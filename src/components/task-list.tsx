@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useT } from "./i18n-provider";
-import { Badge, EmptyState } from "./ui";
+import { Badge, Button, EmptyState } from "./ui";
 import { Icon } from "./icons";
 import { daysUntil, formatDate, formatDateTime } from "@/lib/format";
 import {
@@ -71,6 +71,16 @@ const ACTION_STYLE: Record<Action, string> = {
   return: "border hover:bg-[var(--surface)]",
 };
 
+/**
+ * Withdrawing a task you sent by mistake. Offered only where it is honest: on
+ * the list of what you sent, while the assignee has not touched it yet. Once
+ * they accept, the task is part of their record and the right move is to close
+ * it with a comment.
+ */
+function canWithdraw(variant: TaskVariant, status: string): boolean {
+  return variant === "sent" && status === "YANGI";
+}
+
 function TaskCard({
   task,
   variant,
@@ -89,6 +99,31 @@ function TaskCard({
   const actions = actionsFor(variant, task.status);
   const left = daysUntil(task.deadline);
   const overdue = isOverdue(task);
+  // Two presses, not a modal: the second press is the confirmation, and it
+  // says what it will do rather than asking "are you sure?".
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  async function withdraw() {
+    setBusy(true);
+    setError(null);
+    const response = await fetch(`/api/tasks/${task.id}/delete`, {
+      method: "POST",
+    });
+    setBusy(false);
+    if (!response.ok) {
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      setError(
+        data.error === "ALREADY_STARTED"
+          ? t("tasks.deleteTooLate")
+          : t("common.error"),
+      );
+      setConfirmDelete(false);
+      return;
+    }
+    router.refresh();
+  }
 
   async function fire(action: Action, withComment: string) {
     setBusy(true);
@@ -257,8 +292,8 @@ function TaskCard({
         </div>
       )}
 
-      {!pendingAction && actions.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2 border-t pt-4">
+      {!pendingAction && (actions.length > 0 || canWithdraw(variant, task.status)) && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-4">
           {actions.map((action) => (
             <button
               key={action}
@@ -270,6 +305,38 @@ function TaskCard({
               {t(ACTION_LABEL[action])}
             </button>
           ))}
+
+          {canWithdraw(variant, task.status) &&
+            (confirmDelete ? (
+              <>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void withdraw()}
+                  className="ml-auto rounded-xl bg-rose-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-rose-500 disabled:opacity-60"
+                >
+                  {t("tasks.deleteConfirm")}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setConfirmDelete(false)}
+                  className="muted rounded-xl border px-3.5 py-2 text-xs font-medium transition disabled:opacity-60"
+                >
+                  {t("ai.cancelEdit")}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setConfirmDelete(true)}
+                className="muted ml-auto inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-medium transition hover:border-rose-500/50 hover:text-rose-600 disabled:opacity-60 dark:hover:text-rose-400"
+              >
+                <Icon name="trash" className="size-3.5" />
+                {t("tasks.delete")}
+              </button>
+            ))}
         </div>
       )}
 
@@ -297,6 +364,9 @@ const FILTERS: { key: Filter; label: MessageKey }[] = [
   { key: "PAST", label: "priority.PAST" },
 ];
 
+/** Rows rendered before the "show more" button appears. */
+const PAGE = 12;
+
 function matches(task: TaskRow, filter: Filter): boolean {
   if (filter === "ALL") return true;
   if (filter === "OVERDUE") return isOverdue(task);
@@ -317,10 +387,14 @@ export function TaskList({
 }) {
   const t = useT();
   const [filter, setFilter] = useState<Filter>("ALL");
+  // An uncapped list turned the assign page into a 14,000-pixel scroll on a
+  // phone. Show a screenful, then let the reader ask for more.
+  const [shown, setShown] = useState(PAGE);
 
   if (tasks.length === 0) return <EmptyState text={emptyText} />;
 
   const visible = tasks.filter((task) => matches(task, filter));
+  const page = visible.slice(0, shown);
 
   return (
     <div className="space-y-3">
@@ -338,7 +412,7 @@ export function TaskList({
                 // is not a dead end you can click into.
                 disabled={count === 0 && !active}
                 onClick={() => setFilter(key)}
-                className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition duration-150 disabled:cursor-not-allowed disabled:opacity-40 ${
                   active
                     ? "bg-navy-900 text-white dark:bg-navy-600"
                     : "panel hover:bg-[var(--surface)]"
@@ -361,9 +435,20 @@ export function TaskList({
       {visible.length === 0 ? (
         <EmptyState text={t("tasks.filter.empty")} />
       ) : (
-        visible.map((task) => (
-          <TaskCard key={task.id} task={task} variant={variant} />
-        ))
+        <>
+          {page.map((task) => (
+            <TaskCard key={task.id} task={task} variant={variant} />
+          ))}
+          {visible.length > page.length && (
+            <Button
+              variant="secondary"
+              block
+              onClick={() => setShown((count) => count + PAGE)}
+            >
+              {t("tasks.showMore")} · {visible.length - page.length}
+            </Button>
+          )}
+        </>
       )}
     </div>
   );

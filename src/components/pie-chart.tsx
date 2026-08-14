@@ -1,5 +1,7 @@
 "use client";
 
+import { EmptyState } from "./ui";
+
 import { useState } from "react";
 
 export interface PieSlice {
@@ -199,7 +201,8 @@ export function PieChart({
   const total = slices.reduce((sum, slice) => sum + slice.value, 0);
 
   if (total === 0) {
-    return <p className="muted p-5 text-sm">{emptyText}</p>;
+    // A bare sentence where a chart should be reads as a rendering failure.
+    return <EmptyState bare text={emptyText} icon="chart" />;
   }
 
   const colorOf = (index: number) =>

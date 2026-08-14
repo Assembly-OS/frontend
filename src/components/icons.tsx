@@ -21,7 +21,15 @@ export type IconName =
   | "bell"
   | "chevron"
   | "calendar"
-  | "shield";
+  | "shield"
+  | "paperclip"
+  | "image"
+  | "mic"
+  | "file"
+  | "download"
+  | "trash"
+  | "eye"
+  | "eyeOff";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   grid: (
@@ -163,6 +171,59 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <path d="M12 3 5 6v5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z" />
       <path d="m9 12 2 2 4-4" />
+    </>
+  ),
+  paperclip: (
+    <>
+      <path d="M20 11.5 12.3 19a5 5 0 0 1-7-7l7.6-7.6a3.3 3.3 0 0 1 4.7 4.7l-7.6 7.6a1.7 1.7 0 0 1-2.4-2.4l7-7" />
+    </>
+  ),
+  image: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2.5" />
+      <circle cx="8.5" cy="9.5" r="1.7" />
+      <path d="m4 17 4.5-4.5a2 2 0 0 1 2.8 0L16 17" />
+      <path d="m14 15 1.8-1.8a2 2 0 0 1 2.8 0L20.5 15" />
+    </>
+  ),
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" />
+      <path d="M12 18v3" />
+    </>
+  ),
+  file: (
+    <>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" />
+      <path d="M14 3v5h5" />
+    </>
+  ),
+  download: (
+    <>
+      <path d="M12 4v11" />
+      <path d="m8 11 4 4 4-4" />
+      <path d="M4.5 19h15" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4 7h16" />
+      <path d="M9 7V5h6v2" />
+      <path d="M6.5 7 7.5 20h9L17.5 7" />
+    </>
+  ),
+  eye: (
+    <>
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  eyeOff: (
+    <>
+      <path d="M10.6 6.1A8.9 8.9 0 0 1 12 6c6 0 9.5 6 9.5 6a17 17 0 0 1-3 3.7" />
+      <path d="M6.6 7.9A17 17 0 0 0 2.5 12S6 18 12 18a9 9 0 0 0 3.6-.7" />
+      <path d="m4 4 16 16" />
     </>
   ),
 };

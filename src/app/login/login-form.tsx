@@ -4,27 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useT } from "@/components/i18n-provider";
 
-export interface DemoAccount {
-  login: string;
-  full_name: string;
-  role: string;
-  roleLabel: string;
-}
-
-export function LoginForm({
-  demo,
-  password,
-}: {
-  demo: DemoAccount[];
-  password: string;
-}) {
+export function LoginForm() {
   const t = useT();
   const router = useRouter();
   const [login, setLogin] = useState("");
   const [pass, setPass] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [showDemo, setShowDemo] = useState(false);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -53,13 +39,6 @@ export function LoginForm({
       setError(t("common.error"));
       setBusy(false);
     }
-  }
-
-  function applyAccount(account: DemoAccount) {
-    setLogin(account.login);
-    setPass(password);
-    setError(null);
-    setShowDemo(false);
   }
 
   return (
@@ -120,41 +99,6 @@ export function LoginForm({
           {busy ? t("login.loading") : t("login.submit")}
         </button>
       </form>
-
-      <div className="shadow-soft mt-6 rounded-2xl border bg-[var(--panel)] p-4">
-        <button
-          type="button"
-          onClick={() => setShowDemo((v) => !v)}
-          className="flex w-full items-center justify-between text-left text-sm font-semibold"
-        >
-          {t("login.demo")}
-          <span className="muted text-xs">{showDemo ? "▲" : "▼"}</span>
-        </button>
-        <p className="muted mt-1 text-xs">
-          {t("login.demoHint")}{" "}
-          <code className="rounded bg-[var(--surface)] px-1.5 py-0.5 font-semibold">
-            {password}
-          </code>
-        </p>
-        {showDemo && (
-          <ul className="scroll-thin mt-3 max-h-56 space-y-1 overflow-y-auto">
-            {demo.map((account) => (
-              <li key={account.login}>
-                <button
-                  type="button"
-                  onClick={() => applyAccount(account)}
-                  className="w-full rounded-lg px-2 py-1.5 text-left text-xs transition hover:bg-[var(--surface)]"
-                >
-                  <span className="font-mono font-semibold">
-                    {account.login}
-                  </span>
-                  <span className="muted"> — {account.roleLabel}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
     </div>
   );
 }

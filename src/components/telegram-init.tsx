@@ -3,35 +3,59 @@
 import { useEffect } from "react";
 
 /**
- * When the platform is opened as a Telegram Mini App, Telegram keeps its
- * loading placeholder (the robot) on screen until the page tells it the app is
- * ready. The SDK (telegram-web-app.js) is loaded in <head>; here we call
- * ready()/expand() once it is available. Outside Telegram this is a no-op.
+ * Telegram Mini App integration, loaded only when the page is actually inside
+ * Telegram.
+ *
+ * The SDK used to sit in `<head>` as a `beforeInteractive` script, which meant
+ * every page load — overwhelmingly ordinary desktop browsers — waited on a
+ * request to telegram.org for a feature it would never use, and logged a
+ * console error whenever that host was unreachable. Telegram announces itself
+ * clearly enough that the script can be fetched only when it is wanted: the
+ * webview exposes `TelegramWebviewProxy`, and a Mini App is always opened with
+ * `tgWebApp*` parameters in the URL.
  */
+function launchedByTelegram(): boolean {
+  if (typeof window === "undefined") return false;
+  const scope = window as unknown as {
+    TelegramWebviewProxy?: unknown;
+    Telegram?: { WebApp?: unknown };
+  };
+  if (scope.TelegramWebviewProxy || scope.Telegram?.WebApp) return true;
+  const url = `${window.location.search}${window.location.hash}`;
+  return url.includes("tgWebApp");
+}
+
+interface WebApp {
+  ready: () => void;
+  expand: () => void;
+}
+
 export function TelegramInit() {
   useEffect(() => {
-    let tries = 0;
-    const apply = () => {
-      const tg = (
-        window as unknown as { Telegram?: { WebApp?: {
-          ready: () => void;
-          expand: () => void;
-          setHeaderColor?: (c: string) => void;
-        } } }
-      ).Telegram?.WebApp;
-      if (tg) {
-        tg.ready();
-        tg.expand();
-        return true;
-      }
-      return false;
+    if (!launchedByTelegram()) return;
+
+    const start = () => {
+      const app = (window as unknown as { Telegram?: { WebApp?: WebApp } })
+        .Telegram?.WebApp;
+      if (!app) return false;
+      // Telegram keeps its loading placeholder up until the page says it is
+      // ready; without this the Mini App opens on a robot animation.
+      app.ready();
+      app.expand();
+      return true;
     };
-    if (apply()) return;
-    // The SDK script may still be loading; poll briefly, then give up.
-    const timer = setInterval(() => {
-      if (apply() || (tries += 1) > 40) clearInterval(timer);
-    }, 100);
-    return () => clearInterval(timer);
+
+    if (start()) return;
+
+    const script = document.createElement("script");
+    script.src = "https://telegram.org/js/telegram-web-app.js";
+    script.async = true;
+    script.onload = () => start();
+    document.head.appendChild(script);
+
+    return () => {
+      script.onload = null;
+    };
   }, []);
 
   return null;

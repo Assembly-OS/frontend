@@ -1,6 +1,7 @@
 import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
 import { counters, userById } from "@/lib/queries";
+import { receivesTasks } from "@/lib/types";
 import { get } from "@/lib/db";
 import { PageHeader, Panel, StatCard } from "@/components/ui";
 import { LocaleSwitcher } from "@/components/locale-switcher";
@@ -11,7 +12,9 @@ export default async function ProfilePage() {
   const user = await requireUser();
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
-  const c = counters(user.id);
+  // Only queried for the people who actually have a queue.
+  const ownsTasks = receivesTasks(user.role);
+  const counts = ownsTasks ? counters(user.id) : null;
 
   const manager = user.manager_id ? userById(user.manager_id) : undefined;
   const uyushma = user.uyushma_id
@@ -66,26 +69,33 @@ export default async function ProfilePage() {
             </div>
           </section>
 
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <StatCard
-              label={t("dashboard.newTasks")}
-              value={c.incoming}
-              icon="inbox"
-              tone="navy"
-            />
-            <StatCard
-              label={t("dashboard.inWork")}
-              value={c.inWork}
-              icon="play"
-              tone="gold"
-            />
-            <StatCard
-              label={t("dashboard.completed")}
-              value={c.completed}
-              icon="check"
-              tone="emerald"
-            />
-          </div>
+          {/* Nobody assigns work to the Rais, so for him these three read zero
+              on every visit and always will. Three cards that can only ever
+              say nothing are worse than no cards: they take the eye first,
+              being the largest numbers on the page, and pay it back with a
+              fact about the role rather than about the work. */}
+          {ownsTasks && (
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              <StatCard
+                label={t("dashboard.newTasks")}
+                value={counts!.incoming}
+                icon="inbox"
+                tone="navy"
+              />
+              <StatCard
+                label={t("dashboard.inWork")}
+                value={counts!.inWork}
+                icon="play"
+                tone="gold"
+              />
+              <StatCard
+                label={t("dashboard.completed")}
+                value={counts!.completed}
+                icon="check"
+                tone="emerald"
+              />
+            </div>
+          )}
 
           <Panel title={t("profile.personal")}>
             <dl className="divide-y">
@@ -105,6 +115,13 @@ export default async function ProfilePage() {
         </div>
 
         <div className="space-y-6">
+          {/* First in the column: everyone arrives here holding a password
+              somebody else chose for them, and changing it is what they came
+              to do. The language switcher gets used once. */}
+          <Panel title={t("profile.security")}>
+            <PasswordForm />
+          </Panel>
+
           <Panel title={t("profile.language")}>
             <div className="p-5">
               <LocaleSwitcher current={locale} />
@@ -112,10 +129,6 @@ export default async function ProfilePage() {
                 O&apos;zbekcha (lotin / kirill), Русский, English
               </p>
             </div>
-          </Panel>
-
-          <Panel title={t("profile.security")}>
-            <PasswordForm />
           </Panel>
         </div>
       </div>

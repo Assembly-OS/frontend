@@ -33,6 +33,7 @@ export default async function ThreadPage({
   return (
     <Thread
       meId={user.id}
+      endpoint={`/api/chat/${encodeURIComponent(partner.login)}`}
       partner={{
         login: partner.login,
         full_name: partner.full_name,

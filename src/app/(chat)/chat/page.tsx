@@ -1,5 +1,5 @@
 import { requireUser } from "@/lib/session";
-import { conversations, directory, rais } from "@/lib/queries";
+import { conversations, directory, rais, userGroups } from "@/lib/queries";
 import { isOnline } from "@/lib/presence";
 import { ChatPlaceholder, ConversationList } from "./chat-client";
 
@@ -20,6 +20,7 @@ export default async function ChatIndexPage() {
       <div className="h-full min-h-0 lg:hidden">
         <ConversationList
           conversations={list}
+          groups={userGroups(user.id)}
           people={people}
           raisLogin={chairman?.login ?? null}
           meLogin={user.login}

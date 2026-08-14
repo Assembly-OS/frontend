@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { Icon, type IconName } from "./icons";
 import { LocaleSwitcher } from "./locale-switcher";
+import { NotificationBell } from "./notification-bell";
+import { ThemeToggle } from "./theme-toggle";
 import { useI18n } from "./i18n-provider";
 import type { MessageKey } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
@@ -30,44 +32,6 @@ function initials(name: string) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
-}
-
-/**
- * The theme lives on <html data-theme>, written before paint by the boot script
- * in the root layout. This reads that DOM state instead of duplicating it in
- * React state, so there is no flash and no setState-in-effect.
- */
-const THEME_EVENT = "assambleya:theme";
-
-function subscribeTheme(onChange: () => void) {
-  window.addEventListener(THEME_EVENT, onChange);
-  return () => window.removeEventListener(THEME_EVENT, onChange);
-}
-
-function ThemeToggle() {
-  const dark = useSyncExternalStore(
-    subscribeTheme,
-    () => document.documentElement.dataset.theme === "dark",
-    () => false,
-  );
-
-  function toggle() {
-    const next = dark ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem("assambleya-theme", next);
-    window.dispatchEvent(new Event(THEME_EVENT));
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label="Theme"
-      className="grid size-9 place-items-center rounded-xl border transition hover:bg-[var(--surface)]"
-    >
-      <Icon name={dark ? "sun" : "moon"} className="size-4" />
-    </button>
-  );
 }
 
 export function AppShell({
@@ -190,6 +154,10 @@ export function AppShell({
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[268px_1fr]">
+      {/* First stop for a keyboard user: skip the whole navigation. */}
+      <a href="#content" className="skip-link">
+        {t("a11y.skipToContent")}
+      </a>
       <aside className="hidden lg:sticky lg:top-0 lg:block lg:h-dvh">
         {sidebar}
       </aside>
@@ -225,11 +193,15 @@ export function AppShell({
             </p>
           </div>
 
+          <NotificationBell />
           <LocaleSwitcher current={locale} />
           <ThemeToggle />
         </header>
 
-        <main className="min-w-0 max-w-full flex-1 overflow-x-clip px-4 py-6 sm:px-5 lg:px-8 lg:py-8">
+        <main
+          id="content"
+          className="min-w-0 max-w-full flex-1 overflow-x-clip px-4 py-6 sm:px-5 lg:px-8 lg:py-8"
+        >
           {children}
         </main>
       </div>

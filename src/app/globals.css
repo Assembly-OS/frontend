@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+/* Make `dark:` follow the app's own theme switch.
+   Tailwind v4's stock `dark` variant is `prefers-color-scheme` alone, so on a
+   machine set to light every `dark:` utility stayed inert when the user pressed
+   the theme toggle: the CSS variables flipped and the hundreds of `dark:bg-*`
+   and `dark:text-*` classes did not. Badges kept their light fills on dark
+   panels. This binds the variant to the same two conditions the variables use —
+   an explicit `data-theme="dark"`, or the system preference when the user has
+   not chosen. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(html:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
 @theme {
   /* Primary structural colour — a muted slate blue anchored on #3C5667.
      The `navy-*` names are kept so every existing utility follows the rebrand. */
@@ -32,6 +51,10 @@
   --ink: #1b1a1e;
   --muted: #6b6862;
   --line: #ddd9d1;
+  /* One focus colour for the whole app. Applied globally below, so an element
+     is never left without a visible focus state just because its own class
+     string forgot one. */
+  --focus: #4f4f57;
   /* Soft, theme-aware elevation. `soft` sits panels a hair above the surface;
      `lift` is the raised state a card reaches on hover. Stronger in the light
      theme, where cards need a visible shadow to separate from the surface. */
@@ -39,18 +62,20 @@
     0 8px 22px -10px rgba(24, 23, 28, 0.24);
   --shadow-lift: 0 2px 6px rgba(24, 23, 28, 0.08),
     0 20px 44px -16px rgba(24, 23, 28, 0.34);
-  /* Chart palette — a single-hue blue ramp (light → dark): every slice is the
-     same colour, told apart by shade. Validated ordinal for this surface: one
-     hue, monotone lightness, >=0.06 ΔL between steps, light end clears the
-     surface. `-ink` is the label colour that clears 4.5:1 on each step. */
-  --series-1: #d1a24f;
-  --series-2: #bb8100;
-  --series-3: #a06300;
-  --series-4: #804b00;
-  --series-5: #5d3800;
+  /* Chart palette — the brand gold, stepped light to dark: every slice is the
+     same hue, told apart by shade. Kept luminous rather than earthy: the darker
+     end of the earlier ramp went brown on screen and the dominant slice, which
+     is the one people actually look at, read as mud. Validated ordinal for this surface: one hue,
+     monotone lightness, >=0.06 ΔL between steps, light end clears the surface.
+     `-ink` is the label colour that clears 4.5:1 on each step. */
+  --series-1: #e2b163;
+  --series-2: #cf9317;
+  --series-3: #b27500;
+  --series-4: #8f5a00;
+  --series-5: #6b4200;
   --series-1-ink: #000000;
   --series-2-ink: #000000;
-  --series-3-ink: #ffffff;
+  --series-3-ink: #000000;
   --series-4-ink: #ffffff;
   --series-5-ink: #ffffff;
   /* Native widgets the page cannot paint itself — the date picker popup, the
@@ -64,21 +89,22 @@ html[data-theme="dark"] {
   --ink: #ece9e3;
   --muted: #9a978f;
   --line: #2c2b31;
+  --focus: #aaaab2;
   --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3),
     0 12px 30px -14px rgba(0, 0, 0, 0.6);
   --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.4),
     0 20px 44px -18px rgba(0, 0, 0, 0.7);
   /* The same ramp re-stepped for the dark surface, not an auto-flip. */
-  --series-1: #e6c183;
-  --series-2: #d6a345;
-  --series-3: #c18500;
-  --series-4: #a66b00;
-  --series-5: #835600;
+  --series-1: #f2d296;
+  --series-2: #e5b862;
+  --series-3: #d49e30;
+  --series-4: #bb8515;
+  --series-5: #9c6c00;
   --series-1-ink: #000000;
   --series-2-ink: #000000;
   --series-3-ink: #000000;
   --series-4-ink: #000000;
-  --series-5-ink: #ffffff;
+  --series-5-ink: #000000;
   color-scheme: dark;
 }
 
@@ -89,26 +115,55 @@ html[data-theme="dark"] {
     --ink: #ece9e3;
     --muted: #9a978f;
     --line: #2c2b31;
+    --focus: #aaaab2;
     --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3),
       0 12px 30px -14px rgba(0, 0, 0, 0.6);
     --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.4),
       0 20px 44px -18px rgba(0, 0, 0, 0.7);
-    --series-1: #e6c183;
-    --series-2: #d6a345;
-    --series-3: #c18500;
-    --series-4: #a66b00;
-    --series-5: #835600;
+    --series-1: #f2d296;
+    --series-2: #e5b862;
+    --series-3: #d49e30;
+    --series-4: #bb8515;
+    --series-5: #9c6c00;
     --series-1-ink: #000000;
     --series-2-ink: #000000;
     --series-3-ink: #000000;
     --series-4-ink: #000000;
-    --series-5-ink: #ffffff;
+    --series-5-ink: #000000;
     color-scheme: dark;
   }
 }
 
 * {
   border-color: var(--line);
+}
+
+/* Keyboard focus, everywhere, once.
+   `:where()` keeps specificity at zero so any component that defines its own
+   ring still wins. Only `:focus-visible`, so a mouse click never draws it. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* Skip link — first thing a keyboard reaches, invisible until focused. */
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -3rem;
+  z-index: 60;
+  border-radius: 0.75rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-lift);
+  transition: top 0.15s ease-out;
+}
+.skip-link:focus {
+  top: 0.75rem;
 }
 
 html {

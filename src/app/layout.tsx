@@ -1,10 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import "./globals.css";
 import { TelegramInit } from "@/components/telegram-init";
 
 export const metadata: Metadata = {
-  title: "ASSAMBLEYA OS",
+  title: "ASSEMBLY OS",
   description:
     "O'zbekiston Iqtisodiyot Assambleyasi — integratsiyalashgan raqamli boshqaruv tizimi",
 };
@@ -26,12 +25,6 @@ export default function RootLayout({
     <html lang="uz" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
-        {/* Telegram Mini App SDK — lets the page signal readiness so Telegram
-            drops its loading placeholder. beforeInteractive = in <head>. */}
-        <Script
-          src="https://telegram.org/js/telegram-web-app.js"
-          strategy="beforeInteractive"
-        />
       </head>
       <body>
         <TelegramInit />

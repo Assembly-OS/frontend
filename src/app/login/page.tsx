@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { all } from "@/lib/db";
 import { createTranslator } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n";
 import { currentLocale, currentUser } from "@/lib/session";
@@ -7,10 +6,7 @@ import { I18nProvider } from "@/components/i18n-provider";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { Icon } from "@/components/icons";
 import type { MessageKey } from "@/lib/i18n";
-import type { Role } from "@/lib/types";
-import { LoginForm, type DemoAccount } from "./login-form";
-
-const DEMO_PASSWORD = "12345678";
+import { LoginForm } from "./login-form";
 
 const SCALE = [
   { value: "50+", key: "stats.uyushma" },
@@ -24,18 +20,6 @@ export default async function LoginPage() {
   const locale = await currentLocale();
   const dict = getDictionary(locale);
   const t = createTranslator(locale);
-
-  const rows = all<{ login: string; full_name: string; role: Role }>(
-    `SELECT login, full_name, role FROM users
-     WHERE is_active = 1
-     ORDER BY CASE role
-       WHEN 'RAIS' THEN 0 WHEN 'BOLIM_RAHBARI' THEN 1 WHEN 'AI_LAB' THEN 2
-       WHEN 'UYUSHMA_RAISI' THEN 3 WHEN 'LOYIHA_RAHBARI' THEN 4 ELSE 5 END, login`,
-  );
-  const demo: DemoAccount[] = rows.map((row) => ({
-    ...row,
-    roleLabel: t(`role.${row.role}` as MessageKey),
-  }));
 
   return (
     <I18nProvider locale={locale} dict={dict}>
@@ -115,7 +99,7 @@ export default async function LoginPage() {
               <p className="muted mt-1 text-sm">{t("login.hint")}</p>
             </div>
 
-            <LoginForm demo={demo} password={DEMO_PASSWORD} />
+            <LoginForm />
 
             <p className="muted mt-6 flex items-center gap-2 text-xs">
               <Icon

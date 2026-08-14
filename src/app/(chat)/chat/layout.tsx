@@ -1,9 +1,8 @@
-import { createTranslator } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
-import { conversations, directory, rais } from "@/lib/queries";
+import { conversations, directory, rais, userGroups } from "@/lib/queries";
 import { isOnline } from "@/lib/presence";
-import { PageHeader } from "@/components/ui";
 import { ConversationList } from "./chat-client";
+import { ChatBar } from "./chat-bar";
 
 export default async function ChatLayout({
   children,
@@ -12,9 +11,9 @@ export default async function ChatLayout({
 }) {
   const user = await requireUser();
   const locale = await currentLocale(user);
-  const t = createTranslator(locale);
   const list = conversations(user.id);
   const people = directory(user.id);
+  const groups = userGroups(user.id);
   const chairman = rais();
 
   const onlineLogins = [...list, ...people]
@@ -22,17 +21,22 @@ export default async function ChatLayout({
     .map((person) => person.login);
 
   return (
-    <div className="flex h-[calc(100dvh-9rem)] min-h-[520px] flex-col">
-      <PageHeader title={t("chat.title")} description={t("chat.searchHint")} />
+    // `dvh`, not `vh`: on a phone the URL bar slides away and back, and a
+    // viewport unit that ignores it puts the message box under the browser
+    // chrome exactly when someone is typing into it.
+    <div className="flex h-dvh flex-col overflow-hidden bg-[var(--surface)]">
+      <ChatBar locale={locale} />
+
       {/* The phone track is spelled out as minmax(0,1fr): a bare `grid` leaves
           one implicit `auto` column whose floor is the subtree's min-content,
           so a long name or message preview widened the column past the screen
-          and `overflow-x-clip` on <main> cut the result off without so much as
-          a scrollbar. A 0 minimum lets the column take the width it is given. */}
-      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+          and cut the result off without so much as a scrollbar. A 0 minimum
+          lets the column take the width it is given. */}
+      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] gap-3 p-3 lg:grid-cols-[340px_minmax(0,1fr)] lg:gap-4 lg:p-4">
         <div className="hidden min-h-0 min-w-0 lg:block">
           <ConversationList
             conversations={list}
+            groups={groups}
             people={people}
             raisLogin={chairman?.login ?? null}
             meLogin={user.login}

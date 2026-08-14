@@ -1,10 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
 import { teamStats } from "@/lib/queries";
-import { EmptyState, PageHeader, ProgressBar } from "@/components/ui";
-import { Icon } from "@/components/icons";
+import { EmptyState, IconButton, PageHeader, ProgressBar } from "@/components/ui";
 import { initials, percent } from "@/lib/format";
 import { isManager } from "@/lib/types";
 
@@ -29,52 +27,50 @@ export default async function TeamPage() {
             return (
               <article key={member.id} className="panel p-4">
                 <div className="flex items-start gap-3">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-full bg-navy-900 text-xs font-bold text-white dark:bg-navy-700">
+                  <span
+                    aria-hidden
+                    className="grid size-10 shrink-0 place-items-center rounded-full bg-navy-900 text-[11px] font-bold text-white dark:bg-navy-700"
+                  >
                     {initials(member.full_name)}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">
                       {member.full_name}
                     </p>
+                    {/* Role and login on one quiet line. The position used to
+                        share it and was the thing that got truncated away. */}
                     <p className="muted truncate text-xs">
-                      <span className="font-mono">@{member.login}</span>
+                      {t(`role.${member.role}` as MessageKey)}
                       {member.position ? ` · ${member.position}` : ""}
                     </p>
                   </div>
-                  <Link
+                  <IconButton
                     href={`/chat/${member.login}`}
-                    className="grid size-9 shrink-0 place-items-center rounded-xl border transition hover:bg-[var(--surface)]"
-                    aria-label={t("chat.start")}
-                  >
-                    <Icon name="chat" className="size-4" />
-                  </Link>
+                    icon="chat"
+                    label={t("chat.start")}
+                  />
                 </div>
 
-                <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-xl bg-[var(--surface)] py-2">
-                    <dt className="muted text-[10px] font-medium uppercase">
+                {/* Three numbers on one line, no boxes. The grey tiles they
+                    used to sit in tripled the card's chrome to carry a zero. */}
+                <dl className="mt-4 flex items-baseline gap-5 border-t pt-3">
+                  <div className="min-w-0">
+                    <dd className="text-lg font-bold leading-none tabular-nums">
+                      {member.active}
+                    </dd>
+                    <dt className="muted mt-1 text-[11px]">
                       {t("stats.active")}
                     </dt>
-                    <dd className="text-base font-bold">{member.active}</dd>
                   </div>
-                  <div className="rounded-xl bg-[var(--surface)] py-2">
-                    <dt className="muted text-[10px] font-medium uppercase">
-                      {t("stats.done")}
-                    </dt>
-                    <dd className="text-base font-bold">{member.done}</dd>
+                  <div className="min-w-0">
+                    <dd className="text-lg font-bold leading-none tabular-nums">
+                      {member.done}
+                    </dd>
+                    <dt className="muted mt-1 text-[11px]">{t("stats.done")}</dt>
                   </div>
-                  <div
-                    className={`rounded-xl py-2 ${
-                      member.overdue > 0
-                        ? "bg-rose-50 dark:bg-rose-500/10"
-                        : "bg-[var(--surface)]"
-                    }`}
-                  >
-                    <dt className="muted text-[10px] font-medium uppercase">
-                      {t("dashboard.overdue")}
-                    </dt>
+                  <div className="min-w-0">
                     <dd
-                      className={`text-base font-bold ${
+                      className={`text-lg font-bold leading-none tabular-nums ${
                         member.overdue > 0
                           ? "text-rose-600 dark:text-rose-400"
                           : ""
@@ -82,25 +78,28 @@ export default async function TeamPage() {
                     >
                       {member.overdue}
                     </dd>
+                    <dt className="muted mt-1 text-[11px]">
+                      {t("dashboard.overdue")}
+                    </dt>
+                  </div>
+                  <div className="ml-auto min-w-0 text-right">
+                    <dd className="text-lg font-bold leading-none tabular-nums">
+                      {rate}%
+                    </dd>
+                    <dt className="muted mt-1 text-[11px]">{t("team.load")}</dt>
                   </div>
                 </dl>
 
-                <div className="mt-3">
-                  <div className="muted mb-1 flex justify-between text-[11px]">
-                    <span>{t("team.load")}</span>
-                    <span className="font-semibold">
-                      {rate}% · {member.total}
-                    </span>
+                {/* Only drawn when there is load to show — a 0% bar is a grey
+                    line that says nothing. */}
+                {member.total > 0 && (
+                  <div className="mt-3">
+                    <ProgressBar
+                      value={rate}
+                      tone={rate >= 60 ? "bg-emerald-500" : "bg-navy-600"}
+                    />
                   </div>
-                  <ProgressBar
-                    value={rate}
-                    tone={rate >= 60 ? "bg-emerald-500" : "bg-navy-600"}
-                  />
-                </div>
-
-                <p className="muted mt-3 truncate text-[11px]">
-                  {t(`role.${member.role}` as MessageKey)}
-                </p>
+                )}
               </article>
             );
           })}

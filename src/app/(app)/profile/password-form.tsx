@@ -2,15 +2,34 @@
 
 import { useState } from "react";
 import { useT } from "@/components/i18n-provider";
+import { Icon } from "@/components/icons";
+import { Button, FIELD } from "@/components/ui";
 
+/**
+ * Changing your own password.
+ *
+ * Two things here are not decoration. The new password is typed twice, because
+ * the field is masked and a typo would otherwise be discovered at the next
+ * login, by which point the person is locked out of a system they cannot reset
+ * themselves. And the whole form can be unmasked, because someone handed
+ * `gulrux2026` and asked to replace it will be typing on a phone, where a
+ * masked field is where good passwords go to become typos.
+ */
 export function PasswordForm() {
   const t = useT();
   const [oldPassword, setOld] = useState("");
   const [newPassword, setNew] = useState("");
+  const [repeat, setRepeat] = useState("");
+  const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(
     null,
   );
+
+  const tooShort = newPassword.length > 0 && newPassword.length < 6;
+  const mismatch = repeat.length > 0 && repeat !== newPassword;
+  const ready =
+    oldPassword.length > 0 && newPassword.length >= 6 && repeat === newPassword;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -18,28 +37,44 @@ export function PasswordForm() {
       setMessage({ ok: false, text: t("profile.passwordShort") });
       return;
     }
-    setBusy(true);
-    setMessage(null);
-    const response = await fetch("/api/profile/password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ oldPassword, newPassword }),
-    });
-    setBusy(false);
-    if (response.ok) {
-      setOld("");
-      setNew("");
-      setMessage({ ok: true, text: t("profile.passwordChanged") });
+    if (newPassword !== repeat) {
+      setMessage({ ok: false, text: t("profile.passwordMismatch") });
       return;
     }
-    const data = (await response.json()) as { error?: string };
-    setMessage({
-      ok: false,
-      text:
-        data.error === "SHORT"
-          ? t("profile.passwordShort")
-          : t("profile.passwordError"),
-    });
+    if (newPassword === oldPassword) {
+      setMessage({ ok: false, text: t("profile.passwordSame") });
+      return;
+    }
+
+    setBusy(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/profile/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oldPassword, newPassword }),
+      });
+      if (response.ok) {
+        setOld("");
+        setNew("");
+        setRepeat("");
+        setVisible(false);
+        setMessage({ ok: true, text: t("profile.passwordChanged") });
+        return;
+      }
+      const data = (await response.json()) as { error?: string };
+      setMessage({
+        ok: false,
+        text:
+          data.error === "SHORT"
+            ? t("profile.passwordShort")
+            : t("profile.passwordError"),
+      });
+    } catch {
+      setMessage({ ok: false, text: t("profile.passwordError") });
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -49,11 +84,11 @@ export function PasswordForm() {
           {t("profile.oldPassword")}
         </span>
         <input
-          type="password"
+          type={visible ? "text" : "password"}
           autoComplete="current-password"
           value={oldPassword}
           onChange={(e) => setOld(e.target.value)}
-          className="w-full rounded-xl border bg-[var(--surface)] px-3 py-2.5 text-sm outline-none focus:border-navy-500"
+          className={FIELD}
         />
       </label>
 
@@ -62,13 +97,44 @@ export function PasswordForm() {
           {t("profile.newPassword")}
         </span>
         <input
-          type="password"
+          type={visible ? "text" : "password"}
           autoComplete="new-password"
           value={newPassword}
           onChange={(e) => setNew(e.target.value)}
-          className="w-full rounded-xl border bg-[var(--surface)] px-3 py-2.5 text-sm outline-none focus:border-navy-500"
+          className={`${FIELD} ${tooShort ? "border-amber-500" : ""}`}
         />
+        <span className="muted mt-1 block text-[11px]">
+          {t("profile.passwordRule")}
+        </span>
       </label>
+
+      <label className="block">
+        <span className="muted mb-1 block text-xs font-medium">
+          {t("profile.confirmPassword")}
+        </span>
+        <input
+          type={visible ? "text" : "password"}
+          autoComplete="new-password"
+          value={repeat}
+          onChange={(e) => setRepeat(e.target.value)}
+          className={`${FIELD} ${mismatch ? "border-rose-500" : ""}`}
+        />
+        {/* Said while it can still be fixed, not after the form is submitted. */}
+        {mismatch && (
+          <span className="mt-1 block text-[11px] font-medium text-rose-600 dark:text-rose-400">
+            {t("profile.passwordMismatch")}
+          </span>
+        )}
+      </label>
+
+      <button
+        type="button"
+        onClick={() => setVisible((shown) => !shown)}
+        className="muted flex items-center gap-1.5 text-xs font-medium transition hover:opacity-70"
+      >
+        <Icon name={visible ? "eyeOff" : "eye"} className="size-3.5" />
+        {visible ? t("profile.hidePassword") : t("profile.showPassword")}
+      </button>
 
       {message && (
         <p
@@ -82,13 +148,9 @@ export function PasswordForm() {
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={busy}
-        className="w-full rounded-xl bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800 disabled:opacity-60 dark:bg-navy-600 dark:hover:bg-navy-500"
-      >
+      <Button type="submit" block disabled={busy || !ready}>
         {busy ? t("common.loading") : t("profile.changePassword")}
-      </button>
+      </Button>
     </form>
   );
 }

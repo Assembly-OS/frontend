@@ -10,8 +10,16 @@ import {
   teamStats,
   uyushmaStats,
 } from "@/lib/queries";
-import { Badge, PageHeader, Panel, StatCard } from "@/components/ui";
+import {
+  Badge,
+  EmptyState,
+  MetricStrip,
+  PageHeader,
+  Panel,
+  StatCard,
+} from "@/components/ui";
 import { PieChart } from "@/components/pie-chart";
+import { CrmBlock } from "./crm-block";
 import { Icon } from "@/components/icons";
 import { formatDate, formatMoney, formatNumber, initials, percent } from "@/lib/format";
 import {
@@ -131,7 +139,12 @@ export default async function DashboardPage() {
       {/* Rais command centre */}
       {user.role === "RAIS" && <CommandCentre t={t} />}
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-3">
+      {/* The CRM at a glance, plus whatever is about to go wrong. */}
+      <CrmBlock user={user} t={t} />
+
+      {/* items-start: without it the short right column stretches the tall left
+          panel — or the reverse — and the difference renders as dead space. */}
+      <div className="mt-6 grid items-start gap-6 xl:grid-cols-3">
         {/* Recent activity */}
         <Panel
           title={t("dashboard.recent")}
@@ -147,13 +160,11 @@ export default async function DashboardPage() {
           }
         >
           {recent.length === 0 ? (
-            <p className="muted px-5 py-8 text-center text-sm">
-              {t("common.noData")}
-            </p>
+            <EmptyState bare text={t("dashboard.noRecent")} icon="inbox" />
           ) : (
             <ul className="divide-y">
               {recent.map((task) => (
-                <li key={task.id} className="flex items-start gap-3 px-5 py-3.5">
+                <li key={task.id} className="flex items-center gap-3 px-5 py-3">
                   <span className="muted mt-0.5 shrink-0 font-mono text-[11px] font-semibold">
                     {task.code}
                   </span>
@@ -167,12 +178,12 @@ export default async function DashboardPage() {
                       {formatDate(task.deadline)}
                     </p>
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    <Badge className={statusTone(task.status)}>
-                      {t(`status.${task.status}` as MessageKey)}
-                    </Badge>
+                  <div className="flex shrink-0 items-center gap-1.5">
                     <Badge className={priorityTone(task.priority)}>
                       {t(`priority.${task.priority}` as MessageKey)}
+                    </Badge>
+                    <Badge className={statusTone(task.status)}>
+                      {t(`status.${task.status}` as MessageKey)}
                     </Badge>
                   </div>
                 </li>
@@ -288,39 +299,30 @@ function CommandCentre({ t }: { t: (key: MessageKey) => string }) {
         <h2 className="text-sm font-semibold">{t("dashboard.command")}</h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <StatCard
-          label={t("dashboard.allTasks")}
-          value={totals.tasks}
-          hint={`${t("dashboard.completed")}: ${totals.done}`}
-          icon="grid"
-          tone="navy"
-        />
-        <StatCard
-          label={t("dashboard.activeUsers")}
-          value={totals.users}
-          icon="users"
-          tone="slate"
-        />
-        <StatCard
-          label={t("dashboard.uyushmalar")}
-          value={totals.uyushmalar}
-          hint={`${formatNumber(totals.members)} ${t("stats.members")}`}
-          icon="chart"
-          tone="gold"
-          href="/statistics"
-        />
-        <StatCard
-          label={t("dashboard.projects")}
-          value={totals.loyihalar}
-          hint={`${formatMoney(totals.budget, t)} ${t("stats.sum")}`}
-          icon="send"
-          tone="emerald"
-          href="/statistics"
-        />
-      </div>
+      <MetricStrip
+        items={[
+          {
+            label: t("dashboard.allTasks"),
+            value: totals.tasks,
+            hint: `${t("dashboard.completed")}: ${totals.done}`,
+          },
+          { label: t("dashboard.activeUsers"), value: totals.users },
+          {
+            label: t("dashboard.uyushmalar"),
+            value: totals.uyushmalar,
+            hint: `${formatNumber(totals.members)} ${t("stats.members")}`,
+            href: "/statistics",
+          },
+          {
+            label: t("dashboard.projects"),
+            value: totals.loyihalar,
+            hint: `${formatMoney(totals.budget, t)} ${t("stats.sum")}`,
+            href: "/statistics",
+          },
+        ]}
+      />
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-2">
+      <div className="mt-4 grid items-start gap-4 xl:grid-cols-2">
         <Panel title={t("dashboard.byDepartment")}>
           <PieChart
             totalLabel={t("dashboard.allTasks")}
