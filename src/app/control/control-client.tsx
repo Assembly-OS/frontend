@@ -88,6 +88,8 @@ export function ControlClient({
             onClick={() => act("maint.vacuum", { type: "maint.vacuum" }, "Выполнить VACUUM? База будет перестроена.")} />
           <MaintBtn label="Сбросить присутствие" icon="users" busy={busy === "maint.clearPresence"}
             onClick={() => act("maint.clearPresence", { type: "maint.clearPresence" })} />
+          <MaintBtn label="Пересоздать БД (демо)" icon="alert" danger busy={busy === "maint.reseed"}
+            onClick={() => act("maint.reseed", { type: "maint.reseed" }, "ПЕРЕСОЗДАТЬ базу из демо-данных? Все текущие данные будут стёрты и заменены. Действие необратимо.")} />
         </div>
       </section>
 
@@ -133,6 +135,10 @@ export function ControlClient({
                       <button type="button" title={u.is_active ? "Деактивировать" : "Активировать"} disabled={busy !== null} className={iconBtn}
                         onClick={() => act(`toggle-${u.id}`, { type: "user.toggleActive", id: u.id })}>
                         <Icon name={u.is_active ? "close" : "check"} className="size-3.5" />
+                      </button>
+                      <button type="button" title="Сбросить пароль" disabled={busy !== null} className={iconBtn}
+                        onClick={() => act(`pw-${u.id}`, { type: "user.resetPassword", id: u.id }, `Сбросить пароль @${u.login} на 12345678?`)}>
+                        <Icon name="user" className="size-3.5" />
                       </button>
                       <button type="button" title="Удалить" disabled={busy !== null} className={`${iconBtn} text-rose-600 dark:text-rose-400`}
                         onClick={() => act(`del-${u.id}`, { type: "user.delete", id: u.id }, `Удалить @${u.login}? Необратимо.`)}>

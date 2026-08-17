@@ -1137,7 +1137,7 @@ export function AiClient({
                       />
                     </label>
 
-                    <div className="grid gap-2 sm:grid-cols-3">
+                    <div className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-3">
                       <label className="block">
                         <span className="muted mb-1 block text-[11px] font-medium">
                           {t("form.executor")}

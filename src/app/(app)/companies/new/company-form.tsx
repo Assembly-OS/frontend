@@ -90,7 +90,7 @@ export function CompanyForm({
         </p>
       )}
 
-      <div className="grid items-start gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-2">
         <Panel title={t("crm.field.description")}>
           <div className="space-y-3 p-5">
             {label(
@@ -152,11 +152,11 @@ export function CompanyForm({
                   ))}
                 </Select>,
               )}
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
                 {label(t("crm.field.started"), <DateField name="started_at" />)}
                 {label(t("crm.field.nextContact"), <DateField name="next_contact_at" />)}
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
                 {label(t("crm.field.country"), <input name="country" className={FIELD} />)}
                 {label(t("crm.field.city"), <input name="city" className={FIELD} />)}
               </div>

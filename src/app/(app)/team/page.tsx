@@ -21,7 +21,7 @@ export default async function TeamPage() {
       {team.length === 0 ? (
         <EmptyState text={t("team.noTeam")} />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 xl:grid-cols-3">
           {team.map((member) => {
             const rate = percent(member.done, member.total);
             return (

@@ -45,7 +45,7 @@ export default async function AssignPage() {
 
       {/* items-start: the form must keep its own height, not stretch to match
           the (much longer) list of sent assignments next to it. */}
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
         <AssignForm candidates={candidates} projects={projectOptions} />
 
         <div>

@@ -123,7 +123,7 @@ export function MeetingForm({
         </p>
       )}
 
-      <div className="grid items-start gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
           <Panel title={t("crm.transcript")}>
             <div className="space-y-3 p-5">

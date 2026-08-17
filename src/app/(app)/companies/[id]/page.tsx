@@ -99,7 +99,7 @@ export default async function CompanyPage({
         )}
       </div>
 
-      <div className="grid items-start gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
           <Panel title={t("crm.tab.meetings")}>
             {meetings.length === 0 ? (

@@ -117,7 +117,7 @@ export default async function StatisticsPage() {
       <h2 className="mb-3 mt-8 text-sm font-semibold">
         {t("dashboard.projects")}
       </h2>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 xl:grid-cols-3">
         {projectRows.map((project) => (
           <article key={project.id} className="panel p-4">
             <div className="flex items-start justify-between gap-3">

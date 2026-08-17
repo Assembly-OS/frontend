@@ -182,7 +182,7 @@ export function AssistantClient({
         </p>
       )}
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
         <Panel>
           <div className="scroll-thin max-h-[calc(100dvh-19rem)] min-h-[18rem] overflow-y-auto p-5">
             {turns.length === 0 ? (
@@ -253,6 +253,24 @@ export function AssistantClient({
             <div ref={endRef} />
           </div>
 
+          {/* On a phone the examples ride just above the box you type in, as
+              one scrollable row. As a column in a panel underneath they cost a
+              whole screen of height for four lines nobody scrolls to — and the
+              chat itself is the thing that should own the screen. */}
+          <div className="scroll-thin flex gap-2 overflow-x-auto border-t px-4 py-2.5 xl:hidden">
+            {SUGGESTIONS.map((key) => (
+              <button
+                key={key}
+                type="button"
+                disabled={busy}
+                onClick={() => void ask(t(key))}
+                className="shrink-0 rounded-full border px-3 py-1.5 text-xs transition hover:bg-[var(--surface)] disabled:opacity-50"
+              >
+                {t(key)}
+              </button>
+            ))}
+          </div>
+
           <form
             className="flex items-end gap-2 border-t p-4"
             onSubmit={(event) => {
@@ -284,7 +302,7 @@ export function AssistantClient({
           </form>
         </Panel>
 
-        <Panel title={t("assistant.examples")}>
+        <Panel title={t("assistant.examples")} className="hidden xl:block">
           <ul className="divide-y">
             {SUGGESTIONS.map((key) => (
               <li key={key}>

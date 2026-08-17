@@ -70,7 +70,7 @@ export default async function CompaniesPage({
           }
         />
       ) : (
-        <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
           {rows.map((company) => (
             <Link key={company.id} href={`/companies/${company.id}`} className="block">
               <article className="panel h-full p-4 transition duration-150 hover:shadow-lift hover:-translate-y-0.5">
@@ -86,7 +86,9 @@ export default async function CompaniesPage({
                   </Badge>
                 </div>
 
-                <dl className="mt-4 flex items-baseline gap-5 border-t pt-3">
+                {/* Промежуток сжимается на узком экране: три числа и дата в 360px
+    с gap-5 не помещаются, и «Последний контакт» вылезал за карточку. */}
+                <dl className="mt-4 flex items-baseline gap-3 border-t pt-3 sm:gap-5">
                   <div>
                     <dd className="text-lg font-bold leading-none tabular-nums">
                       {company.meetings}
@@ -111,7 +113,7 @@ export default async function CompaniesPage({
                     </dd>
                     <dt className="muted mt-1 text-[11px]">{t("crm.tab.contacts")}</dt>
                   </div>
-                  <div className="ml-auto text-right">
+                  <div className="ml-auto min-w-0 text-right">
                     <dd className="text-xs font-medium tabular-nums">
                       {formatDate(company.last_contact_at ?? company.last_seen)}
                     </dd>

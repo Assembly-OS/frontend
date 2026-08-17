@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useT } from "@/components/i18n-provider";
+import { loadTelegram } from "@/components/telegram-init";
 
 export function LoginForm() {
   const t = useT();
@@ -11,6 +12,48 @@ export function LoginForm() {
   const [pass, setPass] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  /**
+   * `checking` while Telegram's signature is being tried, `link` once it has
+   * come back saying this account is not attached to anyone yet, `form` for an
+   * ordinary browser. The three are separate because they want three
+   * different screens: a wait, a one-time explanation, and the plain login.
+   */
+  const [mode, setMode] = useState<"form" | "checking" | "link">("form");
+  const initData = useRef("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void loadTelegram().then(async (app) => {
+      if (cancelled || !app?.initData) return;
+      initData.current = app.initData;
+      setMode("checking");
+      try {
+        // No login, no password: if this Telegram account is already attached
+        // to somebody, the signature Telegram put on `initData` is the whole
+        // credential and the person never sees a form.
+        const response = await fetch("/api/auth/telegram", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ initData: app.initData }),
+        });
+        if (cancelled) return;
+        if (response.ok) {
+          router.replace("/dashboard");
+          router.refresh();
+          return;
+        }
+        // 428 is the expected first launch — ask once, then never again.
+        setMode(response.status === 428 ? "link" : "form");
+      } catch {
+        if (!cancelled) setMode("form");
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -21,11 +64,22 @@ export function LoginForm() {
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ login: login.trim(), password: pass }),
-      });
+      // Inside Telegram the same credentials go to the Telegram route, which
+      // signs in *and* records the link — so this is the last time this
+      // person types a password on this phone.
+      const inTelegram = mode === "link" && initData.current;
+      const response = await fetch(
+        inTelegram ? "/api/auth/telegram" : "/api/auth/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            login: login.trim(),
+            password: pass,
+            ...(inTelegram ? { initData: initData.current } : {}),
+          }),
+        },
+      );
       if (!response.ok) {
         setError(
           response.status === 429 ? t("login.rateLimit") : t("login.error"),
@@ -41,8 +95,24 @@ export function LoginForm() {
     }
   }
 
+  if (mode === "checking") {
+    return (
+      <div className="w-full max-w-sm">
+        <p className="muted flex items-center justify-center gap-2 py-8 text-sm">
+          <span className="size-1.5 animate-pulse rounded-full bg-current" />
+          {t("login.telegramChecking")}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-sm">
+      {mode === "link" && (
+        <p className="mb-4 rounded-xl bg-navy-500/10 px-3.5 py-2.5 text-sm">
+          {t("login.telegramLink")}
+        </p>
+      )}
       <form onSubmit={submit} className="space-y-4">
         <div>
           <label

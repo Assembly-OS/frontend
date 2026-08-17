@@ -64,7 +64,7 @@ export default async function ControlPage() {
       </header>
 
       {/* Diagnostics */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-6 grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {tiles.map((t) => (
           <div key={t.label} className="panel p-4">
             <p className="text-2xl font-bold leading-none tabular-nums">{t.value}</p>
@@ -74,7 +74,7 @@ export default async function ControlPage() {
         ))}
       </div>
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-3">
+      <div className="mb-6 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-3">
         <section className="panel p-5">
           <h2 className="mb-3 text-sm font-semibold">Поручения по статусам</h2>
           <ul className="space-y-1.5">

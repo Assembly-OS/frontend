@@ -144,7 +144,7 @@ export default async function DashboardPage() {
 
       {/* items-start: without it the short right column stretches the tall left
           panel — or the reverse — and the difference renders as dead space. */}
-      <div className="mt-6 grid items-start gap-6 xl:grid-cols-3">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-3">
         {/* Recent activity */}
         <Panel
           title={t("dashboard.recent")}
@@ -322,7 +322,7 @@ function CommandCentre({ t }: { t: (key: MessageKey) => string }) {
         ]}
       />
 
-      <div className="mt-4 grid items-start gap-4 xl:grid-cols-2">
+      <div className="mt-4 grid grid-cols-[minmax(0,1fr)] items-start gap-4 xl:grid-cols-2">
         <Panel title={t("dashboard.byDepartment")}>
           <PieChart
             totalLabel={t("dashboard.allTasks")}

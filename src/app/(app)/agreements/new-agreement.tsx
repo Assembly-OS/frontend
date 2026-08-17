@@ -113,7 +113,7 @@ export function NewAgreement({
           className={`${FIELD} resize-y`}
         />
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
           {/* The first <option> is placeholder text, not a label: a screen
               reader announces "combobox" with no name at all, and these two
               are the fields that say who the commitment is with and who

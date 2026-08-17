@@ -184,7 +184,7 @@ export function AssignForm({
           className={`${FIELD} resize-y`}
         />
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
           <label className="block">
             <span className="muted mb-1.5 block text-[11px] font-semibold uppercase tracking-wide">
               {t("form.priority")}

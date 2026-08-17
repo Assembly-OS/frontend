@@ -130,7 +130,7 @@ function StaffForm({
         e.preventDefault();
         onSubmit();
       }}
-      className="grid gap-4 p-5 sm:grid-cols-2"
+      className="grid grid-cols-[minmax(0,1fr)] gap-4 p-5 sm:grid-cols-2"
     >
       <div className="sm:col-span-2">
         <label className={label} htmlFor="fullName">
@@ -833,7 +833,7 @@ export function AdminClient({
           llmConfigured={llmConfigured}
         />
       ) : tab === "chats" ? (
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,22rem)_1fr]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,22rem)_1fr]">
           <div className="space-y-5">
           <Panel title={`${t("chat.tabGroups")}: ${groups.length}`}>
             {groups.length === 0 ? (
@@ -993,7 +993,7 @@ export function AdminClient({
             />
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-2">
             <Panel title={t("admin.system")}>
               <dl className="divide-y text-sm">
                 {[

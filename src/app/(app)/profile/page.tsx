@@ -45,7 +45,7 @@ export default async function ProfilePage() {
     <>
       <PageHeader title={t("profile.title")} />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
           <section className="panel flex flex-wrap items-center gap-5 p-6">
             <span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-navy-900 text-lg font-bold text-white dark:bg-navy-700">

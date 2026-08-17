@@ -109,12 +109,12 @@ export function CompanyPanels({
               });
             }}
           >
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2">
               <input name="first_name" required placeholder={t("profile.fullName")} className={FIELD} />
               <input name="last_name" placeholder="—" className={FIELD} />
             </div>
             <input name="position" placeholder={t("profile.position")} className={FIELD} />
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2">
               <input name="phone" placeholder={t("crm.field.phone")} className={FIELD} />
               <input name="email" type="email" placeholder={t("crm.field.email")} className={FIELD} />
             </div>
@@ -209,7 +209,7 @@ export function CompanyPanels({
                   </option>
                 ))}
               </Select>
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2">
                 <DateField name="deadline" />
                 <Select name="priority" defaultValue="ORTA">
                   {["PAST", "ORTA", "YUQORI", "KRITIK"].map((level) => (
