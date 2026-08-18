@@ -539,6 +539,9 @@ const ru: Dictionary = {
   "crm.search": "Поиск",
 
   "crm.searchHint": "Компания, человек, совещание, договорённость",
+  "crm.searchCompanies": "Название, отрасль, город, руководитель",
+  "crm.searchFields": "Поиск идёт по названию, отрасли, услугам, городу и руководителю",
+  "common.reset": "Сбросить",
 
   "crm.nothingFound": "Ничего не найдено",
 

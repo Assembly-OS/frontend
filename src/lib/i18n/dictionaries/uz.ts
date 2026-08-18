@@ -537,6 +537,9 @@ const uz = {
   "crm.search": "Qidirish",
 
   "crm.searchHint": "Kompaniya, odam, uchrashuv, kelishuv",
+  "crm.searchCompanies": "Nomi, sohasi, shahri, rahbari",
+  "crm.searchFields": "Qidiruv nomi, sohasi, xizmatlari, shahri va rahbari bo'yicha boradi",
+  "common.reset": "Tozalash",
 
   "crm.nothingFound": "Hech narsa topilmadi",
 

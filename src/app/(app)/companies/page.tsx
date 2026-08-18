@@ -3,7 +3,13 @@ import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
 import { canWrite } from "@/lib/crm-access";
 import { companies } from "@/lib/crm";
-import { Badge, Button, EmptyState, PageHeader } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  EmptyState,
+  FIELD,
+  PageHeader,
+} from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { COMPANY_TONE } from "./tone";
 
@@ -23,6 +29,16 @@ export default async function CompaniesPage({
 
   const tabs = ["ALL", "ACTIVE", "POTENTIAL", "PAUSED", "ARCHIVED"] as const;
   const current = filters.status ?? "ALL";
+  const query = filters.q?.trim() ?? "";
+
+  /** Keeps whichever filter is not being changed, so the two compose. */
+  function href(status: string, q: string) {
+    const params = new URLSearchParams();
+    if (status !== "ALL") params.set("status", status);
+    if (q) params.set("q", q);
+    const search = params.toString();
+    return search ? `/companies?${search}` : "/companies";
+  }
 
   return (
     <>
@@ -38,11 +54,40 @@ export default async function CompaniesPage({
         }
       />
 
+      <form
+        method="get"
+        action="/companies"
+        className="mb-4 flex flex-wrap items-center gap-2"
+      >
+        {/* Searching must not silently drop the status the user is looking at. */}
+        {current !== "ALL" && (
+          <input type="hidden" name="status" value={current} />
+        )}
+        <label className="min-w-0 flex-1 sm:max-w-sm">
+          <span className="sr-only">{t("crm.search")}</span>
+          <input
+            type="search"
+            name="q"
+            defaultValue={query}
+            placeholder={t("crm.searchCompanies")}
+            className={FIELD}
+          />
+        </label>
+        <Button type="submit" variant="secondary" icon="search">
+          {t("crm.search")}
+        </Button>
+        {query && (
+          <Button href={href(current, "")} variant="ghost">
+            {t("common.reset")}
+          </Button>
+        )}
+      </form>
+
       <div className="mb-4 flex flex-wrap gap-2">
         {tabs.map((tab) => (
           <Link
             key={tab}
-            href={tab === "ALL" ? "/companies" : `/companies?status=${tab}`}
+            href={href(tab, query)}
             className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition duration-150 ${
               current === tab
                 ? "bg-navy-900 text-white dark:bg-navy-600"
@@ -58,11 +103,15 @@ export default async function CompaniesPage({
 
       {rows.length === 0 ? (
         <EmptyState
-          text={t("crm.noCompanies")}
-          hint={t("crm.companiesDesc")}
-          icon="users"
+          text={query ? t("crm.nothingFound") : t("crm.noCompanies")}
+          hint={query ? t("crm.searchFields") : t("crm.companiesDesc")}
+          icon={query ? "search" : "users"}
           action={
-            canWrite(user) ? (
+            query ? (
+              <Button href={href(current, "")} size="sm" variant="secondary">
+                {t("common.reset")}
+              </Button>
+            ) : canWrite(user) ? (
               <Button href="/companies/new" size="sm" icon="plus">
                 {t("crm.newCompany")}
               </Button>

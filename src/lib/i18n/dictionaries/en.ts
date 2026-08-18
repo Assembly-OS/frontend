@@ -539,6 +539,9 @@ const en: Dictionary = {
   "crm.search": "Search",
 
   "crm.searchHint": "Company, person, meeting, agreement",
+  "crm.searchCompanies": "Name, industry, city, lead",
+  "crm.searchFields": "Searches name, industry, services, city and lead",
+  "common.reset": "Clear",
 
   "crm.nothingFound": "Nothing found",
 

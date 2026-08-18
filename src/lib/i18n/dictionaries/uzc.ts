@@ -539,6 +539,9 @@ const uzc: Dictionary = {
   "crm.search": "Qidirish",
 
   "crm.searchHint": "Kompaniya, odam, uchrashuv, kelishuv",
+  "crm.searchCompanies": "Номи, соҳаси, шаҳри, раҳбари",
+  "crm.searchFields": "Қидирув номи, соҳаси, хизматлари, шаҳри ва раҳбари бўйича боради",
+  "common.reset": "Тозалаш",
 
   "crm.nothingFound": "Hech narsa topilmadi",
 
