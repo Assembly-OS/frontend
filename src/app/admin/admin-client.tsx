@@ -44,6 +44,7 @@ const ERRORS: Record<string, MessageKey> = {
   WEAK_PASSWORD: "admin.errWeak",
   LOGIN_TAKEN: "admin.errTaken",
   LAST_RAIS: "admin.errLastRais",
+  HAS_HISTORY: "admin.errHasHistory",
   SELF: "admin.errSelf",
 };
 
@@ -542,6 +543,13 @@ export function AdminClient({
     await send(`/api/admin/users/${person.id}`, "PATCH", { action: "toggle" });
   }
 
+  async function remove(person: StaffRow) {
+    if (!confirm(t("admin.confirmDelete").replace("{name}", person.full_name)))
+      return;
+    const ok = await send(`/api/admin/users/${person.id}`, "DELETE", {});
+    if (ok) setNotice({ ok: true, text: t("admin.deleted") });
+  }
+
   async function resetPassword(person: StaffRow) {
     const password = newPassword();
     const ok = await send(`/api/admin/users/${person.id}`, "PATCH", {
@@ -868,6 +876,18 @@ export function AdminClient({
                               name={person.is_active ? "close" : "check"}
                               className="size-4"
                             />
+                          </button>
+                          {/* Deleting is for the account created by mistake.
+                              Anyone with history is refused by the database and
+                              the notice says to deactivate instead. */}
+                          <button
+                            type="button"
+                            onClick={() => void remove(person)}
+                            disabled={busy}
+                            title={t("admin.delete")}
+                            className="muted grid size-8 place-items-center rounded-lg border transition hover:bg-rose-500/10 hover:text-rose-600 disabled:opacity-40 dark:hover:text-rose-300"
+                          >
+                            <Icon name="trash" className="size-4" />
                           </button>
                         </div>
                       </td>
