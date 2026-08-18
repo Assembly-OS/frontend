@@ -358,7 +358,7 @@ export function ProjectsPanel({
                   </p>
                 )}
 
-                <div className="mt-4">
+                <div className="mt-3.5">
                   <div className="mb-1.5 flex items-baseline justify-between gap-2">
                     <span className="muted text-[11px] font-semibold uppercase tracking-wide">
                       {t("admin.projectProgress")}
@@ -377,7 +377,7 @@ export function ProjectsPanel({
 
                 {/* Label/value rather than "3 tasks": four languages, four
                     plural rules, and none of them worth encoding here. */}
-                <dl className="mt-4 space-y-1.5 text-xs">
+                <dl className="mt-3.5 space-y-1 text-xs">
                   <div className="flex items-baseline justify-between gap-3">
                     <dt className="muted shrink-0">{t("admin.projectOwner")}</dt>
                     <dd
@@ -419,10 +419,11 @@ export function ProjectsPanel({
                   )}
                 </dl>
 
-                <div className="mt-4 border-t pt-3">
+                <div className="mt-4">
                   <Button
-                    variant="ghost"
+                    variant="secondary"
                     size="sm"
+                    block
                     onClick={() => {
                       setValues(toForm(project));
                       setEditing(project.id);
