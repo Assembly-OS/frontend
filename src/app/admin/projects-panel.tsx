@@ -3,8 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useT } from "@/components/i18n-provider";
-import { Icon } from "@/components/icons";
-import { Badge, EmptyState, FIELD, Panel, Select } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  EmptyState,
+  FIELD,
+  Panel,
+  ProgressBar,
+  Select,
+} from "@/components/ui";
+import { formatDate, formatNumber } from "@/lib/format";
 import type { MessageKey } from "@/lib/i18n";
 // Type-only: `lib/admin` reaches for node:sqlite and must never reach the
 // client bundle. `import type` is erased at compile time.
@@ -254,25 +262,16 @@ export function ProjectsPanel({
       </label>
 
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={submit}
-          className="rounded-xl bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800 disabled:opacity-60 dark:bg-navy-600"
-        >
+        <Button type="button" disabled={busy} onClick={submit}>
           {busy
             ? t("admin.creating")
             : editing === null
               ? t("admin.create")
               : t("admin.save")}
-        </button>
-        <button
-          type="button"
-          onClick={close}
-          className="muted rounded-xl border px-4 py-2.5 text-sm font-medium transition hover:opacity-80"
-        >
+        </Button>
+        <Button type="button" variant="secondary" onClick={close}>
           {t("admin.cancel")}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -292,20 +291,23 @@ export function ProjectsPanel({
       )}
 
       {!creating && editing === null && (
-        <button
+        <Button
           type="button"
+          icon="plus"
           onClick={() => {
             setValues(EMPTY);
             setCreating(true);
           }}
-          className="flex items-center gap-2 rounded-xl bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800 dark:bg-navy-600"
         >
-          <Icon name="plus" className="size-4" />
           {t("admin.newProject")}
-        </button>
+        </Button>
       )}
 
-      {creating && <Panel title={t("admin.newProject")}>{form}</Panel>}
+      {creating && (
+        <Panel title={t("admin.newProject")}>
+          <div className="p-4 lg:p-5">{form}</div>
+        </Panel>
+      )}
 
       {projects.length === 0 && !creating ? (
         <EmptyState
@@ -317,21 +319,20 @@ export function ProjectsPanel({
           {projects.map((project) =>
             editing === project.id ? (
               <div key={project.id} className="sm:col-span-2 xl:col-span-3">
-                <Panel title={project.name}>{form}</Panel>
+<Panel title={project.name}>
+                  <div className="p-4 lg:p-5">{form}</div>
+                </Panel>
               </div>
             ) : (
-              <Panel key={project.id}>
+              <Panel key={project.id} className="p-4 lg:p-5">
+                {/* The number is the one assembly.uz gives the project, so the
+                    panel and the public site can be read side by side. */}
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="muted font-mono text-[11px] font-semibold uppercase tracking-wide">
-                      {project.site_no === null
-                        ? project.code
-                        : `${String(project.site_no).padStart(2, "0")} · ${project.code}`}
-                    </p>
-                    <p className="mt-0.5 truncate text-sm font-semibold">
-                      {project.name}
-                    </p>
-                  </div>
+                  <p className="muted font-mono text-[11px] font-semibold uppercase tracking-wide">
+                    {project.site_no === null
+                      ? project.code
+                      : `${String(project.site_no).padStart(2, "0")} · ${project.code}`}
+                  </p>
                   <Badge
                     className={
                       project.status === "FAOL"
@@ -345,44 +346,92 @@ export function ProjectsPanel({
                   </Badge>
                 </div>
 
+                <h3 className="mt-1 text-sm font-semibold leading-snug">
+                  {project.name}
+                </h3>
+
+                {/* Two lines, always: a clamp here keeps the row of cards level
+                    without stretching any of them to a common height. */}
                 {project.description && (
-                  <p className="muted mt-2 line-clamp-3 text-xs">
+                  <p className="muted mt-1.5 line-clamp-2 text-xs leading-relaxed">
                     {project.description}
                   </p>
                 )}
 
-                <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <dt className="muted">{t("admin.projectProgress")}</dt>
-                    <dd className="font-semibold tabular-nums">
+                <div className="mt-4">
+                  <div className="mb-1.5 flex items-baseline justify-between gap-2">
+                    <span className="muted text-[11px] font-semibold uppercase tracking-wide">
+                      {t("admin.projectProgress")}
+                    </span>
+                    <span className="text-xs font-semibold tabular-nums">
                       {project.progress}%
-                    </dd>
+                    </span>
                   </div>
-                  <div>
-                    <dt className="muted">{t("admin.projectTasks")}</dt>
-                    <dd className="font-semibold tabular-nums">
-                      {project.tasks}
-                    </dd>
-                  </div>
-                  <div className="col-span-2">
-                    <dt className="muted">{t("admin.projectOwner")}</dt>
-                    <dd className="truncate font-medium">
+                  <ProgressBar
+                    value={project.progress}
+                    tone={
+                      project.progress >= 100 ? "bg-emerald-500" : "bg-navy-600"
+                    }
+                  />
+                </div>
+
+                {/* Label/value rather than "3 tasks": four languages, four
+                    plural rules, and none of them worth encoding here. */}
+                <dl className="mt-4 space-y-1.5 text-xs">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <dt className="muted shrink-0">{t("admin.projectOwner")}</dt>
+                    <dd
+                      className={`truncate text-right font-medium ${
+                        project.owner_name ? "" : "muted"
+                      }`}
+                    >
                       {project.owner_name ?? t("admin.noOwner")}
                     </dd>
                   </div>
+
+                  <div className="flex items-baseline justify-between gap-3">
+                    <dt className="muted shrink-0">{t("admin.projectTasks")}</dt>
+                    <dd className="text-right font-medium tabular-nums">
+                      {project.tasks}
+                    </dd>
+                  </div>
+
+                  {project.deadline && (
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="muted shrink-0">
+                        {t("admin.projectDeadline")}
+                      </dt>
+                      <dd className="text-right font-medium tabular-nums">
+                        {formatDate(project.deadline)}
+                      </dd>
+                    </div>
+                  )}
+
+                  {project.budget > 0 && (
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="muted shrink-0">
+                        {t("admin.projectBudget")}
+                      </dt>
+                      <dd className="text-right font-medium tabular-nums">
+                        {formatNumber(project.budget)}
+                      </dd>
+                    </div>
+                  )}
                 </dl>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setValues(toForm(project));
-                    setEditing(project.id);
-                    setCreating(false);
-                  }}
-                  className="muted mt-3 rounded-xl border px-3 py-2 text-xs font-medium transition hover:opacity-80"
-                >
-                  {t("admin.edit")}
-                </button>
+                <div className="mt-4 border-t pt-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setValues(toForm(project));
+                      setEditing(project.id);
+                      setCreating(false);
+                    }}
+                  >
+                    {t("admin.edit")}
+                  </Button>
+                </div>
               </Panel>
             ),
           )}
