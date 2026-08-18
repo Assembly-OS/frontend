@@ -27,12 +27,14 @@ import type {
   AuditMessage,
   ConversationSummary,
   GroupOverview,
+  ProjectRow,
   StaffRow,
 } from "@/lib/admin";
 import type { DbStats, DevEvent, OnlineUser, SystemInfo } from "@/lib/dev";
 import type { AgentSpec } from "@/lib/agents/registry";
 import type { ProposalView, RunRow } from "@/lib/agents/orchestrator";
 import { AgentsPanel } from "./agents-panel";
+import { ProjectsPanel } from "./projects-panel";
 
 /** Maps a server error code onto a message the administrator can act on. */
 const ERRORS: Record<string, MessageKey> = {
@@ -397,6 +399,7 @@ function AuditBubble({
 export function AdminClient({
   staff,
   managers,
+  projects,
   stats,
   online,
   events,
@@ -410,6 +413,7 @@ export function AdminClient({
 }: {
   staff: StaffRow[];
   managers: { id: number; label: string }[];
+  projects: ProjectRow[];
   stats: DbStats;
   online: OnlineUser[];
   events: DevEvent[];
@@ -424,7 +428,7 @@ export function AdminClient({
   const t = useT();
   const router = useRouter();
 
-  const [tab, setTab] = useState<"staff" | "chats" | "agents" | "panel">(
+  const [tab, setTab] = useState<"staff" | "projects" | "chats" | "agents" | "panel">(
     "staff",
   );
   // The open conversation, and its messages once fetched on demand — threads
@@ -624,7 +628,7 @@ export function AdminClient({
       />
 
       <div className="mb-5 flex gap-1 rounded-xl bg-[var(--surface)] p-1 sm:w-fit">
-        {(["staff", "chats", "agents", "panel"] as const).map((value) => (
+        {(["staff", "projects", "chats", "agents", "panel"] as const).map((value) => (
           <button
             key={value}
             type="button"
@@ -637,7 +641,9 @@ export function AdminClient({
           >
             {value === "staff"
               ? t("admin.tabStaff")
-              : value === "chats"
+              : value === "projects"
+                ? t("admin.tabProjects")
+                : value === "chats"
                 ? t("admin.tabChats")
                 : value === "agents"
                   ? t("admin.tabAgents")
@@ -825,6 +831,8 @@ export function AdminClient({
             </div>
           </Panel>
         </div>
+      ) : tab === "projects" ? (
+        <ProjectsPanel projects={projects} owners={managers} />
       ) : tab === "agents" ? (
         <AgentsPanel
           agents={agents}

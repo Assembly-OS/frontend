@@ -223,3 +223,41 @@ export function activeRaisCount(): number {
     )?.c ?? 0,
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Projects                                                           */
+/* ------------------------------------------------------------------ */
+
+export interface ProjectRow {
+  id: number;
+  code: string;
+  name: string;
+  description: string | null;
+  status: string;
+  progress: number;
+  budget: number;
+  owner_id: number | null;
+  owner_name: string | null;
+  deadline: string | null;
+  site_no: number | null;
+  created_at: string;
+  /** Assignments filed under this project. */
+  tasks: number;
+}
+
+/**
+ * Every project, in the order the public site lists them. `site_no` is the
+ * number shown on assembly.uz; projects added later have none, so they sort
+ * after the numbered ones rather than jumping to the front.
+ */
+export function projects(): ProjectRow[] {
+  return all<ProjectRow>(
+    `SELECT l.id, l.code, l.name, l.description, l.status, l.progress,
+            l.budget, l.owner_id, u.full_name AS owner_name,
+            l.deadline, l.site_no, l.created_at,
+            (SELECT COUNT(*) FROM tasks t WHERE t.loyiha_id = l.id) AS tasks
+       FROM loyihalar l
+       LEFT JOIN users u ON u.id = l.owner_id
+      ORDER BY l.site_no IS NULL, l.site_no, l.name`,
+  );
+}

@@ -5,6 +5,7 @@ import {
   allConversations,
   allGroups,
   managerOptions,
+  projects,
   staff,
 } from "@/lib/admin";
 import { dbStats, onlineUsers, recentEvents, systemInfo } from "@/lib/dev";
@@ -60,6 +61,7 @@ export default async function AdminPage() {
       <main className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
         <AdminClient
           staff={staff()}
+          projects={projects()}
           managers={managerOptions()}
           stats={dbStats()}
           online={onlineUsers()}
