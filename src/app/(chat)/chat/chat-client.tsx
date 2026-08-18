@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useT } from "@/components/i18n-provider";
 import { Icon } from "@/components/icons";
+import { Lightbox } from "@/components/lightbox";
 import { onPresence, onTyping } from "@/components/realtime-bus";
 import {
   formatBytes,
@@ -1402,14 +1403,18 @@ function AttachmentView({
   mine: boolean;
   t: (key: MessageKey) => string;
 }) {
+  const [viewing, setViewing] = useState<{ src: string; alt: string } | null>(
+    null,
+  );
   const url = `/api/files/${message.id}`;
 
   if (message.kind === "photo") {
+    const caption = message.file_name ?? t("chat.photo");
     return (
-      <a
-        href={url}
-        target="_blank"
-        rel="noreferrer"
+      <>
+      <button
+        type="button"
+        onClick={() => setViewing({ src: url, alt: caption })}
         className="block overflow-hidden rounded-xl"
       >
         {/* Plain <img>: next/image would proxy through the optimizer, which
@@ -1420,11 +1425,20 @@ function AttachmentView({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={url}
-          alt={message.file_name ?? t("chat.photo")}
+          alt={caption}
           loading="lazy"
           className="h-auto max-h-[15rem] w-auto max-w-full object-contain"
         />
-      </a>
+      </button>
+      {viewing && (
+        <Lightbox
+          src={viewing.src}
+          alt={viewing.alt}
+          label={t("chat.closeImage")}
+          onClose={() => setViewing(null)}
+        />
+      )}
+      </>
     );
   }
 

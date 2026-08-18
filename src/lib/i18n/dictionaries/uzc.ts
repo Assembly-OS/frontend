@@ -197,6 +197,7 @@ const uzc: Dictionary = {
   "chat.you": "Сиз",
   "chat.attach": "Бириктириш",
   "chat.photo": "Расм",
+  "chat.closeImage": "Расмни ёпиш",
   "chat.file": "Файл",
   "chat.voice": "Овозли хабар",
   "chat.record": "Овозли хабар ёзиш",

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useT } from "@/components/i18n-provider";
 import { Icon } from "@/components/icons";
+import { Lightbox } from "@/components/lightbox";
 import {
   Badge,
   EmptyState,
@@ -324,7 +325,9 @@ function AuditBubble({
   busy: boolean;
 }) {
   const t = useT();
+  const [viewing, setViewing] = useState(false);
   const url = `/api/files/${message.id}`;
+  const caption = message.file_name ?? t("chat.photo");
 
   return (
     <li className="flex gap-3 px-5 py-3">
@@ -339,16 +342,26 @@ function AuditBubble({
         </p>
 
         {message.kind === "photo" && (
-          <a href={url} target="_blank" rel="noreferrer">
-            {/* Plain <img>: the optimizer fetches without the admin cookie. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={url}
-              alt={message.file_name ?? ""}
-              loading="lazy"
-              className="mt-1.5 h-auto max-h-40 w-auto max-w-full rounded-lg object-contain"
-            />
-          </a>
+          <>
+            <button type="button" onClick={() => setViewing(true)}>
+              {/* Plain <img>: the optimizer fetches without the admin cookie. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url}
+                alt={message.file_name ?? ""}
+                loading="lazy"
+                className="mt-1.5 h-auto max-h-40 w-auto max-w-full rounded-lg object-contain"
+              />
+            </button>
+            {viewing && (
+              <Lightbox
+                src={url}
+                alt={caption}
+                label={t("chat.closeImage")}
+                onClose={() => setViewing(false)}
+              />
+            )}
+          </>
         )}
         {message.kind === "voice" && (
           <span className="mt-1.5 flex items-center gap-2">

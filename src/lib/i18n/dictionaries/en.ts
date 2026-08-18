@@ -197,6 +197,7 @@ const en: Dictionary = {
   "chat.you": "You",
   "chat.attach": "Attach",
   "chat.photo": "Photo",
+  "chat.closeImage": "Close image",
   "chat.file": "File",
   "chat.voice": "Voice message",
   "chat.record": "Record a voice message",

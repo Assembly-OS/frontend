@@ -197,6 +197,7 @@ const ru: Dictionary = {
   "chat.you": "Вы",
   "chat.attach": "Прикрепить",
   "chat.photo": "Фото",
+  "chat.closeImage": "Закрыть изображение",
   "chat.file": "Файл",
   "chat.voice": "Голосовое сообщение",
   "chat.record": "Записать голосовое",

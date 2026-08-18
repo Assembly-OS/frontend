@@ -195,6 +195,7 @@ const uz = {
   "chat.you": "Siz",
   "chat.attach": "Biriktirish",
   "chat.photo": "Rasm",
+  "chat.closeImage": "Rasmni yopish",
   "chat.file": "Fayl",
   "chat.voice": "Ovozli xabar",
   "chat.record": "Ovozli xabar yozish",
