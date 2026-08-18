@@ -330,6 +330,8 @@ const uz = {
   "admin.newPassword": "Yangi parol",
   "admin.passwordSet": "Parol o'rnatildi",
   "admin.copyNow": "Hozir nusxa oling — parol boshqa ko'rsatilmaydi",
+  "admin.issued": "Berilgan parollar",
+  "admin.dismiss": "Yopish",
   "admin.confirmDeactivate": "Ushbu xodim tizimga kira olmaydi. Davom etasizmi?",
   "admin.never": "hech qachon",
   "admin.lastSeen": "Oxirgi tashrif",

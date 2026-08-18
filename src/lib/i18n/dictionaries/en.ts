@@ -332,6 +332,8 @@ const en: Dictionary = {
   "admin.newPassword": "New password",
   "admin.passwordSet": "Password set",
   "admin.copyNow": "Copy it now — it will not be shown again",
+  "admin.issued": "Issued passwords",
+  "admin.dismiss": "Dismiss",
   "admin.confirmDeactivate": "This person will lose access to the system. Continue?",
   "admin.never": "never",
   "admin.lastSeen": "Last seen",

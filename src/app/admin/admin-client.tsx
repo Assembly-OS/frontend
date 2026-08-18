@@ -444,11 +444,25 @@ export function AdminClient({
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(
     null,
   );
-  // A freshly generated password, shown once — it is never stored in the clear.
-  const [revealed, setRevealed] = useState<{
-    login: string;
-    password: string;
-  } | null>(null);
+  /**
+   * Passwords issued during this panel session, newest first.
+   *
+   * They are shown here and nowhere else: the database keeps a scrypt hash, so
+   * a password that leaves this list cannot be recovered, only replaced. That
+   * is why the list accumulates instead of holding the last one — resetting
+   * five people in a row should leave five credentials to hand out, not four
+   * lost ones. It lives in component state, so a reload clears it.
+   */
+  const [issued, setIssued] = useState<
+    { login: string; password: string; name: string }[]
+  >([]);
+
+  function issue(login: string, password: string, name: string) {
+    setIssued((current) => [
+      { login, password, name },
+      ...current.filter((entry) => entry.login !== login),
+    ]);
+  }
 
   const activeCount = staff.filter((person) => person.is_active === 1).length;
 
@@ -489,7 +503,7 @@ export function AdminClient({
       department: values.department || null,
     });
     if (ok) {
-      setRevealed({ login: values.login, password: values.password });
+      issue(values.login, values.password, values.fullName);
       setNotice({ ok: true, text: t("admin.created") });
       setValues(EMPTY);
       setCreating(false);
@@ -522,7 +536,7 @@ export function AdminClient({
       password,
     });
     if (ok) {
-      setRevealed({ login: person.login, password });
+      issue(person.login, password, person.full_name);
       setNotice({ ok: true, text: t("admin.passwordSet") });
     }
   }
@@ -590,7 +604,6 @@ export function AdminClient({
   function startEdit(person: StaffRow) {
     setCreating(false);
     setEditing(person.id);
-    setRevealed(null);
     setValues({
       fullName: person.full_name,
       login: person.login,
@@ -616,8 +629,7 @@ export function AdminClient({
               onClick={() => {
                 setValues({ ...EMPTY, password: newPassword() });
                 setCreating(true);
-                setRevealed(null);
-              }}
+                          }}
               className="flex items-center gap-2 rounded-xl bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800 dark:bg-navy-600"
             >
               <Icon name="plus" className="size-4" />
@@ -664,14 +676,36 @@ export function AdminClient({
         </p>
       )}
 
-      {revealed && (
+      {issued.length > 0 && (
         <div className="mb-4 rounded-xl border border-gold-500/40 bg-gold-500/10 px-4 py-3">
-          <p className="text-sm font-semibold">
-            <span className="font-mono">{revealed.login}</span>
-            {" · "}
-            <span className="font-mono">{revealed.password}</span>
-          </p>
-          <p className="muted mt-1 text-xs">{t("admin.copyNow")}</p>
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-xs font-semibold uppercase tracking-wide">
+              {t("admin.issued")}
+            </p>
+            <button
+              type="button"
+              onClick={() => setIssued([])}
+              className="muted text-xs font-medium transition hover:opacity-80"
+            >
+              {t("admin.dismiss")}
+            </button>
+          </div>
+
+          <ul className="mt-2 space-y-1.5">
+            {issued.map((entry) => (
+              <li
+                key={entry.login}
+                className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm"
+              >
+                <span className="font-mono font-semibold">{entry.login}</span>
+                <span className="muted">·</span>
+                <span className="font-mono font-semibold">{entry.password}</span>
+                <span className="muted truncate text-xs">{entry.name}</span>
+              </li>
+            ))}
+          </ul>
+
+          <p className="muted mt-2 text-xs">{t("admin.copyNow")}</p>
         </div>
       )}
 

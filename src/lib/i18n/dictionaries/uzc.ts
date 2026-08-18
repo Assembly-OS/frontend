@@ -332,6 +332,8 @@ const uzc: Dictionary = {
   "admin.newPassword": "Янги парол",
   "admin.passwordSet": "Парол ўрнатилди",
   "admin.copyNow": "Ҳозир нусха олинг — парол бошқа кўрсатилмайди",
+  "admin.issued": "Берилган пароллар",
+  "admin.dismiss": "Ёпиш",
   "admin.confirmDeactivate": "Ушбу ходим тизимга кира олмайди. Давом этасизми?",
   "admin.never": "ҳеч қачон",
   "admin.lastSeen": "Охирги ташриф",

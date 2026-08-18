@@ -332,6 +332,8 @@ const ru: Dictionary = {
   "admin.newPassword": "Новый пароль",
   "admin.passwordSet": "Пароль установлен",
   "admin.copyNow": "Скопируйте сейчас — пароль больше не будет показан",
+  "admin.issued": "Выданные пароли",
+  "admin.dismiss": "Скрыть",
   "admin.confirmDeactivate": "Сотрудник потеряет доступ к системе. Продолжить?",
   "admin.never": "никогда",
   "admin.lastSeen": "Был(а) в сети",
