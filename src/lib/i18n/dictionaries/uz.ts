@@ -334,6 +334,7 @@ const uz = {
   "admin.taskEvents": "Jurnal",
   "admin.taskStage": "{n}-bosqich / {of}",
   "admin.taskDeleted": "Topshiriq o'chirildi",
+  "admin.deleteTask": "Topshiriqni o'chirish",
   "admin.confirmDeleteTask": "{code} butunlay o'chiriladi — jurnaldagi {events} yozuv bilan birga. Davom etasizmi?",
   "admin.noProjectShort": "Loyihasiz",
   "admin.delete": "O'chirish",

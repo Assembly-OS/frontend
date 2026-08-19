@@ -336,6 +336,7 @@ const en: Dictionary = {
   "admin.taskEvents": "Log",
   "admin.taskStage": "Stage {n} of {of}",
   "admin.taskDeleted": "Assignment deleted",
+  "admin.deleteTask": "Delete assignment",
   "admin.confirmDeleteTask": "{code} will be deleted permanently — along with {events} log entries. Continue?",
   "admin.noProjectShort": "No project",
   "admin.delete": "Delete",

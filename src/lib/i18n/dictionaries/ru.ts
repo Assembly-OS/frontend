@@ -336,6 +336,7 @@ const ru: Dictionary = {
   "admin.taskEvents": "Журнал",
   "admin.taskStage": "Этап {n} из {of}",
   "admin.taskDeleted": "Поручение удалено",
+  "admin.deleteTask": "Удалить поручение",
   "admin.confirmDeleteTask": "{code} будет удалено безвозвратно — вместе с {events} записями журнала. Продолжить?",
   "admin.noProjectShort": "Без проекта",
   "admin.delete": "Удалить",

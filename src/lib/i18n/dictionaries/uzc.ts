@@ -336,6 +336,7 @@ const uzc: Dictionary = {
   "admin.taskEvents": "Журнал",
   "admin.taskStage": "{n}-босқич / {of}",
   "admin.taskDeleted": "Топшириқ ўчирилди",
+  "admin.deleteTask": "Топшириқни ўчириш",
   "admin.confirmDeleteTask": "{code} бутунлай ўчирилади — журналдаги {events} ёзув билан бирга. Давом этасизми?",
   "admin.noProjectShort": "Лойиҳасиз",
   "admin.delete": "Ўчириш",

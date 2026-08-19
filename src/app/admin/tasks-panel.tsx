@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import { useT } from "@/components/i18n-provider";
 import {
   Badge,
-  Button,
   EmptyState,
   FIELD,
   Panel,
@@ -14,6 +13,7 @@ import {
   Th,
   TableWrap,
 } from "@/components/ui";
+import { Icon } from "@/components/icons";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { statusTone, TASK_STATUSES } from "@/lib/types";
 import type { MessageKey } from "@/lib/i18n";
@@ -187,15 +187,18 @@ export function TasksPanel({ tasks }: { tasks: AdminTaskRow[] }) {
                   </Td>
 
                   <Td className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={busy}
+                    {/* Same control as deleting a message in the chat audit:
+                        one destructive action per row, reached the same way. */}
+                    <button
+                      type="button"
                       onClick={() => void remove(task)}
-                      className="text-rose-600 hover:bg-rose-500/10 dark:text-rose-300"
+                      disabled={busy}
+                      title={t("admin.deleteTask")}
+                      aria-label={t("admin.deleteTask")}
+                      className="muted grid size-8 shrink-0 place-items-center rounded-lg border transition hover:text-rose-600 disabled:opacity-40"
                     >
-                      {t("admin.delete")}
-                    </Button>
+                      <Icon name="trash" className="size-4" />
+                    </button>
                   </Td>
                 </tr>
               ))}
