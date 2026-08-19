@@ -60,18 +60,18 @@ export default async function AdminPage() {
 
       <main className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
         <AdminClient
-          staff={staff()}
-          projects={projects()}
-          managers={managerOptions()}
-          stats={dbStats()}
-          online={onlineUsers()}
-          events={recentEvents(20)}
+          staff={await staff()}
+          projects={await projects()}
+          managers={await managerOptions()}
+          stats={await dbStats()}
+          online={await onlineUsers()}
+          events={await recentEvents(20)}
           system={systemInfo()}
-          chats={allConversations()}
-          groups={allGroups()}
+          chats={await allConversations()}
+          groups={await allGroups()}
           agents={AGENTS}
-          agentRuns={recentRuns(25)}
-          agentProposals={proposals(null, 60)}
+          agentRuns={await recentRuns(25)}
+          agentProposals={await proposals(null, 60)}
           llmConfigured={isConfigured()}
         />
       </main>

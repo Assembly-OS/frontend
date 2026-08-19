@@ -19,7 +19,7 @@ export default async function AssistantPage() {
   return (
     <AssistantClient
       llmConfigured={isConfigured()}
-      initial={chatHistory(user.id).map((turn) => ({
+      initial={(await chatHistory(user.id)).map((turn) => ({
         role: turn.role,
         content: turn.content,
         refs: turn.refs,

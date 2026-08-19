@@ -12,7 +12,7 @@ export default async function TeamPage() {
 
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
-  const team = teamStats(user.id);
+  const team = await teamStats(user.id);
 
   return (
     <>

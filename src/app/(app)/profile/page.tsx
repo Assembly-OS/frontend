@@ -2,7 +2,7 @@ import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
 import { counters, userById } from "@/lib/queries";
 import { receivesTasks } from "@/lib/types";
-import { get } from "@/lib/db";
+import { get } from "@/lib/pg";
 import { PageHeader, Panel, StatCard } from "@/components/ui";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { initials } from "@/lib/format";
@@ -14,11 +14,11 @@ export default async function ProfilePage() {
   const t = createTranslator(locale);
   // Only queried for the people who actually have a queue.
   const ownsTasks = receivesTasks(user.role);
-  const counts = ownsTasks ? counters(user.id) : null;
+  const counts = ownsTasks ? await counters(user.id) : null;
 
-  const manager = user.manager_id ? userById(user.manager_id) : undefined;
+  const manager = user.manager_id ? await userById(user.manager_id) : undefined;
   const uyushma = user.uyushma_id
-    ? get<{ name: string }>(
+    ? await get<{ name: string }>(
         "SELECT name FROM uyushmalar WHERE id = ?",
         user.uyushma_id,
       )

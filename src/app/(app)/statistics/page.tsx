@@ -30,11 +30,11 @@ export default async function StatisticsPage() {
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
 
-  const rows = uyushmaStats();
-  const totals = orgTotals();
-  const breakdown = taskStatusBreakdown();
+  const rows = await uyushmaStats();
+  const totals = await orgTotals();
+  const breakdown = await taskStatusBreakdown();
   const totalTasks = breakdown.reduce((sum, slice) => sum + slice.count, 0);
-  const projectRows = projects();
+  const projectRows = await projects();
 
   const avgRate = Math.round(
     rows.reduce((sum, row) => sum + percent(row.tasks_done, row.tasks_total), 0) /

@@ -5,9 +5,9 @@ import { ChatPlaceholder, ConversationList } from "./chat-client";
 
 export default async function ChatIndexPage() {
   const user = await requireUser();
-  const list = conversations(user.id);
-  const people = directory(user.id);
-  const chairman = rais();
+  const list = await conversations(user.id);
+  const people = await directory(user.id);
+  const chairman = await rais();
 
   // Logins that are online right now, among everyone shown in the rail.
   const onlineLogins = [...list, ...people]
@@ -20,7 +20,7 @@ export default async function ChatIndexPage() {
       <div className="h-full min-h-0 lg:hidden">
         <ConversationList
           conversations={list}
-          groups={userGroups(user.id)}
+          groups={await userGroups(user.id)}
           people={people}
           raisLogin={chairman?.login ?? null}
           meLogin={user.login}

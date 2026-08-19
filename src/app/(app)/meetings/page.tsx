@@ -1,4 +1,4 @@
-import { all } from "@/lib/db";
+import { all } from "@/lib/pg";
 import { createTranslator } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
 import { canSubmitToAi } from "@/lib/agents/access";
@@ -51,7 +51,7 @@ export default async function MeetingsPage() {
   // Cyrillic Uzbek reads the latin text — same language, other script.
   const textLang = locale === "ru" ? "ru" : locale === "en" ? "en" : "uz";
 
-  const rows = all<Row>(
+  const rows = await all<Row>(
     `SELECT m.id, m.title, m.created_at, m.duration, m.lang,
             u.full_name AS owner,
             c.summary, c.key_points, c.decisions

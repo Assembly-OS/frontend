@@ -38,17 +38,19 @@ export default async function CompanyPage({
   const t = createTranslator(locale);
 
   const companyId = parseId((await params).id);
-  const company = companyId ? companyById(companyId) : undefined;
+  const company = companyId ? await companyById(companyId) : undefined;
   if (!company) notFound();
 
   const lang = locale === "ru" ? "ru" : locale === "en" ? "en" : "uz";
-  const meetings = meetingsOf(company.id, lang);
-  const agreements = agreementsOf(company.id);
-  const contacts = contactsOf(company.id);
+  const meetings = await meetingsOf(company.id, lang);
+  const agreements = await agreementsOf(company.id);
+  const contacts = await contactsOf(company.id);
   // What the meeting analyses concluded about this company: the history it
   // wrote and what it thinks is worth proposing next. Same row, same page —
   // the separate "AI suggestions" screen exists only for browsing all of them.
-  const insight = partnersFor(lang).find((entry) => entry.id === company.id);
+  const insight = (await partnersFor(lang)).find(
+    (entry) => entry.id === company.id,
+  );
   const writable = canWrite(user);
   const removable = canDelete(user);
 
@@ -181,7 +183,7 @@ export default async function CompanyPage({
           <CompanyPanels
             companyId={company.id}
             contacts={contacts}
-            staff={assignableUsers(user).map((person) => ({
+            staff={(await assignableUsers(user)).map((person) => ({
               id: person.id,
               full_name: person.full_name,
             }))}

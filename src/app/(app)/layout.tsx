@@ -16,7 +16,7 @@ export default async function AppLayout({
   const locale = await currentLocale(user);
   const dict = getDictionary(locale);
   const t = createTranslator(locale);
-  const c = counters(user.id);
+  const c = await counters(user.id);
 
   const manager = isManager(user.role);
 
@@ -167,7 +167,7 @@ export default async function AppLayout({
       >
         {children}
       </AppShell>
-      <LiveUpdates initial={pulse(user)} />
+      <LiveUpdates initial={await pulse(user)} />
     </I18nProvider>
   );
 }

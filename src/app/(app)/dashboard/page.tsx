@@ -34,11 +34,11 @@ export default async function DashboardPage() {
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
 
-  const c = counters(user.id);
-  const recent = recentTasks(user.id, 6);
+  const c = await counters(user.id);
+  const recent = await recentTasks(user.id, 6);
   const manager = isManager(user.role);
   const receives = receivesTasks(user.role);
-  const chairman = rais();
+  const chairman = await rais();
 
   return (
     <>
@@ -249,14 +249,14 @@ function QuickLink({
   );
 }
 
-function TeamPanel({
+async function TeamPanel({
   userId,
   t,
 }: {
   userId: number;
   t: (key: MessageKey) => string;
 }) {
-  const team = teamStats(userId).slice(0, 6);
+  const team = (await teamStats(userId)).slice(0, 6);
   return (
     <Panel
       title={t("dashboard.myTeam")}
@@ -285,10 +285,10 @@ function TeamPanel({
   );
 }
 
-function CommandCentre({ t }: { t: (key: MessageKey) => string }) {
-  const totals = orgTotals();
-  const depts = departmentStats();
-  const top = [...uyushmaStats()]
+async function CommandCentre({ t }: { t: (key: MessageKey) => string }) {
+  const totals = await orgTotals();
+  const depts = await departmentStats();
+  const top = [...(await uyushmaStats())]
     .sort((a, b) => b.tasks_total - a.tasks_total)
     .slice(0, 5);
 

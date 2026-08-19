@@ -11,10 +11,10 @@ export default async function ChatLayout({
 }) {
   const user = await requireUser();
   const locale = await currentLocale(user);
-  const list = conversations(user.id);
-  const people = directory(user.id);
-  const groups = userGroups(user.id);
-  const chairman = rais();
+  const list = await conversations(user.id);
+  const people = await directory(user.id);
+  const groups = await userGroups(user.id);
+  const chairman = await rais();
 
   const onlineLogins = [...list, ...people]
     .filter((person) => isOnline(person.id))

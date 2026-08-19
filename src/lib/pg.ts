@@ -1,6 +1,13 @@
-import fs from "node:fs";
-import path from "node:path";
-import { Pool } from "pg";
+import { Pool, types } from "pg";
+
+// COUNT(*) and SUM(integer) are bigint in Postgres, and node-postgres hands
+// bigint back as a string so a value past 2^53 cannot be lost silently. Every
+// count in this codebase is a row tally that fits in a double, and the code
+// reading it is typed `number`: without this, `totals.created ? … : 0` sees
+// the string '0' — truthy — and divides by it. Register the parser once, here,
+// rather than wrapping 179 queries in Number().
+types.setTypeParser(20, Number); // int8
+types.setTypeParser(1700, Number); // numeric
 
 /**
  * PostgreSQL access layer.
@@ -127,21 +134,14 @@ export function now(): string {
 }
 
 /**
- * Applies the schema at boot, exactly once per process.
+ * There is deliberately no `migrate()` here.
  *
- * Every statement is `IF NOT EXISTS`, so a second run is a no-op rather than
- * an error — which is what lets the web app and the bot both start without
- * either having to know whether the other went first.
+ * The backend owns schema creation and migration; DEPLOYMENT.md says so, and
+ * Compose waits for backend readiness before this service starts. The frontend
+ * image also ships only the built app — there is no `db/` directory in it — so
+ * a migrate that reads `db/schema.postgres.sql` finds nothing. That is not a
+ * hypothetical: the SQLite version of this file reached for `db/schema.sql`
+ * and every page touching the database failed in production. Leaving the
+ * function out means code copied from backend fails to compile here rather
+ * than failing on a user's first request.
  */
-let ready: Promise<void> | null = null;
-
-export function migrate(): Promise<void> {
-  if (!ready) {
-    ready = (async () => {
-      const file = path.join(process.cwd(), "db", "schema.postgres.sql");
-      if (!fs.existsSync(file)) return;
-      await pool().query(fs.readFileSync(file, "utf8"));
-    })();
-  }
-  return ready;
-}

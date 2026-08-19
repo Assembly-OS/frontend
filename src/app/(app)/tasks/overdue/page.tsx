@@ -16,8 +16,8 @@ export default async function OverduePage() {
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
 
-  const received = receivesTasks(user.role) ? overdueReceived(user.id) : [];
-  const sent = isManager(user.role) ? overdueSent(user.id) : [];
+  const received = receivesTasks(user.role) ? await overdueReceived(user.id) : [];
+  const sent = isManager(user.role) ? await overdueSent(user.id) : [];
   const total = received.length + sent.length;
 
   return (

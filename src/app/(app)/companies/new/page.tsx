@@ -11,7 +11,7 @@ export default async function NewCompanyPage() {
   if (!canWrite(user)) redirect("/companies");
   return (
     <CompanyForm
-      staff={assignableUsers(user).map((person) => ({
+      staff={(await assignableUsers(user)).map((person) => ({
         id: person.id,
         full_name: person.full_name,
       }))}

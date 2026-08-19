@@ -28,7 +28,7 @@ export default async function ChatShell({
   return (
     <I18nProvider locale={locale} dict={getDictionary(locale)}>
       {children}
-      <LiveUpdates initial={pulse(user)} />
+      <LiveUpdates initial={await pulse(user)} />
     </I18nProvider>
   );
 }

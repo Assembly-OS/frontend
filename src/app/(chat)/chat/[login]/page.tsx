@@ -3,7 +3,7 @@ import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
 import { thread, THREAD_PAGE, userByLogin } from "@/lib/queries";
 import { isOnline } from "@/lib/presence";
-import { now, run } from "@/lib/db";
+import { now, run } from "@/lib/pg";
 import { Thread } from "../chat-client";
 
 export default async function ThreadPage({
@@ -13,13 +13,13 @@ export default async function ThreadPage({
 }) {
   const { login } = await params;
   const user = await requireUser();
-  const partner = userByLogin(decodeURIComponent(login));
+  const partner = await userByLogin(decodeURIComponent(login));
 
   if (!partner) notFound();
   if (partner.id === user.id) redirect("/chat");
 
   // Opening the thread clears its unread badge.
-  run(
+  await run(
     "UPDATE messages SET read_at = ? WHERE to_user_id = ? AND from_user_id = ? AND read_at IS NULL",
     now(),
     user.id,
@@ -28,7 +28,7 @@ export default async function ThreadPage({
 
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
-  const initial = thread(user.id, partner.id);
+  const initial = await thread(user.id, partner.id);
 
   return (
     <Thread

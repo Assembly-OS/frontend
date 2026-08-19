@@ -15,11 +15,11 @@ import { AGREEMENT_TONE } from "../companies/tone";
  * dashboard: what is already late, then what is due today. Everything else is
  * a click away and does not belong on the front page.
  */
-export function CrmBlock({ user, t }: { user: User; t: Translator }) {
-  const totals = crmTotals();
+export async function CrmBlock({ user, t }: { user: User; t: Translator }) {
+  const totals = await crmTotals();
   // A manager is accountable for the Assembly's commitments; everyone else is
   // shown their own, which is the only list they can act on.
-  const board = agreementBoard(canWrite(user) ? undefined : user.id);
+  const board = await agreementBoard(canWrite(user) ? undefined : user.id);
   const attention = [...board.overdue, ...board.todayList].slice(0, 6);
 
   return (

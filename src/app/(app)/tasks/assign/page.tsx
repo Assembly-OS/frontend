@@ -20,7 +20,7 @@ export default async function AssignPage() {
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
 
-  const candidates: Candidate[] = assignableUsers(user).map((candidate) => ({
+  const candidates: Candidate[] = (await assignableUsers(user)).map((candidate) => ({
     id: candidate.id,
     login: candidate.login,
     full_name: candidate.full_name,
@@ -29,8 +29,8 @@ export default async function AssignPage() {
     group: groupOf(candidate, user.id),
   }));
 
-  const sent = assignedTasks(user.id);
-  const projectOptions = projects().map((project) => ({
+  const sent = await assignedTasks(user.id);
+  const projectOptions = (await projects()).map((project) => ({
     id: project.id,
     code: project.code,
     name: project.name,

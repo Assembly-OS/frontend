@@ -12,7 +12,7 @@ export default async function ExecutePage() {
 
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
-  const tasks = executeTasks(user.id);
+  const tasks = await executeTasks(user.id);
 
   return (
     <>

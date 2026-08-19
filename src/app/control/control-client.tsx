@@ -82,10 +82,9 @@ export function ControlClient({
         <h2 className="mb-1 text-sm font-semibold">Обслуживание</h2>
         <p className="muted mb-4 text-xs">Инструменты БД и рантайма. Опасные — с подтверждением.</p>
         <div className="flex flex-wrap gap-2">
-          <MaintBtn label="WAL checkpoint" icon="grid" busy={busy === "maint.walCheckpoint"}
-            onClick={() => act("maint.walCheckpoint", { type: "maint.walCheckpoint" })} />
-          <MaintBtn label="VACUUM (сжать БД)" icon="grid" busy={busy === "maint.vacuum"}
-            onClick={() => act("maint.vacuum", { type: "maint.vacuum" }, "Выполнить VACUUM? База будет перестроена.")} />
+          {/* WAL checkpoint и VACUUM были обслуживанием файловой базы. Postgres
+              делает это сам (autovacuum), и обработчики на бэкенде удалены —
+              кнопки возвращали бы «Неизвестное действие». */}
           <MaintBtn label="Сбросить присутствие" icon="users" busy={busy === "maint.clearPresence"}
             onClick={() => act("maint.clearPresence", { type: "maint.clearPresence" })} />
           <MaintBtn label="Пересоздать БД (демо)" icon="alert" danger busy={busy === "maint.reseed"}

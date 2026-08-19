@@ -21,7 +21,9 @@ export default async function AgreementsPage() {
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
   const writable = canWrite(user);
-  const board = agreementBoard(writable ? undefined : user.id);
+  const board = await agreementBoard(writable ? undefined : user.id);
+  // Awaited here rather than in the markup: JSX has nowhere to put an await.
+  const companyOptions = await companies();
 
   const groups: [MessageKey, AgreementRow[], boolean][] = [
     ["crm.overdue", board.overdue, true],
@@ -38,11 +40,11 @@ export default async function AgreementsPage() {
         // The composer owns the header: the button sits beside the title and
         // the form opens full width beneath it, off one piece of state.
         <NewAgreement
-          companies={companies().map((company) => ({
+          companies={companyOptions.map((company) => ({
             id: company.id,
             name: company.name,
           }))}
-          staff={assignableUsers(user).map((person) => ({
+          staff={(await assignableUsers(user)).map((person) => ({
             id: person.id,
             full_name: person.full_name,
           }))}

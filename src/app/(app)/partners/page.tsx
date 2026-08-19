@@ -39,7 +39,7 @@ export default async function PartnersPage() {
   const t = createTranslator(locale);
   // Cyrillic Uzbek reads the latin text — same language, other script.
   const lang = locale === "ru" ? "ru" : locale === "en" ? "en" : "uz";
-  const partners = partnersFor(lang);
+  const partners = await partnersFor(lang);
 
   return (
     <>

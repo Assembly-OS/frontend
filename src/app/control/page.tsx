@@ -28,9 +28,9 @@ function uptime(sec: number): string {
 export default async function ControlPage() {
   if (!(await hasDevAccess())) notFound();
 
-  const stats = dbStats();
-  const online = onlineUsers();
-  const events = recentEvents(15);
+  const stats = await dbStats();
+  const online = await onlineUsers();
+  const events = await recentEvents(15);
   const sys = systemInfo();
 
   const tiles = [
@@ -120,9 +120,9 @@ export default async function ControlPage() {
 
       {/* Interactive management + maintenance */}
       <ControlClient
-        users={adminUsers()}
-        tasks={adminTasks(40)}
-        assignees={assigneeOptions()}
+        users={await adminUsers()}
+        tasks={await adminTasks(40)}
+        assignees={await assigneeOptions()}
         roles={ROLES}
         statuses={TASK_STATUSES}
       />

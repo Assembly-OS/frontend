@@ -19,5 +19,5 @@ export default async function ReportsPage({
   const raw = Number((await searchParams).week);
   const offset = Number.isInteger(raw) ? Math.min(0, Math.max(-52, raw)) : 0;
 
-  return <ReportClient report={weeklyReport(offset)} />;
+  return <ReportClient report={await weeklyReport(offset)} />;
 }

@@ -17,18 +17,19 @@ export default async function AiPage() {
   const locale = await currentLocale(user);
   const lang = locale === "ru" ? "ru" : locale === "en" ? "en" : "uz";
 
+  const recent = await recentMeetings(lang, 20);
   return (
     <AiClient
       // A head sees what was drafted for their department, whoever submitted
       // the document it came from.
-      proposals={proposalsForReviewer(user.id)}
-      runs={runsForOwner(user.id)}
-      staff={assignableUsers(user).map((person) => ({
+      proposals={await proposalsForReviewer(user.id)}
+      runs={await runsForOwner(user.id)}
+      staff={(await assignableUsers(user)).map((person) => ({
         id: person.id,
         login: person.login,
         full_name: person.full_name,
       }))}
-      meetings={recentMeetings(lang, 20).map((meeting) => ({
+      meetings={recent.map((meeting) => ({
         id: meeting.id,
         title: meeting.title,
         date: meeting.held_at ?? meeting.created_at,

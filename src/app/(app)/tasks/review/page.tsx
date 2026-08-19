@@ -12,7 +12,7 @@ export default async function ReviewPage() {
 
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
-  const tasks = reviewTasks(user.id);
+  const tasks = await reviewTasks(user.id);
 
   return (
     <>

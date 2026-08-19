@@ -19,14 +19,14 @@ export default async function GroupThreadPage({
   const user = await requireUser();
   const groupId = Number((await params).id);
 
-  const group = Number.isInteger(groupId) ? groupById(groupId) : undefined;
+  const group = Number.isInteger(groupId) ? await groupById(groupId) : undefined;
   // A non-member is told nothing about whether the group exists.
-  if (!group || !isGroupMember(groupId, user.id)) notFound();
+  if (!group || !(await isGroupMember(groupId, user.id))) notFound();
 
   // Opening the group clears its badge for this member only.
-  if (markGroupRead(groupId, user.id)) publish(user.id);
+  if (await markGroupRead(groupId, user.id)) publish(user.id);
 
-  const initial = groupThread(groupId);
+  const initial = await groupThread(groupId);
 
   return (
     <Thread
@@ -35,7 +35,7 @@ export default async function GroupThreadPage({
       group={{
         id: group.id,
         title: group.title,
-        members: groupMembers(groupId).length,
+        members: (await groupMembers(groupId)).length,
       }}
       initial={initial}
       initialHasMore={initial.length === THREAD_PAGE}

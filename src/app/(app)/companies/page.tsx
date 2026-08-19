@@ -25,7 +25,7 @@ export default async function CompaniesPage({
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
   const filters = await searchParams;
-  const rows = companies({ status: filters.status, query: filters.q });
+  const rows = await companies({ status: filters.status, query: filters.q });
 
   const tabs = ["ALL", "ACTIVE", "POTENTIAL", "PAUSED", "ARCHIVED"] as const;
   const current = filters.status ?? "ALL";

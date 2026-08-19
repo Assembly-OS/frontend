@@ -12,7 +12,7 @@ export default async function InboxPage() {
 
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
-  const tasks = inboxTasks(user.id);
+  const tasks = await inboxTasks(user.id);
 
   return (
     <>

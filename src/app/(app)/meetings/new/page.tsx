@@ -16,13 +16,14 @@ export default async function NewMeetingPage({
   if (!canWrite(user)) redirect("/meetings");
   const preset = Number((await searchParams).company);
 
+  const companyOptions = await companies();
   return (
     <MeetingForm
-      companies={companies().map((company) => ({
+      companies={companyOptions.map((company) => ({
         id: company.id,
         name: company.name,
       }))}
-      staff={assignableUsers(user).map((person) => ({
+      staff={(await assignableUsers(user)).map((person) => ({
         id: person.id,
         full_name: person.full_name,
       }))}
