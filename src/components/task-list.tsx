@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useT } from "./i18n-provider";
 import { Badge, Button, EmptyState } from "./ui";
 import { Icon } from "./icons";
+import { StageStrip } from "./stage-strip";
 import { daysUntil, formatDate, formatDateTime } from "@/lib/format";
 import {
   priorityTone,
@@ -61,6 +62,17 @@ const ACTION_LABEL: Record<Action, MessageKey> = {
   approve: "action.approve",
   return: "action.return",
 };
+
+/**
+ * Approving the middle of a chain hands the work on; approving the last stage
+ * closes it. Same button, two different consequences — so it has to say which
+ * one, or whoever approves stage 1 of 3 will believe the job is finished.
+ */
+function actionLabel(action: Action, task: TaskRow): MessageKey {
+  if (action === "approve" && task.current_stage < task.stage_count)
+    return "chain.approveNext";
+  return ACTION_LABEL[action];
+}
 
 const ACTION_STYLE: Record<Action, string> = {
   accept: "bg-navy-900 text-white hover:bg-navy-800 dark:bg-navy-600 dark:hover:bg-navy-500",
@@ -179,6 +191,12 @@ function TaskCard({
             )}
           </div>
 
+          <StageStrip
+            names={(task.stage_names ?? "").split(",").filter(Boolean)}
+            current={task.current_stage}
+            total={task.stage_count}
+          />
+
           <h3 className="mt-2 text-[15px] font-semibold leading-snug">
             {task.title}
           </h3>
@@ -231,6 +249,35 @@ function TaskCard({
 
       {open && (
         <div className="mt-4 space-y-3 border-t pt-4 text-sm">
+          {/* What the person before handed in. Without it a handover means
+              nothing: the next person cannot see what they are continuing. */}
+          {task.stage_count > 1 && task.prev_result_comment && (
+            <div>
+              <p className="muted mb-1 text-[11px] font-semibold uppercase tracking-wide">
+                {t("chain.prevResult")}
+              </p>
+              <p className="whitespace-pre-line rounded-xl bg-[var(--surface)] px-3 py-2 leading-relaxed">
+                {task.prev_result_comment}
+              </p>
+              {/* Outside the overline: a person's name set in all caps over
+                  two lines reads as shouting, not as attribution. */}
+              {task.prev_stage_name && (
+                <p className="muted mt-1 text-[11px]">
+                  {t("chain.prevBy")}: {task.prev_stage_name}
+                </p>
+              )}
+            </div>
+          )}
+          {task.stage_instruction && (
+            <div>
+              <p className="muted mb-1 text-[11px] font-semibold uppercase tracking-wide">
+                {t("chain.myPart")}
+              </p>
+              <p className="whitespace-pre-line leading-relaxed">
+                {task.stage_instruction}
+              </p>
+            </div>
+          )}
           {task.description && (
             <div>
               <p className="muted mb-1 text-[11px] font-semibold uppercase tracking-wide">
@@ -279,7 +326,7 @@ function TaskCard({
               onClick={() => void fire(pendingAction, comment)}
               className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition disabled:opacity-60 ${ACTION_STYLE[pendingAction]}`}
             >
-              {t(ACTION_LABEL[pendingAction])}
+              {t(actionLabel(pendingAction, task))}
             </button>
             <button
               type="button"
@@ -302,7 +349,7 @@ function TaskCard({
               onClick={() => onAction(action)}
               className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition disabled:opacity-60 ${ACTION_STYLE[action]}`}
             >
-              {t(ACTION_LABEL[action])}
+              {t(actionLabel(action, task))}
             </button>
           ))}
 

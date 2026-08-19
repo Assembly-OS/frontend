@@ -4,6 +4,7 @@ import { hasAdminSession, ADMIN_LOGIN } from "@/lib/admin-auth";
 import {
   allConversations,
   allGroups,
+  adminTasks,
   managerOptions,
   projects,
   staff,
@@ -62,6 +63,7 @@ export default async function AdminPage() {
         <AdminClient
           staff={await staff()}
           projects={await projects()}
+          tasks={await adminTasks()}
           managers={await managerOptions()}
           stats={await dbStats()}
           online={await onlineUsers()}

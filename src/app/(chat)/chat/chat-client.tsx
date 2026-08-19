@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useT } from "@/components/i18n-provider";
 import { Icon } from "@/components/icons";
+import { Linkify } from "@/components/linkify";
 import { Lightbox } from "@/components/lightbox";
 import { onPresence, onTyping } from "@/components/realtime-bus";
 import {
@@ -1123,7 +1124,7 @@ export function Thread({
                       message.kind === "text" ? "" : "mt-2"
                     } ${framed ? "px-2" : ""}`}
                   >
-                    {message.body}
+                    <Linkify text={message.body} />
                   </p>
                 )}
                 <p
@@ -1175,7 +1176,7 @@ export function Thread({
                 )}
                 {message.body && (
                   <p className="whitespace-pre-wrap break-words leading-relaxed">
-                    {message.body}
+                    <Linkify text={message.body} />
                   </p>
                 )}
                 <p className="mt-1 flex items-center justify-end gap-2 text-[10px] text-white/70">

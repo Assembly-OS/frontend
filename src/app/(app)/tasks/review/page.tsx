@@ -8,11 +8,15 @@ import { redirect } from "next/navigation";
 
 export default async function ReviewPage() {
   const user = await requireUser();
-  if (!isManager(user.role)) redirect("/dashboard");
+  const tasks = await reviewTasks(user.id);
+  // Managers always have this page. Anybody else reaches it only while a stage
+  // of a chain actually names them as its reviewer — `reviewTasks` scopes to
+  // exactly that, and the transition itself is authorised server-side, so this
+  // is a route becoming reachable rather than a permission being widened.
+  if (!isManager(user.role) && tasks.length === 0) redirect("/dashboard");
 
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
-  const tasks = await reviewTasks(user.id);
 
   return (
     <>

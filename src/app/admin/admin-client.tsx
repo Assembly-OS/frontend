@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useT } from "@/components/i18n-provider";
 import { Icon } from "@/components/icons";
+import { Linkify } from "@/components/linkify";
 import { Lightbox } from "@/components/lightbox";
 import {
   Badge,
@@ -28,6 +29,7 @@ import type {
   AuditMessage,
   ConversationSummary,
   GroupOverview,
+  AdminTaskRow,
   ProjectRow,
   StaffRow,
 } from "@/lib/admin";
@@ -36,6 +38,7 @@ import type { AgentSpec } from "@/lib/agents/registry";
 import type { ProposalView, RunRow } from "@/lib/agents/orchestrator";
 import { AgentsPanel } from "./agents-panel";
 import { ProjectsPanel } from "./projects-panel";
+import { TasksPanel } from "./tasks-panel";
 
 /** Maps a server error code onto a message the administrator can act on. */
 const ERRORS: Record<string, MessageKey> = {
@@ -388,7 +391,7 @@ function AuditBubble({
 
         {message.body && (
           <p className="mt-1 whitespace-pre-wrap break-words text-sm">
-            {message.body}
+            <Linkify text={message.body} />
           </p>
         )}
       </div>
@@ -414,6 +417,7 @@ export function AdminClient({
   staff,
   managers,
   projects,
+  tasks,
   stats,
   online,
   events,
@@ -428,6 +432,7 @@ export function AdminClient({
   staff: StaffRow[];
   managers: { id: number; label: string }[];
   projects: ProjectRow[];
+  tasks: AdminTaskRow[];
   stats: DbStats;
   online: OnlineUser[];
   events: DevEvent[];
@@ -442,7 +447,7 @@ export function AdminClient({
   const t = useT();
   const router = useRouter();
 
-  const [tab, setTab] = useState<"staff" | "projects" | "chats" | "agents" | "panel">(
+  const [tab, setTab] = useState<"staff" | "projects" | "tasks" | "chats" | "agents" | "panel">(
     "staff",
   );
   // The open conversation, and its messages once fetched on demand — threads
@@ -661,7 +666,7 @@ export function AdminClient({
       />
 
       <div className="mb-5 flex gap-1 rounded-xl bg-[var(--surface)] p-1 sm:w-fit">
-        {(["staff", "projects", "chats", "agents", "panel"] as const).map((value) => (
+        {(["staff", "projects", "tasks", "chats", "agents", "panel"] as const).map((value) => (
           <button
             key={value}
             type="button"
@@ -676,7 +681,9 @@ export function AdminClient({
               ? t("admin.tabStaff")
               : value === "projects"
                 ? t("admin.tabProjects")
-                : value === "chats"
+                : value === "tasks"
+                  ? t("admin.tabTasks")
+                  : value === "chats"
                 ? t("admin.tabChats")
                 : value === "agents"
                   ? t("admin.tabAgents")
@@ -898,6 +905,8 @@ export function AdminClient({
             </div>
           </Panel>
         </div>
+      ) : tab === "tasks" ? (
+        <TasksPanel tasks={tasks} />
       ) : tab === "projects" ? (
         <ProjectsPanel projects={projects} owners={managers} />
       ) : tab === "agents" ? (

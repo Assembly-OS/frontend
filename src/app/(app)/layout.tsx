@@ -72,6 +72,18 @@ export default async function AppLayout({
         group: "nav.group.work",
       },
     );
+  } else if (c.onReview > 0) {
+    // A stage of a chain can name its own reviewer — normally the person whose
+    // turn is next, who is very often a rank-and-file employee. Without this
+    // the work they are meant to check has nowhere to appear, and the
+    // "prepare, then check" chain the feature exists for cannot finish.
+    nav.push({
+      href: "/tasks/review",
+      labelKey: "nav.review",
+      icon: "check",
+      badge: c.onReview,
+      group: "nav.group.work",
+    });
   }
 
   nav.push({
