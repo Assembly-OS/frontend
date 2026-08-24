@@ -1,3 +1,4 @@
+import { seesEverything } from "@/lib/oversight";
 import Link from "next/link";
 import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
@@ -137,7 +138,9 @@ export default async function DashboardPage() {
       </div>
 
       {/* Rais command centre */}
-      {user.role === "RAIS" && <CommandCentre t={t} />}
+      {/* The chairman's view of the whole Assembly — and his assistant's,
+          who is asked the same questions about it. */}
+      {seesEverything(user) && <CommandCentre t={t} />}
 
       {/* The CRM at a glance, plus whatever is about to go wrong. */}
       <CrmBlock user={user} t={t} />
