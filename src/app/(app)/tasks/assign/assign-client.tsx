@@ -15,6 +15,8 @@ import {
   statusTone,
   type Priority,
   type TaskRow,
+  TASK_SCOPES,
+  type TaskScope,
 } from "@/lib/types";
 import type { MessageKey } from "@/lib/i18n";
 
@@ -81,6 +83,7 @@ export function AssignForm({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<Priority>("ORTA");
+  const [scope, setScope] = useState<TaskScope>("HAFTALIK");
   const [deadline, setDeadline] = useState("");
   const [loyihaId, setLoyihaId] = useState<string>("");
   const [busy, setBusy] = useState(false);
@@ -169,6 +172,7 @@ export function AssignForm({
         title,
         description,
         priority,
+        scope,
         deadline: deadline || null,
         loyihaId: loyihaId ? Number(loyihaId) : null,
         // One shape or the other, never both: a chain of one is what a plain
@@ -197,6 +201,7 @@ export function AssignForm({
     setDescription("");
     setDeadline("");
     setLoyihaId("");
+    setScope("HAFTALIK");
     setToUserId(null);
     setChain([]);
     setChainMode(false);
@@ -374,6 +379,24 @@ export function AssignForm({
         />
 
         <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
+          {/* Kind before priority: it decides which list the assignment lands
+              in, and priority only orders it once it is there. */}
+          <label className="block">
+            <span className="muted mb-1.5 block text-[11px] font-semibold uppercase tracking-wide">
+              {t("form.scope")}
+            </span>
+            <Select
+              value={scope}
+              onChange={(e) => setScope(e.target.value as TaskScope)}
+            >
+              {TASK_SCOPES.map((value) => (
+                <option key={value} value={value}>
+                  {t(`scope.${value}` as MessageKey)}
+                </option>
+              ))}
+            </Select>
+          </label>
+
           <label className="block">
             <span className="muted mb-1.5 block text-[11px] font-semibold uppercase tracking-wide">
               {t("form.priority")}

@@ -6,7 +6,7 @@ import { useT } from "./i18n-provider";
 import { Badge, Button, EmptyState } from "./ui";
 import { Icon } from "./icons";
 import { StageStrip } from "./stage-strip";
-import { daysUntil, formatDate, formatDateTime } from "@/lib/format";
+import { daysUntil, formatDate, formatDateTime, formatBytes } from "@/lib/format";
 import {
   priorityTone,
   statusTone,
@@ -105,6 +105,9 @@ function TaskCard({
   const [open, setOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<Action | null>(null);
   const [comment, setComment] = useState("");
+  // Only handing in a result carries a file, so the picker lives with the
+  // comment box and is cleared with it.
+  const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -140,18 +143,40 @@ function TaskCard({
   async function fire(action: Action, withComment: string) {
     setBusy(true);
     setError(null);
-    const response = await fetch(`/api/tasks/${task.id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, comment: withComment }),
-    });
+
+    // Multipart only when there is a file: the route reads both shapes, and a
+    // bare verb has no reason to travel as a form.
+    let response: Response;
+    if (action === "submit" && file) {
+      const form = new FormData();
+      form.append("action", action);
+      form.append("comment", withComment);
+      form.append("file", file);
+      response = await fetch(`/api/tasks/${task.id}`, {
+        method: "POST",
+        body: form,
+      });
+    } else {
+      response = await fetch(`/api/tasks/${task.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, comment: withComment }),
+      });
+    }
+
     setBusy(false);
     if (!response.ok) {
-      setError(t("common.error"));
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      setError(
+        data.error === "TOO_LARGE" ? t("tasks.fileTooLarge") : t("common.error"),
+      );
       return;
     }
     setPendingAction(null);
     setComment("");
+    setFile(null);
     router.refresh();
   }
 
@@ -183,6 +208,14 @@ function TaskCard({
             <Badge className={priorityTone(task.priority)}>
               {t(`priority.${task.priority}` as MessageKey)}
             </Badge>
+            {/* Only the long kind is marked. Most work is weekly, and a chip on
+                every card would say the same thing everywhere and so say
+                nothing. */}
+            {task.scope === "UMUMIY" && (
+              <Badge className="bg-sky-50 text-sky-700 ring-sky-600/20 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-400/30">
+                {t("scope.UMUMIY")}
+              </Badge>
+            )}
             {overdue && (
               <Badge className="bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-400/30">
                 <Icon name="alert" className="mr-1 size-3" />
@@ -296,6 +329,20 @@ function TaskCard({
               </p>
             </div>
           )}
+          {task.result_file_name && (
+            <a
+              href={`/api/tasks/${task.id}/result-file`}
+              className="flex items-center gap-2 rounded-xl border px-3 py-2 transition hover:bg-[var(--surface)]"
+            >
+              <Icon name="file" className="size-4 shrink-0" />
+              <span className="min-w-0 flex-1 truncate">
+                {task.result_file_name}
+              </span>
+              <span className="muted shrink-0 text-xs tabular-nums">
+                {formatBytes(task.result_file_size)}
+              </span>
+            </a>
+          )}
           <p className="muted text-xs">
             {t("tasks.created")}: {formatDateTime(task.created_at)}
             {task.submitted_at
@@ -307,6 +354,24 @@ function TaskCard({
 
       {pendingAction && (
         <div className="mt-4 space-y-2 border-t pt-4">
+          {pendingAction === "submit" && (
+            <label className="flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm transition hover:bg-[var(--surface)]">
+              <Icon name="paperclip" className="size-4 shrink-0" />
+              <span className={`min-w-0 flex-1 truncate ${file ? "" : "muted"}`}>
+                {file ? file.name : t("tasks.attachResult")}
+              </span>
+              {file && (
+                <span className="muted shrink-0 text-xs tabular-nums">
+                  {formatBytes(file.size)}
+                </span>
+              )}
+              <input
+                type="file"
+                className="sr-only"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              />
+            </label>
+          )}
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
