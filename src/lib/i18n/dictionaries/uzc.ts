@@ -153,6 +153,7 @@ const uzc: Dictionary = {
   "chain.step.done": "Бажарди",
   "chain.step.now": "Ҳозир шу кишида",
   "chain.step.waiting": "Навбатда",
+  "chain.whoDoesWhat": "Ким нима қилади",
   "chain.prevResult": "Олдинги босқич натижаси",
   "chain.prevBy": "Бажарди",
   "chain.myPart": "Сизнинг вазифангиз",
@@ -604,6 +605,8 @@ const uzc: Dictionary = {
 
   "crm.isHead": "Rahbar",
   "report.title": "Ҳафталик ҳисобот",
+  "report.weekly": "Ҳафталик",
+  "report.monthly": "Ойлик",
   "report.subtitle": "Ким қандай ишлади",
   "report.prevWeek": "Олдинги ҳафта",
   "report.nextWeek": "Кейинги ҳафта",

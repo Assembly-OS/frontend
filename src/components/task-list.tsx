@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useT } from "./i18n-provider";
 import { Badge, Button, EmptyState } from "./ui";
 import { Icon } from "./icons";
+import { StageDetail } from "./stage-detail";
 import { StageStrip } from "./stage-strip";
 import { daysUntil, formatDate, formatDateTime, formatBytes } from "@/lib/format";
 import {
@@ -329,6 +330,7 @@ function TaskCard({
               </p>
             </div>
           )}
+          {task.stage_count > 1 && <StageDetail taskId={task.id} />}
           {task.result_file_name && (
             <a
               href={`/api/tasks/${task.id}/result-file`}

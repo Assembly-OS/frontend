@@ -10,14 +10,21 @@ export const dynamic = "force-dynamic";
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string }>;
+  searchParams: Promise<{ week?: string; period?: string }>;
 }) {
   const user = await requireUser();
   if (!isManager(user.role)) redirect("/dashboard");
 
-  // `?week=-1` is last week. Clamped: a year back is as far as it goes.
-  const raw = Number((await searchParams).week);
-  const offset = Number.isInteger(raw) ? Math.min(0, Math.max(-52, raw)) : 0;
+  const filters = await searchParams;
+  const period = filters.period === "month" ? "month" : "week";
 
-  return <ReportClient report={await weeklyReport(offset)} />;
+  // `?week=-1` is the previous stretch, whichever kind is selected. Clamped to
+  // a year back either way: fifty-two weeks, twelve months.
+  const raw = Number(filters.week);
+  const limit = period === "month" ? -12 : -52;
+  const offset = Number.isInteger(raw) ? Math.min(0, Math.max(limit, raw)) : 0;
+
+  return (
+    <ReportClient report={await weeklyReport(offset, period)} period={period} />
+  );
 }

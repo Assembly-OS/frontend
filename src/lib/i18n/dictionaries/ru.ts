@@ -153,6 +153,7 @@ const ru: Dictionary = {
   "chain.step.done": "Выполнил",
   "chain.step.now": "Сейчас здесь",
   "chain.step.waiting": "Ждёт очереди",
+  "chain.whoDoesWhat": "Кто что делает",
   "chain.prevResult": "Результат предыдущего этапа",
   "chain.prevBy": "Выполнил",
   "chain.myPart": "Ваша часть работы",
@@ -604,6 +605,8 @@ const ru: Dictionary = {
 
   "crm.isHead": "Руководитель",
   "report.title": "Отчёт за неделю",
+  "report.weekly": "Неделя",
+  "report.monthly": "Месяц",
   "report.subtitle": "Кто и как работал",
   "report.prevWeek": "Предыдущая неделя",
   "report.nextWeek": "Следующая неделя",

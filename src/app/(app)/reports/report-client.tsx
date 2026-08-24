@@ -12,7 +12,13 @@ function worked(row: WeeklyRow): boolean {
   return row.actions > 0 || row.messages > 0;
 }
 
-export function ReportClient({ report }: { report: WeeklyReport }) {
+export function ReportClient({
+  report,
+  period,
+}: {
+  report: WeeklyReport;
+  period: "week" | "month";
+}) {
   const t = useT();
   const { week, totals, rows } = report;
 
@@ -25,9 +31,28 @@ export function ReportClient({ report }: { report: WeeklyReport }) {
         title={t("report.title")}
         description={t("report.subtitle")}
         action={
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {/* Kind first, then which one: switching period resets to the
+                current stretch, because week -7 and month -7 are different
+                places and carrying the number across lands somewhere nobody
+                asked for. */}
+            <div className="mr-1 flex gap-1 rounded-xl bg-[var(--surface)] p-1">
+              {(["week", "month"] as const).map((value) => (
+                <Link
+                  key={value}
+                  href={`/reports?period=${value}`}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                    period === value
+                      ? "bg-navy-900 text-white dark:bg-navy-600"
+                      : "muted hover:opacity-80"
+                  }`}
+                >
+                  {t(value === "month" ? "report.monthly" : "report.weekly")}
+                </Link>
+              ))}
+            </div>
             <Link
-              href={`/reports?week=${week.offset - 1}`}
+              href={`/reports?period=${period}&week=${week.offset - 1}`}
               className="muted grid size-9 place-items-center rounded-xl border transition hover:bg-[var(--surface)]"
               aria-label={t("report.prevWeek")}
             >
@@ -37,7 +62,7 @@ export function ReportClient({ report }: { report: WeeklyReport }) {
               {week.label}
             </span>
             <Link
-              href={`/reports?week=${Math.min(0, week.offset + 1)}`}
+              href={`/reports?period=${period}&week=${Math.min(0, week.offset + 1)}`}
               aria-disabled={week.offset >= 0}
               className={`muted grid size-9 place-items-center rounded-xl border transition hover:bg-[var(--surface)] ${
                 week.offset >= 0 ? "pointer-events-none opacity-40" : ""

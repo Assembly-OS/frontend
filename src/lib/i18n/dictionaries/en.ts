@@ -153,6 +153,7 @@ const en: Dictionary = {
   "chain.step.done": "Done",
   "chain.step.now": "With them now",
   "chain.step.waiting": "Waiting",
+  "chain.whoDoesWhat": "Who does what",
   "chain.prevResult": "Result of the previous stage",
   "chain.prevBy": "Done by",
   "chain.myPart": "Your part",
@@ -604,6 +605,8 @@ const en: Dictionary = {
 
   "crm.isHead": "Head",
   "report.title": "Weekly report",
+  "report.weekly": "Week",
+  "report.monthly": "Month",
   "report.subtitle": "Who did what",
   "report.prevWeek": "Previous week",
   "report.nextWeek": "Next week",

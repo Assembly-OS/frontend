@@ -151,6 +151,7 @@ const uz = {
   "chain.step.done": "Bajardi",
   "chain.step.now": "Hozir shu kishida",
   "chain.step.waiting": "Navbatda",
+  "chain.whoDoesWhat": "Kim nima qiladi",
   "chain.prevResult": "Oldingi bosqich natijasi",
   "chain.prevBy": "Bajardi",
   "chain.myPart": "Sizning vazifangiz",
@@ -602,6 +603,8 @@ const uz = {
 
   "crm.isHead": "Rahbar",
   "report.title": "Haftalik hisobot",
+  "report.weekly": "Haftalik",
+  "report.monthly": "Oylik",
   "report.subtitle": "Kim qanday ishladi",
   "report.prevWeek": "Oldingi hafta",
   "report.nextWeek": "Keyingi hafta",
