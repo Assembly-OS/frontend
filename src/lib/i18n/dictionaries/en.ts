@@ -306,6 +306,15 @@ const en: Dictionary = {
   "profile.myLogin": "Your login",
   "profile.loginHint": "Colleagues can message you using this login",
 
+  "staff.title": "Staff administration",
+  "staff.desc": "Add a colleague, issue a login and password, manage access",
+  "staff.forbidden": "This section is for the chairman and his assistant",
+  "staff.credentials": "Sign-in details",
+  "staff.copy": "Copy",
+  "staff.copied": "Copied",
+  "staff.noMatch": "No such colleague",
+  "staff.you": "You",
+
   "tasks.overdue.title": "Overdue assignments",
   "tasks.overdue.desc":
     "Past their deadline and still open. Clear these first.",

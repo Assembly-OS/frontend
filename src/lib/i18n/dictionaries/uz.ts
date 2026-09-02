@@ -304,6 +304,15 @@ const uz = {
   "profile.myLogin": "Sizning loginingiz",
   "profile.loginHint": "Hamkasblar sizga shu login orqali yozishlari mumkin",
 
+  "staff.title": "Xodimlar boshqaruvi",
+  "staff.desc": "Yangi xodim qo'shing, login va parol bering, kirishni boshqaring",
+  "staff.forbidden": "Bu bo'limga faqat rais va uning yordamchisi kira oladi",
+  "staff.credentials": "Kirish ma'lumotlari",
+  "staff.copy": "Nusxalash",
+  "staff.copied": "Nusxalandi",
+  "staff.noMatch": "Bunday xodim topilmadi",
+  "staff.you": "Siz",
+
   "tasks.overdue.title": "Muddati o'tgan topshiriqlar",
   "tasks.overdue.desc":
     "Muddati o'tib ketgan va hali yopilmagan topshiriqlar. Avval shularni yoping.",

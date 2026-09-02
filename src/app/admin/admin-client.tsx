@@ -6,22 +6,20 @@ import { useT } from "@/components/i18n-provider";
 import { Icon } from "@/components/icons";
 import { Linkify } from "@/components/linkify";
 import { Lightbox } from "@/components/lightbox";
+import { Badge, EmptyState, PageHeader, Panel, StatCard } from "@/components/ui";
 import {
-  Badge,
-  EmptyState,
-  FIELD,
-  PageHeader,
-  Panel,
-  Select,
-  StatCard,
-} from "@/components/ui";
+  EMPTY_STAFF,
+  newPassword,
+  StaffForm,
+  type StaffValues,
+} from "@/components/staff-form";
 import {
   formatBytes,
   formatChatTime,
   formatDateTime,
   formatDuration,
 } from "@/lib/format";
-import { DEPARTMENTS, ROLES, statusTone, type Role } from "@/lib/types";
+import { statusTone } from "@/lib/types";
 import type { MessageKey } from "@/lib/i18n";
 // Type-only: these modules reach for node:sqlite and node:fs, and must never
 // be pulled into the client bundle. `import type` is erased at compile time.
@@ -51,13 +49,6 @@ const ERRORS: Record<string, MessageKey> = {
   SELF: "admin.errSelf",
 };
 
-/** Readable random password — no look-alike glyphs to mistype over the phone. */
-function newPassword(): string {
-  const alphabet = "abcdefghijkmnpqrstuvwxyzACDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(12));
-  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
-}
-
 /** Stands in for an attachment whose caption is empty, so no preview is blank. */
 function kindLabel(
   kind: AuditMessage["kind"],
@@ -80,239 +71,6 @@ function uptime(seconds: number): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-interface FormValues {
-  fullName: string;
-  login: string;
-  password: string;
-  role: Role;
-  department: string;
-  position: string;
-  managerId: string;
-  phone: string;
-  email: string;
-}
-
-const EMPTY: FormValues = {
-  fullName: "",
-  login: "",
-  password: "",
-  role: "ISHCHI",
-  department: "",
-  position: "",
-  managerId: "",
-  phone: "",
-  email: "",
-};
-
-/* ------------------------------------------------------------------ */
-/* The one form, worn by both "add" and "edit"                        */
-/* ------------------------------------------------------------------ */
-
-function StaffForm({
-  mode,
-  values,
-  managers,
-  busy,
-  onChange,
-  onSubmit,
-  onCancel,
-}: {
-  mode: "create" | "edit";
-  values: FormValues;
-  managers: { id: number; label: string }[];
-  busy: boolean;
-  onChange: (next: FormValues) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-}) {
-  const t = useT();
-  const set = <K extends keyof FormValues>(key: K, value: FormValues[K]) =>
-    onChange({ ...values, [key]: value });
-
-  const label = "mb-1.5 block text-sm font-medium";
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit();
-      }}
-      className="grid grid-cols-[minmax(0,1fr)] gap-4 p-5 sm:grid-cols-2"
-    >
-      <div className="sm:col-span-2">
-        <label className={label} htmlFor="fullName">
-          {t("admin.fullName")} *
-        </label>
-        <input
-          id="fullName"
-          value={values.fullName}
-          onChange={(e) => set("fullName", e.target.value)}
-          className={FIELD}
-          autoComplete="off"
-          required
-        />
-      </div>
-
-      {/* A login is an identity other rows point at, so it is set once. */}
-      {mode === "create" && (
-        <>
-          <div>
-            <label className={label} htmlFor="login">
-              {t("admin.login")} *
-            </label>
-            <input
-              id="login"
-              value={values.login}
-              onChange={(e) => set("login", e.target.value.toLowerCase())}
-              className={`${FIELD} font-mono`}
-              placeholder="ism.familiya"
-              autoComplete="off"
-              required
-            />
-          </div>
-          <div>
-            <label className={label} htmlFor="password">
-              {t("admin.password")} *
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="password"
-                value={values.password}
-                onChange={(e) => set("password", e.target.value)}
-                className={`${FIELD} font-mono`}
-                autoComplete="new-password"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => set("password", newPassword())}
-                className="shrink-0 rounded-xl border px-3 text-sm font-medium transition hover:bg-[var(--surface)]"
-              >
-                {t("admin.generate")}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
-      <div>
-        <label className={label} htmlFor="role">
-          {t("admin.role")}
-        </label>
-        <Select
-          id="role"
-          value={values.role}
-          onChange={(e) => set("role", e.target.value as Role)}
-        >
-          {ROLES.map((role) => (
-            <option key={role} value={role}>
-              {t(`role.${role}` as MessageKey)}
-            </option>
-          ))}
-        </Select>
-      </div>
-
-      <div>
-        <label className={label} htmlFor="department">
-          {t("admin.department")}
-        </label>
-        <Select
-          id="department"
-          value={values.department}
-          onChange={(e) => set("department", e.target.value)}
-        >
-          <option value="">{t("admin.noDepartment")}</option>
-          {DEPARTMENTS.map((dept) => (
-            <option key={dept} value={dept}>
-              {t(`dept.${dept}` as MessageKey)}
-            </option>
-          ))}
-        </Select>
-      </div>
-
-      <div className="sm:col-span-2">
-        <label className={label} htmlFor="position">
-          {t("admin.position")}
-        </label>
-        <input
-          id="position"
-          value={values.position}
-          onChange={(e) => set("position", e.target.value)}
-          className={FIELD}
-          placeholder="GR bo'limi bosh mutaxassisi"
-          autoComplete="off"
-        />
-      </div>
-
-      <div className="sm:col-span-2">
-        <label className={label} htmlFor="managerId">
-          {t("admin.manager")}
-        </label>
-        <Select
-          id="managerId"
-          value={values.managerId}
-          onChange={(e) => set("managerId", e.target.value)}
-        >
-          <option value="">{t("admin.noManager")}</option>
-          {managers.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.label}
-            </option>
-          ))}
-        </Select>
-      </div>
-
-      <div>
-        <label className={label} htmlFor="phone">
-          {t("admin.phone")}
-        </label>
-        <input
-          id="phone"
-          value={values.phone}
-          onChange={(e) => set("phone", e.target.value)}
-          className={FIELD}
-          autoComplete="off"
-          inputMode="tel"
-        />
-      </div>
-
-      <div>
-        <label className={label} htmlFor="email">
-          {t("admin.email")}
-        </label>
-        <input
-          id="email"
-          type="email"
-          value={values.email}
-          onChange={(e) => set("email", e.target.value)}
-          className={FIELD}
-          autoComplete="off"
-        />
-      </div>
-
-      <div className="flex gap-2 sm:col-span-2">
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-xl bg-navy-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800 disabled:opacity-50 dark:bg-navy-600"
-        >
-          {busy
-            ? t("admin.creating")
-            : mode === "create"
-              ? t("admin.create")
-              : t("admin.save")}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-xl border px-5 py-2.5 text-sm font-medium transition hover:bg-[var(--surface)]"
-        >
-          {t("admin.cancel")}
-        </button>
-      </div>
-    </form>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /* Chat oversight                                                     */
@@ -458,7 +216,7 @@ export function AdminClient({
   const [loadingThread, setLoadingThread] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<number | null>(null);
-  const [values, setValues] = useState<FormValues>(EMPTY);
+  const [values, setValues] = useState<StaffValues>(EMPTY_STAFF);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(
     null,
@@ -524,7 +282,7 @@ export function AdminClient({
     if (ok) {
       issue(values.login, values.password, values.fullName);
       setNotice({ ok: true, text: t("admin.created") });
-      setValues(EMPTY);
+      setValues(EMPTY_STAFF);
       setCreating(false);
     }
   }
@@ -539,7 +297,7 @@ export function AdminClient({
     if (ok) {
       setNotice({ ok: true, text: t("admin.saved") });
       setEditing(null);
-      setValues(EMPTY);
+      setValues(EMPTY_STAFF);
     }
   }
 
@@ -653,7 +411,7 @@ export function AdminClient({
             <button
               type="button"
               onClick={() => {
-                setValues({ ...EMPTY, password: newPassword() });
+                setValues({ ...EMPTY_STAFF, password: newPassword() });
                 setCreating(true);
                           }}
               className="flex items-center gap-2 rounded-xl bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800 dark:bg-navy-600"
@@ -750,7 +508,7 @@ export function AdminClient({
                 onSubmit={create}
                 onCancel={() => {
                   setCreating(false);
-                  setValues(EMPTY);
+                  setValues(EMPTY_STAFF);
                 }}
               />
             </Panel>
@@ -767,7 +525,7 @@ export function AdminClient({
                 onSubmit={() => saveEdit(editing)}
                 onCancel={() => {
                   setEditing(null);
-                  setValues(EMPTY);
+                  setValues(EMPTY_STAFF);
                 }}
               />
             </Panel>

@@ -6,7 +6,10 @@ import { get } from "@/lib/pg";
 import { PageHeader, Panel, StatCard } from "@/components/ui";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { initials } from "@/lib/format";
+import { canManageStaff } from "@/lib/oversight";
+import { managerOptions, staff } from "@/lib/admin";
 import { PasswordForm } from "./password-form";
+import { StaffPanel } from "./staff-panel";
 
 export default async function ProfilePage() {
   const user = await requireUser();
@@ -15,6 +18,13 @@ export default async function ProfilePage() {
   // Only queried for the people who actually have a queue.
   const ownsTasks = receivesTasks(user.role);
   const counts = ownsTasks ? await counters(user.id) : null;
+
+  // Only the chairman and his assistant see the staff section, and only they
+  // pay for the two queries behind it.
+  const managesStaff = canManageStaff(user);
+  const [people, managers] = managesStaff
+    ? await Promise.all([staff(), managerOptions()])
+    : [null, null];
 
   const manager = user.manager_id ? await userById(user.manager_id) : undefined;
   const uyushma = user.uyushma_id
@@ -132,6 +142,14 @@ export default async function ProfilePage() {
           </Panel>
         </div>
       </div>
+
+      {/* Full width, below the personal half of the page: this is the one
+          thing here that is about other people rather than about you. */}
+      {managesStaff && (
+        <div className="mt-6">
+          <StaffPanel staff={people!} managers={managers!} selfId={user.id} />
+        </div>
+      )}
     </>
   );
 }
