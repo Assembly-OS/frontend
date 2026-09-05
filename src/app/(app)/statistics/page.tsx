@@ -10,8 +10,9 @@ import {
 } from "@/lib/queries";
 import { PageHeader, Panel, ProgressBar, StatCard } from "@/components/ui";
 import { formatDate, formatMoney, formatNumber, percent } from "@/lib/format";
-import { isManager, statusTone, TASK_STATUSES } from "@/lib/types";
+import { isManager, TASK_STATUSES } from "@/lib/types";
 import { UyushmaTable } from "./uyushma-table";
+import { PROJECT_TONE } from "../projects/tone";
 
 const STATUS_BAR: Record<string, string> = {
   YANGI: "bg-sky-500",
@@ -127,10 +128,14 @@ export default async function StatisticsPage() {
                 </p>
                 <h3 className="truncate text-sm font-semibold">{project.name}</h3>
               </div>
+              {/* Coloured by the project's own status rather than by a task
+                  status it was being translated into: with five states that
+                  mapping had started labelling a paused project "under
+                  review". */}
               <span
-                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${statusTone(
-                  project.status === "FAOL" ? "BAJARILMOQDA" : "TEKSHIRUVDA",
-                )}`}
+                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${
+                  PROJECT_TONE[project.status] ?? PROJECT_TONE.REJA
+                }`}
               >
                 {project.progress}%
               </span>
