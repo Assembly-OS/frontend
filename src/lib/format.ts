@@ -74,6 +74,17 @@ export function formatDateTime(value: string | null): string {
     : value;
 }
 
+/**
+ * Just the clock, in Assembly time.
+ *
+ * For lists already grouped under a date heading: repeating the date on every
+ * row inside "18.08.2026" says nothing and crowds out what does.
+ */
+export function formatTime(value: string): string {
+  const local = localParts(value);
+  return local ? `${local.hour}:${local.minute}` : value;
+}
+
 /** Chat bubbles: time for today, day+month otherwise. */
 export function formatChatTime(value: string): string {
   const local = localParts(value);

@@ -87,7 +87,10 @@ export default async function ProjectsPage() {
                       zero badge is a badge carrying no information. */}
                   <div className="flex shrink-0 items-center gap-3">
                     {project.awaiting_acceptance > 0 && (
-                      <span className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+                      <span
+                        title={t("proj.awaiting")}
+                        className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-300"
+                      >
                         <Icon name="clock" className="size-4" />
                         <span className="tabular-nums">
                           {project.awaiting_acceptance}
@@ -96,7 +99,10 @@ export default async function ProjectsPage() {
                       </span>
                     )}
                     {project.overdue_tasks > 0 && (
-                      <span className="flex items-center gap-1.5 text-xs font-medium text-rose-700 dark:text-rose-300">
+                      <span
+                        title={t("proj.overdue")}
+                        className="flex items-center gap-1.5 text-xs font-medium text-rose-700 dark:text-rose-300"
+                      >
                         <Icon name="alert" className="size-4" />
                         <span className="tabular-nums">
                           {project.overdue_tasks}

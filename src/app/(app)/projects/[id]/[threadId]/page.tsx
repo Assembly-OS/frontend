@@ -12,7 +12,12 @@ import {
   type EntryRow,
 } from "@/lib/project-threads";
 import { assignableUsers } from "@/lib/queries";
-import { formatBytes, formatDate, formatDateTime } from "@/lib/format";
+import {
+  formatBytes,
+  formatDate,
+  formatDateTime,
+  formatTime,
+} from "@/lib/format";
 import { Badge, EmptyState, Panel } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { AcceptanceTrail } from "@/components/acceptance";
@@ -24,6 +29,17 @@ import { EntryActions } from "./entry-actions";
 import { id as parseId } from "@/lib/validate";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Was this entry written on a different day from the one it records?
+ *
+ * Compared on the stored UTC day, which is the same day `entryDay` groups by,
+ * so the heading and this flag can never disagree.
+ */
+function entryWrittenLater(entry: EntryRow): boolean {
+  return Boolean(entry.occurred_on) && entryDay(entry) !== entry.created_at.slice(0, 10);
+}
+
 
 /**
  * One thread: everything that has happened with this counterpart, in order.
@@ -170,12 +186,24 @@ export default async function ThreadPage({
                         <span className="text-xs font-semibold">
                           {entry.author_full_name}
                         </span>
-                        <span className="muted text-[11px] tabular-nums">
-                          {formatDateTime(entry.created_at)}
-                        </span>
-                        {entry.occurred_on && (
-                          <span className="muted text-[11px]">
-                            {t("thread.recordedLater")}
+                        {/* Written on a different day from the one it is filed
+                            under — Tuesday's meeting typed up on Thursday. Only
+                            then is the writing date worth printing, and only
+                            then does the note mean anything; on the common case
+                            it repeated the heading and labelled every entry
+                            "recorded later". */}
+                        {entryWrittenLater(entry) ? (
+                          <>
+                            <span className="muted text-[11px] tabular-nums">
+                              {formatDateTime(entry.created_at)}
+                            </span>
+                            <span className="muted text-[11px]">
+                              {t("thread.recordedLater")}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="muted text-[11px] tabular-nums">
+                            {formatTime(entry.created_at)}
                           </span>
                         )}
                         {entry.edited_at && (
@@ -196,7 +224,11 @@ export default async function ThreadPage({
                         </span>
                       </div>
 
-                      {entry.body && (
+                      {/* The agreement block below repeats the text verbatim
+                          when the commitment was recorded straight from the
+                          composer, so printing the body as well said the same
+                          sentence twice. */}
+                      {entry.body && entry.body !== entry.agreement_text && (
                         <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">
                           <Linkify text={entry.body} />
                         </p>

@@ -97,6 +97,23 @@ export default async function ProjectPage({
         ))}
       </div>
 
+      {/* Full width, above the columns. Inside the third-width column the
+          strip had four cells of about eighty pixels and truncated its own
+          labels to "Проср…" — a number with no idea what it counts. */}
+      <div className="mb-6">
+        <MetricStrip
+          items={[
+            { label: t("proj.overdue"), value: pulse.tasks.overdue },
+            {
+              label: t("proj.awaiting"),
+              value: pulse.tasks.awaitingAcceptance,
+            },
+            { label: t("proj.inProgress"), value: pulse.tasks.inProgress },
+            { label: t("proj.done"), value: pulse.tasks.done },
+          ]}
+        />
+      </div>
+
       <div className="grid items-start gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Panel
@@ -133,18 +150,6 @@ export default async function ProjectPage({
         </div>
 
         <div className="space-y-6">
-          <MetricStrip
-            items={[
-              { label: t("proj.overdue"), value: pulse.tasks.overdue },
-              {
-                label: t("proj.awaiting"),
-                value: pulse.tasks.awaitingAcceptance,
-              },
-              { label: t("proj.inProgress"), value: pulse.tasks.inProgress },
-              { label: t("proj.done"), value: pulse.tasks.done },
-            ]}
-          />
-
           {/* The block the whole acceptance feature exists for: assignments
               that have been handed out and that nobody has taken on. */}
           <Panel title={t("proj.waitingTitle")}>

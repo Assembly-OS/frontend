@@ -1,6 +1,6 @@
 import { Icon } from "./icons";
 import type { Translator } from "@/lib/i18n";
-import { formatDateTime } from "@/lib/format";
+import { formatChatTime } from "@/lib/format";
 
 /**
  * What has happened to an assignment, from the sender's side.
@@ -80,9 +80,12 @@ export function AcceptanceTrail({
               }`}
             >
               {step.label}
+              {/* Time for today, day and month before that: two full
+                  datetimes side by side printed the same date twice for steps
+                  that are usually minutes apart. */}
               {step.at && (
                 <span className="muted ml-1 tabular-nums">
-                  {formatDateTime(step.at)}
+                  {formatChatTime(step.at)}
                 </span>
               )}
             </span>
@@ -111,12 +114,15 @@ export function WaitingRow({
   seen: boolean;
   t: Translator;
 }) {
+  // Stacked, not side by side. Sharing one line, the meta cluster — icon,
+  // name, state — took the width and truncated the assignment title to "Sh…",
+  // which is the one part of the row a manager needs to recognise.
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-      <p className="min-w-0 flex-1 truncate text-sm">{title}</p>
-      <p className="muted flex shrink-0 items-center gap-1.5 text-xs">
+    <div>
+      <p className="text-sm leading-snug">{title}</p>
+      <p className="muted mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs">
         <Icon name={seen ? "eye" : "clock"} className="size-3.5 shrink-0" />
-        <span>{assignee}</span>
+        <span className="truncate">{assignee}</span>
         <span aria-hidden>·</span>
         <span>{seen ? t("accept.seenNotAccepted") : t("accept.notSeenYet")}</span>
       </p>
