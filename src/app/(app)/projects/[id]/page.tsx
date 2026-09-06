@@ -15,6 +15,7 @@ import {
 import { WaitingRow } from "@/components/acceptance";
 import { AGREEMENT_TONE } from "../../companies/tone";
 import { PROJECT_TONE } from "../tone";
+import { ProjectMemory } from "@/components/project-memory";
 import { NewThread } from "./new-thread";
 import { ThreadRail } from "./thread-rail";
 import { id as parseId } from "@/lib/validate";
@@ -95,6 +96,15 @@ export default async function ProjectPage({
             <span className="font-medium">{value}</span>
           </p>
         ))}
+      </div>
+
+      {/* The memory, before the numbers. Somebody arriving with a question
+          in mind should not have to scroll past four counters to ask it. */}
+      <div className="mb-6">
+        <ProjectMemory
+          projectId={project.id}
+          scopeLabel={t("memory.scopeProject")}
+        />
       </div>
 
       {/* Full width, above the columns. Inside the third-width column the

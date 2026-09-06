@@ -25,6 +25,7 @@ import { Linkify } from "@/components/linkify";
 import { ENTRY_ICON } from "../../tone";
 import { ThreadRail } from "../thread-rail";
 import { TaskPanel } from "@/components/task-panel";
+import { ProjectMemory } from "@/components/project-memory";
 import { Composer } from "./composer";
 import { ThreadMembers } from "./members";
 import { EntryActions } from "./entry-actions";
@@ -142,6 +143,14 @@ export default async function ThreadPage({
               {thread.company_name}
             </a>
           )}
+        </div>
+
+        <div className="mb-5">
+          <ProjectMemory
+            projectId={project.id}
+            threadId={thread.id}
+            scopeLabel={t("memory.scopeThread")}
+          />
         </div>
 
         <ThreadMembers
