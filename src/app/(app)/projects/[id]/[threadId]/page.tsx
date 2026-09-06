@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 import { createTranslator } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
-import { canEditEntry } from "@/lib/project-access";
+import { canEditEntry, canManageProjects } from "@/lib/project-access";
 import {
   entriesOf,
   entryDay,
   pinnedOf,
   projectById,
   threadById,
+  threadMembers,
   threadsOf,
   type EntryRow,
 } from "@/lib/project-threads";
@@ -20,11 +21,12 @@ import {
 } from "@/lib/format";
 import { Badge, EmptyState, Panel } from "@/components/ui";
 import { Icon } from "@/components/icons";
-import { AcceptanceTrail } from "@/components/acceptance";
 import { Linkify } from "@/components/linkify";
 import { ENTRY_ICON } from "../../tone";
 import { ThreadRail } from "../thread-rail";
+import { TaskPanel } from "@/components/task-panel";
 import { Composer } from "./composer";
+import { ThreadMembers } from "./members";
 import { EntryActions } from "./entry-actions";
 import { id as parseId } from "@/lib/validate";
 
@@ -71,12 +73,17 @@ export default async function ThreadPage({
   // would happily render another project's history under this one's name.
   if (!project || !thread || thread.project_id !== project.id) notFound();
 
-  const [entries, pinned, threads, staff] = await Promise.all([
+  const [entries, pinned, threads, staff, members] = await Promise.all([
     entriesOf(thread.id),
     pinnedOf(thread.id),
     threadsOf(project.id),
     assignableUsers(user),
+    threadMembers(thread.id),
   ]);
+  const people = staff.map((person) => ({
+    id: person.id,
+    name: person.full_name,
+  }));
 
   // Grouped in one pass rather than by filtering per day: a thread with a
   // thousand entries would otherwise walk the list once for every date on it.
@@ -136,6 +143,13 @@ export default async function ThreadPage({
             </a>
           )}
         </div>
+
+        <ThreadMembers
+          threadId={thread.id}
+          members={members}
+          staff={people}
+          mayManage={canManageProjects(user)}
+        />
 
         {pinned.length > 0 && (
           <Panel title={t("thread.pinned")} className="mb-6">
@@ -283,35 +297,17 @@ export default async function ThreadPage({
                       )}
 
                       {entry.task_id && entry.task_title && (
-                        <div className="mt-2 rounded-xl border px-3 py-2">
-                          <p className="flex flex-wrap items-center gap-2 text-xs">
-                            <Badge className="bg-[var(--surface)] ring-[var(--line)]">
-                              {t("thread.task")}
-                            </Badge>
-                            <span className="font-medium">
-                              {entry.task_title}
-                            </span>
-                            {entry.task_assignee && (
-                              <span className="muted">
-                                {entry.task_assignee}
-                              </span>
-                            )}
-                            {entry.task_deadline && (
-                              <span className="muted tabular-nums">
-                                {formatDate(entry.task_deadline)}
-                              </span>
-                            )}
-                          </p>
-                          <div className="mt-1.5">
-                            <AcceptanceTrail
-                              createdAt={entry.created_at}
-                              seenAt={entry.task_seen_at}
-                              acceptedAt={entry.task_accepted_at}
-                              status={entry.task_status ?? "YANGI"}
-                              t={t}
-                            />
-                          </div>
-                        </div>
+                        <TaskPanel
+                          taskId={entry.task_id}
+                          title={entry.task_title}
+                          assignee={entry.task_assignee}
+                          deadline={entry.task_deadline}
+                          status={entry.task_status ?? "YANGI"}
+                          createdAt={entry.created_at}
+                          seenAt={entry.task_seen_at}
+                          acceptedAt={entry.task_accepted_at}
+                          canRemind={entry.task_author_id === user.id}
+                        />
                       )}
                     </li>
                   ))}
@@ -325,10 +321,7 @@ export default async function ThreadPage({
           <Composer
             threadId={thread.id}
             projectId={project.id}
-            staff={staff.map((person) => ({
-              id: person.id,
-              name: person.full_name,
-            }))}
+            staff={people}
           />
         </div>
       </div>
