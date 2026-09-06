@@ -96,6 +96,15 @@ export default async function AppLayout({
 
   /* --- Hamkorlar: the outside world --------------------------------- */
 
+  // First in the group on purpose. A project is the thing people are working
+  // on; the company directory and the commitments list are ways of slicing
+  // it. Somebody arriving to find out what is happening wants the former.
+  nav.push({
+    href: "/projects",
+    labelKey: "nav.projects",
+    icon: "folder",
+    group: "nav.group.partners",
+  });
   nav.push({
     href: "/companies",
     labelKey: "nav.companies",

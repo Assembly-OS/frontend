@@ -17,8 +17,13 @@ import type { MessageKey } from "@/lib/i18n";
 // Type-only: `lib/admin` reaches for node:sqlite and must never reach the
 // client bundle. `import type` is erased at compile time.
 import type { ProjectRow } from "@/lib/admin";
+import { PROJECT_STATUSES } from "@/lib/project-vocab";
+import { PROJECT_TONE } from "@/app/(app)/projects/tone";
 
-const STATUSES = ["FAOL", "YAKUNLANMOQDA"] as const;
+// Read from the shared list rather than repeated here: a status this panel
+// cannot offer is a status nobody can set, and the two drifting apart is how
+// a project ends up stuck in a state its own editor denies exists.
+const STATUSES = PROJECT_STATUSES;
 
 const ERRORS: Record<string, MessageKey> = {
   REQUIRED: "admin.errRequired",
@@ -188,9 +193,7 @@ export function ProjectsPanel({
           >
             {STATUSES.map((status) => (
               <option key={status} value={status}>
-                {status === "FAOL"
-                  ? t("admin.projectActive")
-                  : t("admin.projectClosing")}
+                {t(`proj.status.${status}` as MessageKey)}
               </option>
             ))}
           </Select>
@@ -334,15 +337,9 @@ export function ProjectsPanel({
                       : `${String(project.site_no).padStart(2, "0")} · ${project.code}`}
                   </p>
                   <Badge
-                    className={
-                      project.status === "FAOL"
-                        ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-400/30"
-                        : "bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-400/30"
-                    }
+                    className={PROJECT_TONE[project.status] ?? PROJECT_TONE.REJA}
                   >
-                    {project.status === "FAOL"
-                      ? t("admin.projectActive")
-                      : t("admin.projectClosing")}
+                    {t(`proj.status.${project.status}` as MessageKey)}
                   </Badge>
                 </div>
 

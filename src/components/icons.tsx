@@ -29,7 +29,10 @@ export type IconName =
   | "download"
   | "trash"
   | "eye"
-  | "eyeOff";
+  | "eyeOff"
+  | "folder"
+  | "pin"
+  | "link";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   grid: (
@@ -224,6 +227,23 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M10.6 6.1A8.9 8.9 0 0 1 12 6c6 0 9.5 6 9.5 6a17 17 0 0 1-3 3.7" />
       <path d="M6.6 7.9A17 17 0 0 0 2.5 12S6 18 12 18a9 9 0 0 0 3.6-.7" />
       <path d="m4 4 16 16" />
+    </>
+  ),
+  folder: (
+    <>
+      <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2.5h7A1.5 1.5 0 0 1 19 10v7a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3 17Z" />
+    </>
+  ),
+  pin: (
+    <>
+      <path d="M9 3h6l-1 5 3 3v2H7v-2l3-3Z" />
+      <path d="M12 13v8" />
+    </>
+  ),
+  link: (
+    <>
+      <path d="M10 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1" />
+      <path d="M14 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1" />
     </>
   ),
 };
