@@ -29,6 +29,7 @@ import { ProjectMemory } from "@/components/project-memory";
 import { Composer } from "./composer";
 import { ThreadMembers } from "./members";
 import { EntryActions } from "./entry-actions";
+import { DeleteThread } from "./delete-thread";
 import { id as parseId } from "@/lib/validate";
 
 export const dynamic = "force-dynamic";
@@ -85,6 +86,7 @@ export default async function ThreadPage({
     id: person.id,
     name: person.full_name,
   }));
+  const removable = canManageProjects(user);
 
   // Grouped in one pass rather than by filtering per day: a thread with a
   // thousand entries would otherwise walk the list once for every date on it.
@@ -134,14 +136,25 @@ export default async function ThreadPage({
               <p className="muted mt-1 max-w-2xl text-sm">{thread.summary}</p>
             )}
           </div>
-          {thread.company_id && thread.company_name && (
-            <a
-              href={`/companies/${thread.company_id}`}
-              className="muted inline-flex items-center gap-1.5 text-xs font-medium hover:text-[var(--ink)]"
-            >
-              <Icon name="users" className="size-4" />
-              {thread.company_name}
-            </a>
+          {/* The counterpart's file and the way out of the chat, stacked at
+              the end of the header. Deleting sits with the people who may
+              open a chat in the first place: opening one under the wrong
+              project is their slip to make, and theirs to undo. */}
+          {(removable || (thread.company_id && thread.company_name)) && (
+            <div className="flex flex-col items-end gap-2">
+              {thread.company_id && thread.company_name && (
+                <a
+                  href={`/companies/${thread.company_id}`}
+                  className="muted inline-flex items-center gap-1.5 text-xs font-medium hover:text-[var(--ink)]"
+                >
+                  <Icon name="users" className="size-4" />
+                  {thread.company_name}
+                </a>
+              )}
+              {removable && (
+                <DeleteThread threadId={thread.id} projectId={project.id} />
+              )}
+            </div>
           )}
         </div>
 
