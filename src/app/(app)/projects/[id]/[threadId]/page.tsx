@@ -26,6 +26,7 @@ import { ENTRY_ICON } from "../../tone";
 import { ThreadRail } from "../thread-rail";
 import { TaskPanel } from "@/components/task-panel";
 import { ProjectMemory } from "@/components/project-memory";
+import { ReadFileButton } from "@/components/read-file-button";
 import { Composer } from "./composer";
 import { ThreadMembers } from "./members";
 import { EntryActions } from "./entry-actions";
@@ -294,7 +295,27 @@ export default async function ThreadPage({
                           <span className="muted tabular-nums">
                             {formatBytes(entry.file_size)}
                           </span>
+                          {/* Whether the assistant can answer from this file.
+                              Without it, "the records do not say" is
+                              indistinguishable from "nobody read the file". */}
+                          <span
+                            className={
+                              entry.file_read
+                                ? "text-[11px] font-medium text-emerald-700 dark:text-emerald-300"
+                                : "muted text-[11px]"
+                            }
+                          >
+                            {entry.file_read
+                              ? t("thread.fileRead")
+                              : t("thread.fileUnread")}
+                          </span>
                         </a>
+                      )}
+
+                      {/* Files attached before uploads were read on arrival.
+                          The button exists so they are not stranded. */}
+                      {entry.file_key && entry.file_name && !entry.file_read && (
+                        <ReadFileButton entryId={entry.id} />
                       )}
 
                       {/* What the entry produced. The agreement carries the
