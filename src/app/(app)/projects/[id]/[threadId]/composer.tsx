@@ -3,7 +3,14 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useT } from "@/components/i18n-provider";
-import { Button, DateField, FIELD, Panel, Select } from "@/components/ui";
+import {
+  Button,
+  DateField,
+  FIELD,
+  FOCUS,
+  Panel,
+  Select,
+} from "@/components/ui";
 import { Icon } from "@/components/icons";
 import type { MessageKey } from "@/lib/i18n";
 
@@ -223,7 +230,7 @@ export function Composer({
             icon="paperclip"
             onClick={() => fileInput.current?.click()}
           >
-            {file ? file.name.slice(0, 24) : t("thread.attach")}
+            {t("thread.attach")}
           </Button>
           <input
             ref={fileInput}
@@ -231,6 +238,28 @@ export function Composer({
             className="hidden"
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           />
+
+          {/* The chosen file, carrying its own remove control. It used to sit
+              a row below, next to the submit button — far enough from the
+              file that people could not find how to take it off again. */}
+          {file && (
+            <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs">
+              <Icon name="paperclip" className="muted size-3.5 shrink-0" />
+              <span className="truncate font-medium">{file.name}</span>
+              <button
+                type="button"
+                aria-label={t("thread.removeFile")}
+                title={t("thread.removeFile")}
+                onClick={() => {
+                  setFile(null);
+                  if (fileInput.current) fileInput.current.value = "";
+                }}
+                className={`muted shrink-0 rounded p-0.5 hover:text-[var(--ink)] ${FOCUS}`}
+              >
+                <Icon name="close" className="size-3.5" />
+              </button>
+            </span>
+          )}
 
           <Button
             size="sm"
@@ -350,19 +379,7 @@ export function Composer({
           >
             {busy ? t("common.loading") : t("thread.record")}
           </Button>
-          {file && (
-            <button
-              type="button"
-              onClick={() => {
-                setFile(null);
-                if (fileInput.current) fileInput.current.value = "";
-              }}
-              className="muted inline-flex items-center gap-1 text-xs hover:text-[var(--ink)]"
-            >
-              <Icon name="close" className="size-3.5" />
-              {t("thread.removeFile")}
-            </button>
-          )}
+
         </div>
       </form>
     </Panel>

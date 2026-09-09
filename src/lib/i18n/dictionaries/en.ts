@@ -890,6 +890,10 @@ const en: Dictionary = {
 
   "thread.readFile": "Read it",
   "thread.fileUnreadable": "could not read",
+
+  /* --- Faylni yozuvdan olib tashlash --------------------------------- */
+
+  "thread.detachFile": "Remove the file",
 };
 
 export default en;

@@ -257,6 +257,7 @@ export default async function ThreadPage({
                             pinned={entry.is_pinned === 1}
                             body={entry.body}
                             mayEdit={canEditEntry(user, entry.author_id)}
+                            hasFile={Boolean(entry.file_key)}
                           />
                         </span>
                       </div>

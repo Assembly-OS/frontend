@@ -890,6 +890,10 @@ const ru: Dictionary = {
 
   "thread.readFile": "Прочитать",
   "thread.fileUnreadable": "не удалось прочитать",
+
+  /* --- Faylni yozuvdan olib tashlash --------------------------------- */
+
+  "thread.detachFile": "Удалить файл",
 };
 
 export default ru;
