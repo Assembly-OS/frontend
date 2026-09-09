@@ -813,6 +813,9 @@ const en: Dictionary = {
   "thread.unpin": "Unmark",
   "thread.editEntry": "Edit",
   "thread.deleteConfirm": "Delete for good",
+  "thread.deleteThread": "Delete chat",
+  "thread.deleteThreadConfirm": "Yes, delete",
+  "thread.deleteThreadWarn": "The chat and every record in it go for good. Agreements and tasks are kept, but lose the link.",
   "thread.write": "Add a record",
   "thread.writePlaceholder": "What happened? For example: met UNIDO, discussed the integration.",
   "thread.entry.NOTE": "Note",
@@ -877,6 +880,20 @@ const en: Dictionary = {
   "memory.EMPTY": "Nothing has been recorded here yet.",
   "memory.REFUSED": "That question was declined.",
   "memory.ERROR": "Something went wrong",
+
+  /* --- Ilova qilingan hujjat holati --------------------------------- */
+
+  "thread.fileRead": "read",
+  "thread.fileUnread": "not read",
+
+  /* --- Hujjatni o'qish ---------------------------------------------- */
+
+  "thread.readFile": "Read it",
+  "thread.fileUnreadable": "could not read",
+
+  /* --- Faylni yozuvdan olib tashlash --------------------------------- */
+
+  "thread.detachFile": "Remove the file",
 };
 
 export default en;

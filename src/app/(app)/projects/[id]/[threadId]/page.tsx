@@ -26,9 +26,11 @@ import { ENTRY_ICON } from "../../tone";
 import { ThreadRail } from "../thread-rail";
 import { TaskPanel } from "@/components/task-panel";
 import { ProjectMemory } from "@/components/project-memory";
+import { ReadFileButton } from "@/components/read-file-button";
 import { Composer } from "./composer";
 import { ThreadMembers } from "./members";
 import { EntryActions } from "./entry-actions";
+import { DeleteThread } from "./delete-thread";
 import { id as parseId } from "@/lib/validate";
 
 export const dynamic = "force-dynamic";
@@ -85,6 +87,7 @@ export default async function ThreadPage({
     id: person.id,
     name: person.full_name,
   }));
+  const removable = canManageProjects(user);
 
   // Grouped in one pass rather than by filtering per day: a thread with a
   // thousand entries would otherwise walk the list once for every date on it.
@@ -134,14 +137,25 @@ export default async function ThreadPage({
               <p className="muted mt-1 max-w-2xl text-sm">{thread.summary}</p>
             )}
           </div>
-          {thread.company_id && thread.company_name && (
-            <a
-              href={`/companies/${thread.company_id}`}
-              className="muted inline-flex items-center gap-1.5 text-xs font-medium hover:text-[var(--ink)]"
-            >
-              <Icon name="users" className="size-4" />
-              {thread.company_name}
-            </a>
+          {/* The counterpart's file and the way out of the chat, stacked at
+              the end of the header. Deleting sits with the people who may
+              open a chat in the first place: opening one under the wrong
+              project is their slip to make, and theirs to undo. */}
+          {(removable || (thread.company_id && thread.company_name)) && (
+            <div className="flex flex-col items-end gap-2">
+              {thread.company_id && thread.company_name && (
+                <a
+                  href={`/companies/${thread.company_id}`}
+                  className="muted inline-flex items-center gap-1.5 text-xs font-medium hover:text-[var(--ink)]"
+                >
+                  <Icon name="users" className="size-4" />
+                  {thread.company_name}
+                </a>
+              )}
+              {removable && (
+                <DeleteThread threadId={thread.id} projectId={project.id} />
+              )}
+            </div>
           )}
         </div>
 
@@ -243,6 +257,7 @@ export default async function ThreadPage({
                             pinned={entry.is_pinned === 1}
                             body={entry.body}
                             mayEdit={canEditEntry(user, entry.author_id)}
+                            hasFile={Boolean(entry.file_key)}
                           />
                         </span>
                       </div>
@@ -281,7 +296,27 @@ export default async function ThreadPage({
                           <span className="muted tabular-nums">
                             {formatBytes(entry.file_size)}
                           </span>
+                          {/* Whether the assistant can answer from this file.
+                              Without it, "the records do not say" is
+                              indistinguishable from "nobody read the file". */}
+                          <span
+                            className={
+                              entry.file_read
+                                ? "text-[11px] font-medium text-emerald-700 dark:text-emerald-300"
+                                : "muted text-[11px]"
+                            }
+                          >
+                            {entry.file_read
+                              ? t("thread.fileRead")
+                              : t("thread.fileUnread")}
+                          </span>
                         </a>
+                      )}
+
+                      {/* Files attached before uploads were read on arrival.
+                          The button exists so they are not stranded. */}
+                      {entry.file_key && entry.file_name && !entry.file_read && (
+                        <ReadFileButton entryId={entry.id} />
                       )}
 
                       {/* What the entry produced. The agreement carries the

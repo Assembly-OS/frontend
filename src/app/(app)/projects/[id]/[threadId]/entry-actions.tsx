@@ -18,11 +18,14 @@ export function EntryActions({
   pinned,
   body,
   mayEdit,
+  hasFile = false,
 }: {
   entryId: number;
   pinned: boolean;
   body: string;
   mayEdit: boolean;
+  /** Whether this record carries an attachment that could be taken off. */
+  hasFile?: boolean;
 }) {
   const t = useT();
   const router = useRouter();
@@ -111,6 +114,20 @@ export function EntryActions({
           <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>
             {t("thread.editEntry")}
           </Button>
+          {/* Taking the file off keeps the record and the words on it. The
+              delete below removes the record itself — two different things,
+              and a person with a wrong attachment wants the first. */}
+          {hasFile && (
+            <Button
+              size="sm"
+              variant="ghost"
+              icon="paperclip"
+              disabled={busy}
+              onClick={() => void patch({ action: "detach" })}
+            >
+              {t("thread.detachFile")}
+            </Button>
+          )}
           {confirming ? (
             <Button
               size="sm"

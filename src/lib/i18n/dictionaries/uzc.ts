@@ -813,6 +813,9 @@ const uzc: Dictionary = {
   "thread.unpin": "Белгини олиш",
   "thread.editEntry": "Таҳрирлаш",
   "thread.deleteConfirm": "Ўчириш — тасдиқлайман",
+  "thread.deleteThread": "Суҳбатни ўчириш",
+  "thread.deleteThreadConfirm": "Ҳа, ўчирилсин",
+  "thread.deleteThreadWarn": "Суҳбат ва ундаги барча ёзувлар бутунлай ўчади. Келишувлар ва топшириқлар сақланади, лекин боғланиши йўқолади.",
   "thread.write": "Ёзув қўшиш",
   "thread.writePlaceholder": "Нима бўлди? Масалан: UNIDO билан учрашдик, интеграцияни муҳокама қилдик.",
   "thread.entry.NOTE": "Ёзув",
@@ -877,6 +880,20 @@ const uzc: Dictionary = {
   "memory.EMPTY": "Бу ерда ҳали ҳеч нарса ёзилмаган.",
   "memory.REFUSED": "Бу саволга жавоб берилмади.",
   "memory.ERROR": "Хатолик юз берди",
+
+  /* --- Ilova qilingan hujjat holati --------------------------------- */
+
+  "thread.fileRead": "ўқилди",
+  "thread.fileUnread": "ўқилмаган",
+
+  /* --- Hujjatni o'qish ---------------------------------------------- */
+
+  "thread.readFile": "Ўқиш",
+  "thread.fileUnreadable": "ўқиб бўлмади",
+
+  /* --- Faylni yozuvdan olib tashlash --------------------------------- */
+
+  "thread.detachFile": "Файлни олиб ташлаш",
 };
 
 export default uzc;

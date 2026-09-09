@@ -811,6 +811,9 @@ const uz = {
   "thread.unpin": "Belgini olish",
   "thread.editEntry": "Tahrirlash",
   "thread.deleteConfirm": "O'chirish — tasdiqlayman",
+  "thread.deleteThread": "Suhbatni o'chirish",
+  "thread.deleteThreadConfirm": "Ha, o'chirilsin",
+  "thread.deleteThreadWarn": "Suhbat va undagi barcha yozuvlar butunlay o'chadi. Kelishuvlar va topshiriqlar saqlanadi, lekin bog'lanishi yo'qoladi.",
   "thread.write": "Yozuv qo'shish",
   "thread.writePlaceholder": "Nima bo'ldi? Masalan: UNIDO bilan uchrashdik, integratsiyani muhokama qildik.",
   "thread.entry.NOTE": "Yozuv",
@@ -875,6 +878,20 @@ const uz = {
   "memory.EMPTY": "Bu yerda hali hech narsa yozilmagan.",
   "memory.REFUSED": "Bu savolga javob berilmadi.",
   "memory.ERROR": "Xatolik yuz berdi",
+
+  /* --- Ilova qilingan hujjat holati --------------------------------- */
+
+  "thread.fileRead": "o'qildi",
+  "thread.fileUnread": "o'qilmagan",
+
+  /* --- Hujjatni o'qish ---------------------------------------------- */
+
+  "thread.readFile": "O'qish",
+  "thread.fileUnreadable": "o'qib bo'lmadi",
+
+  /* --- Faylni yozuvdan olib tashlash --------------------------------- */
+
+  "thread.detachFile": "Faylni olib tashlash",
 };
 
 export default uz;

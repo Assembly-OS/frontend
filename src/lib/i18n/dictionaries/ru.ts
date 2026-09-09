@@ -813,6 +813,9 @@ const ru: Dictionary = {
   "thread.unpin": "Снять отметку",
   "thread.editEntry": "Изменить",
   "thread.deleteConfirm": "Удалить окончательно",
+  "thread.deleteThread": "Удалить чат",
+  "thread.deleteThreadConfirm": "Да, удалить",
+  "thread.deleteThreadWarn": "Чат и все записи в нём удалятся безвозвратно. Договорённости и поручения сохранятся, но потеряют привязку.",
   "thread.write": "Добавить запись",
   "thread.writePlaceholder": "Что произошло? Например: встретились с UNIDO, обсудили интеграцию.",
   "thread.entry.NOTE": "Запись",
@@ -877,6 +880,20 @@ const ru: Dictionary = {
   "memory.EMPTY": "Здесь ещё ничего не записано.",
   "memory.REFUSED": "На этот вопрос ответа не будет.",
   "memory.ERROR": "Что-то пошло не так",
+
+  /* --- Ilova qilingan hujjat holati --------------------------------- */
+
+  "thread.fileRead": "прочитан",
+  "thread.fileUnread": "не прочитан",
+
+  /* --- Hujjatni o'qish ---------------------------------------------- */
+
+  "thread.readFile": "Прочитать",
+  "thread.fileUnreadable": "не удалось прочитать",
+
+  /* --- Faylni yozuvdan olib tashlash --------------------------------- */
+
+  "thread.detachFile": "Удалить файл",
 };
 
 export default ru;
