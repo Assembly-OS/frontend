@@ -835,7 +835,7 @@ export function AdminClient({
             />
           </div>
 
-          <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-2">
+          <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-2">
             <Panel title={t("admin.system")}>
               <dl className="divide-y text-sm">
                 {[
