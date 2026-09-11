@@ -192,7 +192,7 @@ export function ReportClient({
         )}
       </Panel>
 
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-2">
         <Panel title={t("report.completion")}>
           <div className="px-5 py-4">
             <p className="mb-2 flex items-baseline justify-between">
