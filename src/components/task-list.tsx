@@ -7,7 +7,13 @@ import { Badge, Button, EmptyState } from "./ui";
 import { Icon } from "./icons";
 import { StageDetail } from "./stage-detail";
 import { StageStrip } from "./stage-strip";
-import { daysUntil, formatDate, formatDateTime, formatBytes } from "@/lib/format";
+import {
+  daysUntil,
+  formatDate,
+  formatDateTime,
+  formatBytes,
+  localDay,
+} from "@/lib/format";
 import {
   priorityTone,
   statusTone,
@@ -16,7 +22,14 @@ import {
 } from "@/lib/types";
 import type { MessageKey } from "@/lib/i18n";
 
-export type TaskVariant = "inbox" | "execute" | "review" | "sent" | "overdue";
+/** `report` is read-only: one person's finished work, opened from the report. */
+export type TaskVariant =
+  | "inbox"
+  | "execute"
+  | "review"
+  | "sent"
+  | "overdue"
+  | "report";
 
 /** Past its deadline and still in play — a closed task is never "late". */
 function isOverdue(task: TaskRow): boolean {
@@ -27,6 +40,13 @@ function isOverdue(task: TaskRow): boolean {
     task.status !== "BAJARILDI" &&
     task.status !== "RAD_ETILDI"
   );
+}
+
+/** Finished after its deadline day, judged by the Assembly's calendar. */
+function finishedLate(task: TaskRow): boolean {
+  if (!task.completed_at || !task.deadline) return false;
+  const day = localDay(task.completed_at);
+  return day !== null && day > task.deadline;
 }
 
 type Action = "accept" | "reject" | "start" | "submit" | "approve" | "return";
@@ -114,7 +134,9 @@ function TaskCard({
 
   const actions = actionsFor(variant, task.status);
   const left = daysUntil(task.deadline);
-  const overdue = isOverdue(task);
+  // In the report this person's part is done; if a chain is still running
+  // late after them, that lateness is not theirs to wear on this card.
+  const overdue = variant !== "report" && isOverdue(task);
   // Two presses, not a modal: the second press is the confirmation, and it
   // says what it will do rather than asking "are you sure?".
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -191,7 +213,10 @@ function TaskCard({
   }
 
   const counterpart =
-    variant === "inbox" || variant === "execute" || variant === "overdue"
+    variant === "inbox" ||
+    variant === "execute" ||
+    variant === "overdue" ||
+    variant === "report"
       ? { label: t("tasks.from"), name: task.from_name, login: task.from_login }
       : { label: t("tasks.to"), name: task.to_name, login: task.to_login };
 
@@ -221,6 +246,12 @@ function TaskCard({
               <Badge className="bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-400/30">
                 <Icon name="alert" className="mr-1 size-3" />
                 {t("tasks.overdue")}
+              </Badge>
+            )}
+            {variant === "report" && finishedLate(task) && (
+              <Badge className="bg-amber-50 text-amber-800 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-400/30">
+                <Icon name="clock" className="mr-1 size-3" />
+                {t("report.finishedLate")}
               </Badge>
             )}
           </div>
@@ -258,12 +289,21 @@ function TaskCard({
             <span className="inline-flex items-center gap-1">
               <Icon name="clock" className="size-3.5" />
               {task.deadline ? formatDate(task.deadline) : t("tasks.noDeadline")}
-              {left !== null && left >= 0 && task.status !== "BAJARILDI" && (
-                <span className="ml-1">
-                  ({left} {t("tasks.daysLeft")})
-                </span>
-              )}
+              {left !== null &&
+                left >= 0 &&
+                task.status !== "BAJARILDI" &&
+                !task.completed_at && (
+                  <span className="ml-1">
+                    ({left} {t("tasks.daysLeft")})
+                  </span>
+                )}
             </span>
+            {task.completed_at && (
+              <span className="inline-flex items-center gap-1">
+                <Icon name="check" className="size-3.5" />
+                {t("report.done")}: {formatDate(task.completed_at)}
+              </span>
+            )}
             {task.loyiha_name && (
               <span className="truncate">
                 {t("tasks.project")}: {task.loyiha_name}

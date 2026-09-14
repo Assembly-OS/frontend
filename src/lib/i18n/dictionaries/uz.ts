@@ -636,6 +636,12 @@ const uz = {
   "report.idle": "Harakatsiz",
   "report.everyoneWorked": "Hamma ishladi",
   "report.nobody": "Bu haftada harakat bo'lmadi",
+  "report.openPerson": "Bajarilgan topshiriqlarni ochish",
+  "report.completedTitle": "Bajarilgan topshiriqlar",
+  "report.completedEmpty": "Bu davrda bajarilgan topshiriq yo'q",
+  "report.completedEmptyHint": "Muallif natijani qabul qilganda topshiriq shu yerda paydo bo'ladi",
+  "report.back": "Hisobotga qaytish",
+  "report.finishedLate": "Kechikib",
 
   "admin.tabAgents": "Agentlar",
   "agent.title": "AI agentlar",

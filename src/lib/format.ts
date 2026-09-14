@@ -54,6 +54,15 @@ function localParts(value: string): Local | null {
   };
 }
 
+/**
+ * A stored instant's calendar day in Assembly time, as `YYYY-MM-DD` — the shape
+ * a deadline is stored in, so the two compare as plain strings.
+ */
+export function localDay(value: string): string | null {
+  const local = localParts(value);
+  return local ? `${local.year}-${local.month}-${local.day}` : null;
+}
+
 export function formatDate(value: string | null): string {
   if (!value) return "—";
   // No time part: a calendar date, printed as written.
