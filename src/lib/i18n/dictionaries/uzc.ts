@@ -401,6 +401,8 @@ const uzc: Dictionary = {
   "admin.lastSeen": "Охирги ташриф",
   "admin.tasksCount": "Топшириқлар",
   "admin.errRequired": "Барча мажбурий майдонларни тўлдиринг",
+  "admin.pickDepartment": "Бўлимни танланг",
+  "admin.errDepartment": "Бўлимсиз ходим сақланмайди",
   "admin.errLogin": "Логин фақат лотин ҳарфлари, рақамлар, нуқта ва чизиқчадан иборат бўлсин (3-32 белги)",
   "admin.errWeak": "Парол камида 8 белгидан иборат бўлсин",
   "admin.errTaken": "Бундай логин аллақачон мавжуд",

@@ -401,6 +401,8 @@ const en: Dictionary = {
   "admin.lastSeen": "Last seen",
   "admin.tasksCount": "Tasks",
   "admin.errRequired": "Fill in the required fields",
+  "admin.pickDepartment": "Choose a department",
+  "admin.errDepartment": "Staff are not saved without a department",
   "admin.errLogin": "Login: latin letters, digits, dot and dash (3 to 32 characters)",
   "admin.errWeak": "Password must be at least 8 characters",
   "admin.errTaken": "That login is already taken",

@@ -401,6 +401,8 @@ const ru: Dictionary = {
   "admin.lastSeen": "Был(а) в сети",
   "admin.tasksCount": "Задачи",
   "admin.errRequired": "Заполните обязательные поля",
+  "admin.pickDepartment": "Выберите отдел",
+  "admin.errDepartment": "Сотрудник без отдела не сохраняется",
   "admin.errLogin": "Логин: латиница, цифры, точка и дефис (от 3 до 32 символов)",
   "admin.errWeak": "Пароль не короче 8 символов",
   "admin.errTaken": "Такой логин уже занят",

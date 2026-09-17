@@ -399,6 +399,8 @@ const uz = {
   "admin.lastSeen": "Oxirgi tashrif",
   "admin.tasksCount": "Topshiriqlar",
   "admin.errRequired": "Barcha majburiy maydonlarni to'ldiring",
+  "admin.pickDepartment": "Bo'limni tanlang",
+  "admin.errDepartment": "Bo'limsiz xodim saqlanmaydi",
   "admin.errLogin": "Login faqat lotin harflari, raqamlar, nuqta va chiziqchadan iborat bo'lsin (3-32 belgi)",
   "admin.errWeak": "Parol kamida 8 belgidan iborat bo'lsin",
   "admin.errTaken": "Bunday login allaqachon mavjud",

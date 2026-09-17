@@ -74,6 +74,12 @@ export function StaffForm({
   const shortPassword =
     mode === "create" && values.password.length > 0 && values.password.length < 8;
 
+  // Every colleague belongs to a department, because an assignment inherits
+  // its department from whoever it is given to — and one without a department
+  // never reaches the chart the chairman reads. The chairman is the exception:
+  // the departments are operating arms and he heads the Assembly, not one.
+  const needsDepartment = !values.department && values.role !== "RAIS";
+
   return (
     <form
       onSubmit={(e) => {
@@ -169,19 +175,38 @@ export function StaffForm({
       <div>
         <label className={label} htmlFor="department">
           {t("admin.department")}
+          {values.role === "RAIS" ? "" : " *"}
         </label>
         <Select
           id="department"
           value={values.department}
           onChange={(e) => set("department", e.target.value)}
+          aria-invalid={needsDepartment || undefined}
+          aria-describedby={needsDepartment ? "department-hint" : undefined}
         >
-          <option value="">{t("admin.noDepartment")}</option>
+          {/* Leaving it blank is a real answer for the chairman and a mistake
+              for everyone else, so the same option says two different things.
+              The server refuses the second case either way; this is so the
+              person finds out while the form is still in front of them. */}
+          <option value="">
+            {values.role === "RAIS"
+              ? t("admin.noDepartment")
+              : t("admin.pickDepartment")}
+          </option>
           {DEPARTMENTS.map((dept) => (
             <option key={dept} value={dept}>
               {t(`dept.${dept}` as MessageKey)}
             </option>
           ))}
         </Select>
+        {needsDepartment && (
+          <span
+            id="department-hint"
+            className="mt-1 block text-[11px] font-medium text-amber-600 dark:text-amber-400"
+          >
+            {t("admin.errDepartment")}
+          </span>
+        )}
       </div>
 
       <div className="sm:col-span-2">
