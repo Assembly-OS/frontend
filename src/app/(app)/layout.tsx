@@ -5,6 +5,7 @@ import { I18nProvider } from "@/components/i18n-provider";
 import { AppShell, type NavItem } from "@/components/app-shell";
 import { LiveUpdates } from "@/components/live-updates";
 import { isManager, receivesTasks } from "@/lib/types";
+import { canWrite } from "@/lib/crm-access";
 import { canSubmitToAi } from "@/lib/agents/access";
 
 export default async function AppLayout({
@@ -117,7 +118,10 @@ export default async function AppLayout({
     icon: "check",
     group: "nav.group.partners",
   });
-  if (canSubmitToAi(user)) {
+  // Shown to whoever may file a meeting, which is who the register lets in.
+  // It was tied to the AI permission while the page was only a feed of AI
+  // conclusions; a project lead could file a meeting and then not find it.
+  if (canWrite(user)) {
     nav.push({
       href: "/meetings",
       labelKey: "nav.meetings",

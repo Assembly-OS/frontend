@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
 import { canManageProjects } from "@/lib/project-access";
+import { canWrite } from "@/lib/crm-access";
+import { searchMeetings } from "@/lib/meetings";
 import { projectById, projectPulse, threadsOf } from "@/lib/project-threads";
 import { viewStatus } from "@/lib/crm";
 import { formatDate } from "@/lib/format";
@@ -50,9 +53,15 @@ export default async function ProjectPage({
   const project = projectId ? await projectById(projectId) : undefined;
   if (!project) notFound();
 
-  const [threads, pulse] = await Promise.all([
+  // Meetings are read by the people who may file them; to anyone else the
+  // panel would be a list of links that lead nowhere.
+  const readsMeetings = canWrite(user);
+  const [threads, pulse, meetings] = await Promise.all([
     threadsOf(project.id),
     projectPulse(project.id),
+    readsMeetings
+      ? searchMeetings({ projectId: project.id })
+      : Promise.resolve({ rows: [], total: 0 }),
   ]);
   const mayManage = canManageProjects(user);
 
@@ -212,6 +221,61 @@ export default async function ProjectPage({
               </ul>
             )}
           </Panel>
+
+          {/* The TZ: a meeting shows on its project's card by itself. The
+              last five, newest first, and the way to the rest. */}
+          {readsMeetings && (
+            <Panel
+              title={t("meetings.title")}
+              action={
+                <Link
+                  href={`/meetings/new?project=${project.id}`}
+                  className="muted text-xs font-medium hover:underline"
+                >
+                  {t("crm.newMeeting")}
+                </Link>
+              }
+            >
+              {meetings.rows.length === 0 ? (
+                <EmptyState bare icon="calendar" text={t("meeting.noneForProject")} />
+              ) : (
+                <ul className="divide-y">
+                  {meetings.rows.slice(0, 5).map((meeting) => (
+                    <li key={meeting.id}>
+                      <Link
+                        href={`/meetings/${meeting.id}`}
+                        className="block px-5 py-3 transition duration-150 hover:bg-[var(--surface)]"
+                      >
+                        <span className="flex items-baseline justify-between gap-3">
+                          <span className="min-w-0 truncate text-sm font-medium">
+                            {meeting.title}
+                          </span>
+                          <span className="muted shrink-0 text-[11px] tabular-nums">
+                            {formatDate(meeting.happened)}
+                          </span>
+                        </span>
+                        {meeting.company_name && (
+                          <span className="muted mt-0.5 block truncate text-[11px]">
+                            {meeting.company_name}
+                          </span>
+                        )}
+                      </Link>
+                    </li>
+                  ))}
+                  {meetings.total > 5 && (
+                    <li>
+                      <Link
+                        href={`/meetings?project=${project.id}`}
+                        className="muted block px-5 py-2.5 text-xs font-medium hover:underline"
+                      >
+                        {t("meeting.all").replace("{n}", String(meetings.total))}
+                      </Link>
+                    </li>
+                  )}
+                </ul>
+              )}
+            </Panel>
+          )}
         </div>
       </div>
     </>

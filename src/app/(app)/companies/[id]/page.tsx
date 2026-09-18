@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
@@ -118,7 +119,12 @@ export default async function CompanyPage({
                 {meetings.map((meeting) => (
                   <li key={meeting.id} className="px-5 py-3.5">
                     <div className="flex flex-wrap items-baseline gap-x-3">
-                      <p className="text-sm font-semibold">{meeting.title}</p>
+                      <Link
+                        href={`/meetings/${meeting.id}`}
+                        className="text-sm font-semibold hover:underline"
+                      >
+                        {meeting.title}
+                      </Link>
                       <span className="muted text-xs tabular-nums">
                         {formatDate(meeting.held_at ?? meeting.created_at)}
                       </span>
@@ -128,9 +134,11 @@ export default async function CompanyPage({
                         {t("crm.participants")}: {meeting.participants}
                       </p>
                     )}
-                    {meeting.summary && (
+                    {/* What was agreed first; the AI conclusion for
+                        meetings filed before that field existed. */}
+                    {(meeting.agreed || meeting.summary) && (
                       <p className="mt-1.5 text-sm leading-relaxed">
-                        {meeting.summary}
+                        {meeting.agreed || meeting.summary}
                       </p>
                     )}
                   </li>
