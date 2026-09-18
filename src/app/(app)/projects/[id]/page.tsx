@@ -6,7 +6,8 @@ import { canManageProjects } from "@/lib/project-access";
 import { canWrite } from "@/lib/crm-access";
 import { searchMeetings } from "@/lib/meetings";
 import { projectById, projectPulse, threadsOf } from "@/lib/project-threads";
-import { viewStatus } from "@/lib/crm";
+import { today, viewStatus } from "@/lib/crm";
+import { stagesOf } from "@/lib/project-stages";
 import { formatDate, formatNumber } from "@/lib/format";
 import {
   PHASE_STATUS,
@@ -30,6 +31,7 @@ import { PROJECT_TONE } from "../tone";
 import { ProjectMemory } from "@/components/project-memory";
 import { NewThread } from "./new-thread";
 import { ThreadRail } from "./thread-rail";
+import { Schedule } from "./schedule";
 import { id as parseId } from "@/lib/validate";
 
 export const dynamic = "force-dynamic";
@@ -65,14 +67,19 @@ export default async function ProjectPage({
   // Meetings are read by the people who may file them; to anyone else the
   // panel would be a list of links that lead nowhere.
   const readsMeetings = canWrite(user);
-  const [threads, pulse, meetings] = await Promise.all([
+  const [threads, pulse, meetings, stages] = await Promise.all([
     threadsOf(project.id),
     projectPulse(project.id),
     readsMeetings
       ? searchMeetings({ projectId: project.id })
       : Promise.resolve({ rows: [], total: 0 }),
+    stagesOf(project.id),
   ]);
   const mayManage = canManageProjects(user);
+  // The schedule is kept by the managers and by this project's own leader and
+  // deputy — the same people the API lets save it.
+  const mayKeepSchedule =
+    mayManage || project.owner_id === user.id || project.deputy_id === user.id;
 
   // The line under the title keeps to what changes week to week — where the
   // project stands and when it last moved. Who leads it, its dates and its
@@ -182,6 +189,19 @@ export default async function ProjectPage({
             { label: t("proj.inProgress"), value: pulse.tasks.inProgress },
             { label: t("proj.done"), value: pulse.tasks.done },
           ]}
+        />
+      </div>
+
+      {/* The work schedule, full width: the TZ's reason for it is that a new
+          leader opens the project and sees at once where the work stopped,
+          so it sits above the conversations rather than beside them. */}
+      <div className="mb-6">
+        <Schedule
+          projectId={project.id}
+          stages={stages}
+          today={today()}
+          mayEdit={mayKeepSchedule}
+          t={t}
         />
       </div>
 

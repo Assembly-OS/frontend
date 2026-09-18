@@ -23,6 +23,7 @@ const KIND_ICON: Record<string, IconName> = {
   agreement: "check",
   review: "shield",
   meeting: "calendar",
+  project: "folder",
 };
 
 /** How often the bell asks. Slow on purpose — see the comment in `poll`. */

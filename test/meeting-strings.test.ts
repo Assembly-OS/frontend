@@ -11,6 +11,7 @@ import {
   KELISHUV_STATUSES,
 } from "../src/lib/kelishuv-fields.ts";
 import { PASSPORT_REQUIRED, PHASES, TIERS } from "../src/lib/project-passport.ts";
+import { HELP_STATUSES } from "../src/lib/work-schedule.ts";
 
 /**
  * The meeting page names what a record is missing by building keys at run
@@ -57,6 +58,19 @@ for (const [lang, dict] of Object.entries(DICTIONARIES)) {
       ...PHASES.map((phase) => `proj.phase.${phase}`),
       ...TIERS.map((tier) => `proj.tier.${tier}`),
       ...PASSPORT_REQUIRED.map((field) => `proj.passport.missing.${field}`),
+    ];
+    for (const key of keys) assert.ok(dict[key]?.trim(), `${lang} is missing ${key}`);
+  });
+}
+
+for (const [lang, dict] of Object.entries(DICTIONARIES)) {
+  test(`${lang}: every schedule state, help status and line refusal has its words`, () => {
+    const keys = [
+      ...["DONE", "LATE", "ACTIVE", "PLANNED"].map((view) => `sched.view.${view}`),
+      ...HELP_STATUSES.map((status) => `sched.help.${status}`),
+      ...["NAME_REQUIRED", "PLAN_REQUIRED", "BAD_PLAN", "BAD_FACT", "DELAY_REASON"].map(
+        (error) => `sched.err.${error}`,
+      ),
     ];
     for (const key of keys) assert.ok(dict[key]?.trim(), `${lang} is missing ${key}`);
   });
