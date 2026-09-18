@@ -501,7 +501,8 @@ const uz = {
   "assistant.clearConfirm": "Ha, tozalansin",
   "crm.deleteCompany": "Kompaniyani o'chirish",
   "crm.deleteCompanyConfirm": "Ha, o'chirilsin",
-  "crm.deleteCompanyWarn": "Kompaniya bilan birga uning kontaktlari va kelishuvlari o'chadi. Uchrashuvlar saqlanadi, lekin bog'lanishi yo'qoladi.",
+  "crm.deleteCompanyWarn": "Kompaniya va uning kontaktlari ro'yxatdan olib tashlanadi. Nusxasi Assambleya arxivida saqlanadi.",
+  "crm.deleteBlocked": "Kompaniyaning uchrashuv va kelishuvlari bor, shuning uchun uni o'chirib bo'lmaydi. Holatini «Arxiv»ga o'tkazing.",
 
   "assistant.q1": "Qaysi kelishuvlar muddati o'tgan?",
 
@@ -836,7 +837,7 @@ const uz = {
   "thread.deleteConfirm": "O'chirish — tasdiqlayman",
   "thread.deleteThread": "Suhbatni o'chirish",
   "thread.deleteThreadConfirm": "Ha, o'chirilsin",
-  "thread.deleteThreadWarn": "Suhbat va undagi barcha yozuvlar butunlay o'chadi. Kelishuvlar va topshiriqlar saqlanadi, lekin bog'lanishi yo'qoladi.",
+  "thread.deleteThreadWarn": "Suhbat va undagi barcha yozuvlar loyihadan olib tashlanadi, nusxasi Assambleya arxivida saqlanadi. Kelishuvlar va topshiriqlar qoladi, lekin bog'lanishi yo'qoladi.",
   "thread.write": "Yozuv qo'shish",
   "thread.writePlaceholder": "Nima bo'ldi? Masalan: UNIDO bilan uchrashdik, integratsiyani muhokama qildik.",
   "thread.entry.NOTE": "Yozuv",

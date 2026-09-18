@@ -503,7 +503,8 @@ const uzc: Dictionary = {
   "assistant.clearConfirm": "Ҳа, тозалансин",
   "crm.deleteCompany": "Компанияни ўчириш",
   "crm.deleteCompanyConfirm": "Ҳа, ўчирилсин",
-  "crm.deleteCompanyWarn": "Компания билан бирга унинг контактлари ва келишувлари ўчади. Учрашувлар сақланади, лекин боғланиши йўқолади.",
+  "crm.deleteCompanyWarn": "Компания ва унинг контактлари рўйхатдан олиб ташланади. Нусхаси Ассамблея архивида сақланади.",
+  "crm.deleteBlocked": "Компаниянинг учрашув ва келишувлари бор, шунинг учун уни ўчириб бўлмайди. Ҳолатини «Архив»га ўтказинг.",
 
   "assistant.q1": "Қайси келишувлар муддати ўтган?",
 
@@ -530,13 +531,13 @@ const uzc: Dictionary = {
 
   "crm.noCompanies": "Hali kompaniya kiritilmagan",
 
-  "crm.status.POTENTIAL": "Potensial",
+  "crm.status.POTENTIAL": "Потенциал",
 
-  "crm.status.ACTIVE": "Faol",
+  "crm.status.ACTIVE": "Фаол",
 
-  "crm.status.PAUSED": "To'xtatilgan",
+  "crm.status.PAUSED": "Тўхтатилган",
 
-  "crm.status.ARCHIVED": "Arxiv",
+  "crm.status.ARCHIVED": "Архив",
 
   "crm.agr.NEW": "Yangi",
 
@@ -838,7 +839,7 @@ const uzc: Dictionary = {
   "thread.deleteConfirm": "Ўчириш — тасдиқлайман",
   "thread.deleteThread": "Суҳбатни ўчириш",
   "thread.deleteThreadConfirm": "Ҳа, ўчирилсин",
-  "thread.deleteThreadWarn": "Суҳбат ва ундаги барча ёзувлар бутунлай ўчади. Келишувлар ва топшириқлар сақланади, лекин боғланиши йўқолади.",
+  "thread.deleteThreadWarn": "Суҳбат ва ундаги барча ёзувлар лойиҳадан олиб ташланади, нусхаси Ассамблея архивида сақланади. Келишувлар ва топшириқлар қолади, лекин боғланиши йўқолади.",
   "thread.write": "Ёзув қўшиш",
   "thread.writePlaceholder": "Нима бўлди? Масалан: UNIDO билан учрашдик, интеграцияни муҳокама қилдик.",
   "thread.entry.NOTE": "Ёзув",

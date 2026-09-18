@@ -86,7 +86,12 @@ export default async function CompanyPage({
               <Button href={`/meetings/new?company=${company.id}`} icon="calendar">
                 {t("crm.newMeeting")}
               </Button>
-              {removable && <DeleteCompany companyId={company.id} />}
+              {removable && (
+                <DeleteCompany
+                  companyId={company.id}
+                  hasHistory={meetings.length + agreements.length > 0}
+                />
+              )}
             </div>
           ) : undefined
         }

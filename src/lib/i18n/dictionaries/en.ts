@@ -503,7 +503,8 @@ const en: Dictionary = {
   "assistant.clearConfirm": "Yes, clear",
   "crm.deleteCompany": "Delete company",
   "crm.deleteCompanyConfirm": "Yes, delete",
-  "crm.deleteCompanyWarn": "Its contacts and agreements go with it. Meetings are kept, but lose the link.",
+  "crm.deleteCompanyWarn": "The company and its contacts leave the list. A copy is kept in the Assembly archive.",
+  "crm.deleteBlocked": "This company has meetings and agreements, so it cannot be deleted. Set its status to “Archived” instead.",
 
   "assistant.q1": "Which agreements are overdue?",
 
@@ -838,7 +839,7 @@ const en: Dictionary = {
   "thread.deleteConfirm": "Delete for good",
   "thread.deleteThread": "Delete chat",
   "thread.deleteThreadConfirm": "Yes, delete",
-  "thread.deleteThreadWarn": "The chat and every record in it go for good. Agreements and tasks are kept, but lose the link.",
+  "thread.deleteThreadWarn": "The chat and every record in it leave the project; a copy is kept in the Assembly archive. Agreements and tasks remain, but lose the link.",
   "thread.write": "Add a record",
   "thread.writePlaceholder": "What happened? For example: met UNIDO, discussed the integration.",
   "thread.entry.NOTE": "Note",
