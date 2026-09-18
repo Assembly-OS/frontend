@@ -46,13 +46,37 @@ const CHAIN_ERROR: Record<string, MessageKey> = {
   REQUIRED: "form.required",
 };
 
-/** Tab order for the "departments you can assign to" strip. */
-const GROUP_ORDER = ["TEAM", "GR", "FR", "BR", "PR", "AI_LAB", "UYUSHMA", "LOYIHA"];
+/**
+ * Tab order for the "who you can assign to" strip.
+ *
+ * My own team first because it is the common case, then the departments, then
+ * the two lead rosters, and leadership last: handing work upward is rare and
+ * should read as the deliberate thing it is. `NO_DEPT` sits at the end and is
+ * only ever present while somebody is still missing a department — it is a
+ * defect made visible rather than a category of person.
+ */
+const GROUP_ORDER = [
+  "TEAM",
+  "GR",
+  "FR",
+  "BR",
+  "PR",
+  "AI_LAB",
+  "UYUSHMA",
+  "LOYIHA",
+  "LEADERSHIP",
+  "NO_DEPT",
+];
+
+/** Leadership is marked apart from the rest, as the TZ asks. */
+const SET_APART = new Set(["LEADERSHIP", "NO_DEPT"]);
 
 function groupLabel(group: string, t: (key: MessageKey) => string): string {
   if (group === "TEAM") return t("team.title");
   if (group === "UYUSHMA") return t("role.UYUSHMA_RAISI");
   if (group === "LOYIHA") return t("role.LOYIHA_RAHBARI");
+  if (group === "LEADERSHIP") return t("form.leadership");
+  if (group === "NO_DEPT") return t("admin.noDepartment");
   return t(`dept.${group}` as MessageKey).split(" — ")[0];
 }
 
@@ -227,10 +251,12 @@ export function AssignForm({
               setGroup(g);
               setToUserId(null);
             }}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition duration-150 ${
               g === group
                 ? "bg-navy-900 text-white dark:bg-navy-600"
-                : "border hover:bg-[var(--surface)]"
+                : SET_APART.has(g)
+                  ? "border border-amber-500/50 text-amber-700 hover:bg-[var(--surface)] dark:text-amber-400"
+                  : "border hover:bg-[var(--surface)]"
             }`}
           >
             {groupLabel(g, t)}

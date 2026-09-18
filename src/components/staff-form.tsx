@@ -2,7 +2,7 @@
 
 import { useT } from "@/components/i18n-provider";
 import { Button, FIELD, Select } from "@/components/ui";
-import { DEPARTMENTS, ROLES, type Role } from "@/lib/types";
+import { DEPARTMENTS, ROLES, receivesTasks, type Role } from "@/lib/types";
 import type { MessageKey } from "@/lib/i18n";
 
 /**
@@ -74,11 +74,16 @@ export function StaffForm({
   const shortPassword =
     mode === "create" && values.password.length > 0 && values.password.length < 8;
 
-  // Every colleague belongs to a department, because an assignment inherits
-  // its department from whoever it is given to — and one without a department
-  // never reaches the chart the chairman reads. The chairman is the exception:
-  // the departments are operating arms and he heads the Assembly, not one.
-  const needsDepartment = !values.department && values.role !== "RAIS";
+  // Required of exactly the people who can receive an assignment, because
+  // they are exactly the people who can mint one that belongs to no
+  // department — and such an assignment never reaches the chart the chairman
+  // reads. The same test the server applies, for the same reason.
+  const needsDepartment = !values.department && receivesTasks(values.role);
+
+  // The team page and the assignment form both build "my team" from this
+  // field, so a colleague with no manager is on nobody's team on either
+  // screen. The chairman reports to no one.
+  const needsManager = !values.managerId && values.role !== "RAIS";
 
   return (
     <form
@@ -226,19 +231,34 @@ export function StaffForm({
       <div className="sm:col-span-2">
         <label className={label} htmlFor="managerId">
           {t("admin.manager")}
+          {values.role === "RAIS" ? "" : " *"}
         </label>
         <Select
           id="managerId"
           value={values.managerId}
           onChange={(e) => set("managerId", e.target.value)}
+          aria-invalid={needsManager || undefined}
+          aria-describedby={needsManager ? "manager-hint" : undefined}
         >
-          <option value="">{t("admin.noManager")}</option>
+          <option value="">
+            {values.role === "RAIS"
+              ? t("admin.noManager")
+              : t("admin.pickManager")}
+          </option>
           {managers.map((m) => (
             <option key={m.id} value={m.id}>
               {m.label}
             </option>
           ))}
         </Select>
+        {needsManager && (
+          <span
+            id="manager-hint"
+            className="mt-1 block text-[11px] font-medium text-amber-600 dark:text-amber-400"
+          >
+            {t("admin.errManager")}
+          </span>
+        )}
       </div>
 
       <div>
