@@ -25,9 +25,12 @@ interface Row {
 export function AgreementRowItem({
   agreement,
   canSettle,
+  showCompany = true,
 }: {
   agreement: Row;
   canSettle: boolean;
+  /** Off under an agreement's own page, where every row shares its party. */
+  showCompany?: boolean;
 }) {
   const t = useT();
   const router = useRouter();
@@ -62,7 +65,7 @@ export function AgreementRowItem({
       <div className="min-w-0 flex-1">
         <p className="text-sm">{agreement.description}</p>
         <p className="muted mt-0.5 flex flex-wrap gap-x-2 text-xs">
-          {agreement.company_id && agreement.company_name && (
+          {showCompany && agreement.company_id && agreement.company_name && (
             <Link href={`/companies/${agreement.company_id}`} className="hover:underline">
               {agreement.company_name}
             </Link>

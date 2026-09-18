@@ -5,9 +5,12 @@ import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
 import { canWrite, crmRole } from "@/lib/crm-access";
 import { meetingById, meetingCode, missingFields } from "@/lib/meetings";
+import { kelishuvCode, kelishuvlarOfMeeting, viewKelishuv } from "@/lib/kelishuvlar";
+import { today } from "@/lib/crm";
 import { formatDate } from "@/lib/format";
 import {
   INCOMPLETE_TONE,
+  kelishuvTone,
   legalTone,
   statusTone,
   type TaskStatus,
@@ -49,6 +52,7 @@ export default async function MeetingPage({
   if (!meeting) notFound();
 
   const taskFailed = (await searchParams).task === "failed";
+  const agreements = await kelishuvlarOfMeeting(meeting.id);
   const missing = missingFields(meeting);
   const mayEdit =
     meeting.owner_id === user.id ||
@@ -207,6 +211,44 @@ export default async function MeetingPage({
                 )}
               </p>
             </div>
+          </Panel>
+
+          {/* TZ 1.1, step four: what a meeting settled becomes an agreement
+              card, drawn up from the meeting rather than retyped. */}
+          <Panel
+            title={t("kelishuv.title")}
+            action={
+              <Link
+                href={`/agreements/new?meeting=${meeting.id}`}
+                className="muted text-xs font-medium hover:underline"
+              >
+                {t("kelishuv.draftFromMeeting")}
+              </Link>
+            }
+          >
+            {agreements.length === 0 ? (
+              <p className="px-4 py-3 lg:px-5">{notRecorded}</p>
+            ) : (
+              <ul className="divide-y">
+                {agreements.map((agreement) => {
+                  const view = viewKelishuv(agreement.status, agreement.valid_until, today());
+                  return (
+                    <li key={agreement.id}>
+                      <Link
+                        href={`/agreements/${agreement.id}`}
+                        className="flex flex-wrap items-center gap-2 px-4 py-3 transition duration-150 hover:bg-[var(--surface)] lg:px-5"
+                      >
+                        <span className="muted font-mono text-xs">{kelishuvCode(agreement.id)}</span>
+                        <span className="text-sm font-medium">{agreement.title}</span>
+                        <Badge className={kelishuvTone(view)}>
+                          {t(`kelishuv.status.${view}` as MessageKey)}
+                        </Badge>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </Panel>
 
           {meeting.summary && (

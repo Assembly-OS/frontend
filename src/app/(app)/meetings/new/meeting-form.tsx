@@ -213,9 +213,11 @@ export function MeetingForm({
           a desk the same four panels are placed by grid position alone: the
           facts on the right spanning every row, the other three stacked on the
           left. Only the right column may end early; a panel beside a taller
-          one in the same row would leave a gap between panels on the left. */}
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-3">
-        <Panel title={t("meeting.facts")} className="xl:col-start-3 xl:row-span-3 xl:row-start-1">
+          one in the same row would leave a gap between panels on the left.
+          The trailing 1fr row takes the facts panel's extra height when it
+          is the taller column, so the left panels stay together. */}
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-3 xl:grid-rows-[auto_auto_auto_1fr]">
+        <Panel title={t("meeting.facts")} className="xl:col-start-3 xl:row-span-4 xl:row-start-1">
           <div className="space-y-3 p-4 lg:p-5">
             {field(
               `${t("form.title")} *`,
