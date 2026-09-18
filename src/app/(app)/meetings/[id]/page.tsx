@@ -5,6 +5,7 @@ import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
 import { canWrite, crmRole } from "@/lib/crm-access";
 import { meetingById, meetingCode, missingFields } from "@/lib/meetings";
+import { suggestedFields } from "@/lib/meeting-fields";
 import { kelishuvCode, kelishuvlarOfMeeting, viewKelishuv } from "@/lib/kelishuvlar";
 import { today } from "@/lib/crm";
 import { formatDate } from "@/lib/format";
@@ -17,6 +18,7 @@ import {
 } from "@/lib/types";
 import { id as parseId } from "@/lib/validate";
 import { Badge, Button, PageHeader, Panel } from "@/components/ui";
+import { SUGGESTION_LABEL } from "../suggestion-labels";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +60,9 @@ export default async function MeetingPage({
     meeting.owner_id === user.id ||
     meeting.responsible_id === user.id ||
     crmRole(user) === "admin";
+  // Offered only to someone who can act on it: the review happens in the edit
+  // form, and a reader who cannot open it has nothing to do with the news.
+  const suggested = mayEdit ? suggestedFields(meeting.suggestion) : [];
 
   // Quiet on purpose. The one amber signal is the "incomplete" badge above,
   // which names every missing field; eleven amber labels down the page would
@@ -149,6 +154,23 @@ export default async function MeetingPage({
         >
           {t("meeting.taskFailed")}
         </p>
+      )}
+
+      {suggested.length > 0 && (
+        <div
+          role="status"
+          className="mb-4 flex flex-col gap-3 rounded-xl bg-sky-500/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p className="text-sm text-sky-800 dark:text-sky-200">
+            {t("meeting.ai.pageNotice").replace(
+              "{fields}",
+              suggested.map((field) => t(SUGGESTION_LABEL[field])).join(", "),
+            )}
+          </p>
+          <Button href={`/meetings/${meeting.id}/edit`} variant="secondary" size="sm" className="shrink-0">
+            {t("meeting.ai.review")}
+          </Button>
+        </div>
       )}
 
       {missing.length > 0 && (

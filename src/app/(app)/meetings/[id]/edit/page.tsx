@@ -45,6 +45,7 @@ export default async function EditMeetingPage({
       mode="edit"
       meetingId={meeting.id}
       {...options}
+      suggestion={meeting.suggestion}
       initial={{
         title: meeting.title,
         held_at: meeting.held_at?.slice(0, 10) ?? "",

@@ -12,6 +12,8 @@ import {
 } from "../src/lib/kelishuv-fields.ts";
 import { PASSPORT_REQUIRED, PHASES, TIERS } from "../src/lib/project-passport.ts";
 import { HELP_STATUSES } from "../src/lib/work-schedule.ts";
+import { SUGGESTED_FIELDS } from "../src/lib/meeting-fields.ts";
+import { SUGGESTION_LABEL } from "../src/app/(app)/meetings/suggestion-labels.ts";
 
 /**
  * The meeting page names what a record is missing by building keys at run
@@ -73,5 +75,14 @@ for (const [lang, dict] of Object.entries(DICTIONARIES)) {
       ),
     ];
     for (const key of keys) assert.ok(dict[key]?.trim(), `${lang} is missing ${key}`);
+  });
+}
+
+for (const [lang, dict] of Object.entries(DICTIONARIES)) {
+  test(`${lang}: every field the AI can propose has its label`, () => {
+    for (const field of SUGGESTED_FIELDS) {
+      const key = SUGGESTION_LABEL[field];
+      assert.ok(key && dict[key]?.trim(), `${lang} is missing the label of ${field}`);
+    }
   });
 }
