@@ -10,6 +10,7 @@ import {
   KELISHUV_REQUIRED,
   KELISHUV_STATUSES,
 } from "../src/lib/kelishuv-fields.ts";
+import { PASSPORT_REQUIRED, PHASES, TIERS } from "../src/lib/project-passport.ts";
 
 /**
  * The meeting page names what a record is missing by building keys at run
@@ -45,6 +46,17 @@ for (const [lang, dict] of Object.entries(DICTIONARIES)) {
       // The tabs and the badge: every stored status, "all", and the one that
       // is worked out rather than stored.
       ...[...KELISHUV_STATUSES, "ALL", "EXPIRED"].map((s) => `kelishuv.status.${s}`),
+    ];
+    for (const key of keys) assert.ok(dict[key]?.trim(), `${lang} is missing ${key}`);
+  });
+}
+
+for (const [lang, dict] of Object.entries(DICTIONARIES)) {
+  test(`${lang}: every passport phase, tier and missing field has its words`, () => {
+    const keys = [
+      ...PHASES.map((phase) => `proj.phase.${phase}`),
+      ...TIERS.map((tier) => `proj.tier.${tier}`),
+      ...PASSPORT_REQUIRED.map((field) => `proj.passport.missing.${field}`),
     ];
     for (const key of keys) assert.ok(dict[key]?.trim(), `${lang} is missing ${key}`);
   });

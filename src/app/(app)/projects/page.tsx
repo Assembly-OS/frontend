@@ -6,6 +6,8 @@ import { formatDate } from "@/lib/format";
 import { Badge, EmptyState, PageHeader, Panel } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { PROJECT_TONE } from "./tone";
+import { PHASE_STATUS, inLocale, isDraft, type Phase } from "@/lib/project-passport";
+import { INCOMPLETE_TONE, NEUTRAL_TONE } from "@/lib/types";
 import { NewProject } from "./new-project";
 
 export const dynamic = "force-dynamic";
@@ -54,17 +56,43 @@ export default async function ProjectsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="truncate text-sm font-semibold">
-                        {project.name}
+                        {inLocale(locale, project.name, project.name_ru, project.name_en)}
                       </span>
-                      <Badge
-                        className={PROJECT_TONE[project.status] ?? PROJECT_TONE.REJA}
-                      >
-                        {t(`proj.status.${project.status}` as MessageKey)}
-                      </Badge>
+                      {/* Phase once the passport names one — the TZ's finding
+                          was twenty projects all reading "Active". The older
+                          status until then, in the same colours. */}
+                      {project.phase ? (
+                        <Badge
+                          className={
+                            PROJECT_TONE[PHASE_STATUS[project.phase as Phase]] ?? PROJECT_TONE.REJA
+                          }
+                        >
+                          {t(`proj.phase.${project.phase}` as MessageKey)}
+                        </Badge>
+                      ) : (
+                        <Badge
+                          className={PROJECT_TONE[project.status] ?? PROJECT_TONE.REJA}
+                        >
+                          {t(`proj.status.${project.status}` as MessageKey)}
+                        </Badge>
+                      )}
+                      {project.tier && (
+                        <Badge className={NEUTRAL_TONE}>
+                          {t(`proj.tier.${project.tier}` as MessageKey)}
+                        </Badge>
+                      )}
+                      {isDraft(project) && (
+                        <Badge className={INCOMPLETE_TONE}>{t("proj.draft")}</Badge>
+                      )}
                     </div>
                     {project.description && (
                       <p className="muted mt-1 line-clamp-1 text-xs">
-                        {project.description}
+                        {inLocale(
+                          locale,
+                          project.description,
+                          project.description_ru,
+                          project.description_en,
+                        )}
                       </p>
                     )}
                     <p className="muted mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
@@ -76,8 +104,10 @@ export default async function ProjectsPage() {
                           ? `${t("proj.lastActivity")} ${formatDate(project.last_activity)}`
                           : t("proj.noActivity")}
                       </span>
-                      {project.owner_full_name && (
-                        <span className="truncate">{project.owner_full_name}</span>
+                      {(project.owner_full_name || project.leader_name) && (
+                        <span className="truncate">
+                          {project.owner_full_name ?? project.leader_name}
+                        </span>
                       )}
                     </p>
                   </div>

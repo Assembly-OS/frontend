@@ -6,7 +6,7 @@ import { useT } from "@/components/i18n-provider";
 import { Button, FIELD, Panel, Select } from "@/components/ui";
 // From `project-vocab`, not `projects`: this is a Client Component, and
 // that module opens a Postgres pool on import.
-import { PROJECT_STATUSES } from "@/lib/project-vocab";
+import { PHASES } from "@/lib/project-passport";
 import type { MessageKey } from "@/lib/i18n";
 
 /**
@@ -24,7 +24,9 @@ export function NewProject({ label }: { label: string }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<string>("FAOL");
+  // The TZ's life cycle, not the older status: a project opened today is
+  // usually an idea being shaped, so it starts at the concept.
+  const [phase, setPhase] = useState<string>("CONCEPT");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -37,7 +39,7 @@ export function NewProject({ label }: { label: string }) {
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), description, status }),
+        body: JSON.stringify({ name: name.trim(), description, phase }),
       });
       const data = (await response.json()) as { id?: number };
       if (!response.ok || !data.id) {
@@ -101,19 +103,19 @@ export function NewProject({ label }: { label: string }) {
 
         <div>
           <label
-            htmlFor="project-status"
+            htmlFor="project-phase"
             className="mb-1.5 block text-sm font-medium"
           >
-            {t("proj.field.status")}
+            {t("proj.field.phase")}
           </label>
           <Select
-            id="project-status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
+            id="project-phase"
+            value={phase}
+            onChange={(event) => setPhase(event.target.value)}
           >
-            {PROJECT_STATUSES.map((value) => (
+            {PHASES.map((value) => (
               <option key={value} value={value}>
-                {t(`proj.status.${value}` as MessageKey)}
+                {t(`proj.phase.${value}` as MessageKey)}
               </option>
             ))}
           </Select>
