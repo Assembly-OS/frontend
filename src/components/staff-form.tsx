@@ -2,7 +2,7 @@
 
 import { useT } from "@/components/i18n-provider";
 import { Button, FIELD, Select } from "@/components/ui";
-import { DEPARTMENTS, ROLES, type Role } from "@/lib/types";
+import { DEPARTMENTS, ROLES, receivesTasks, type Role } from "@/lib/types";
 import type { MessageKey } from "@/lib/i18n";
 
 /**
@@ -73,6 +73,17 @@ export function StaffForm({
     mode === "create" && values.login.length > 0 && !LOGIN_SHAPE.test(values.login);
   const shortPassword =
     mode === "create" && values.password.length > 0 && values.password.length < 8;
+
+  // Required of exactly the people who can receive an assignment, because
+  // they are exactly the people who can mint one that belongs to no
+  // department — and such an assignment never reaches the chart the chairman
+  // reads. The same test the server applies, for the same reason.
+  const needsDepartment = !values.department && receivesTasks(values.role);
+
+  // The team page and the assignment form both build "my team" from this
+  // field, so a colleague with no manager is on nobody's team on either
+  // screen. The chairman reports to no one.
+  const needsManager = !values.managerId && values.role !== "RAIS";
 
   return (
     <form
@@ -169,19 +180,38 @@ export function StaffForm({
       <div>
         <label className={label} htmlFor="department">
           {t("admin.department")}
+          {values.role === "RAIS" ? "" : " *"}
         </label>
         <Select
           id="department"
           value={values.department}
           onChange={(e) => set("department", e.target.value)}
+          aria-invalid={needsDepartment || undefined}
+          aria-describedby={needsDepartment ? "department-hint" : undefined}
         >
-          <option value="">{t("admin.noDepartment")}</option>
+          {/* Leaving it blank is a real answer for the chairman and a mistake
+              for everyone else, so the same option says two different things.
+              The server refuses the second case either way; this is so the
+              person finds out while the form is still in front of them. */}
+          <option value="">
+            {values.role === "RAIS"
+              ? t("admin.noDepartment")
+              : t("admin.pickDepartment")}
+          </option>
           {DEPARTMENTS.map((dept) => (
             <option key={dept} value={dept}>
               {t(`dept.${dept}` as MessageKey)}
             </option>
           ))}
         </Select>
+        {needsDepartment && (
+          <span
+            id="department-hint"
+            className="mt-1 block text-[11px] font-medium text-amber-600 dark:text-amber-400"
+          >
+            {t("admin.errDepartment")}
+          </span>
+        )}
       </div>
 
       <div className="sm:col-span-2">
@@ -201,19 +231,34 @@ export function StaffForm({
       <div className="sm:col-span-2">
         <label className={label} htmlFor="managerId">
           {t("admin.manager")}
+          {values.role === "RAIS" ? "" : " *"}
         </label>
         <Select
           id="managerId"
           value={values.managerId}
           onChange={(e) => set("managerId", e.target.value)}
+          aria-invalid={needsManager || undefined}
+          aria-describedby={needsManager ? "manager-hint" : undefined}
         >
-          <option value="">{t("admin.noManager")}</option>
+          <option value="">
+            {values.role === "RAIS"
+              ? t("admin.noManager")
+              : t("admin.pickManager")}
+          </option>
           {managers.map((m) => (
             <option key={m.id} value={m.id}>
               {m.label}
             </option>
           ))}
         </Select>
+        {needsManager && (
+          <span
+            id="manager-hint"
+            className="mt-1 block text-[11px] font-medium text-amber-600 dark:text-amber-400"
+          >
+            {t("admin.errManager")}
+          </span>
+        )}
       </div>
 
       <div>

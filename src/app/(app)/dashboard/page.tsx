@@ -19,7 +19,8 @@ import {
   Panel,
   StatCard,
 } from "@/components/ui";
-import { PieChart } from "@/components/pie-chart";
+import { PieChart, type PieSlice } from "@/components/pie-chart";
+import { ScopeChip } from "@/components/metric-note";
 import { CrmBlock } from "./crm-block";
 import { Icon } from "@/components/icons";
 import { formatDate, formatMoney, formatNumber, initials, percent } from "@/lib/format";
@@ -68,6 +69,7 @@ export default async function DashboardPage() {
             <StatCard
               label={t("dashboard.newTasks")}
               value={c.incoming}
+              metric="incoming"
               icon="inbox"
               tone="navy"
               href="/tasks/inbox"
@@ -75,6 +77,7 @@ export default async function DashboardPage() {
             <StatCard
               label={t("dashboard.inWork")}
               value={c.inWork}
+              metric="inWork"
               icon="play"
               tone="gold"
               href="/tasks/execute"
@@ -85,12 +88,14 @@ export default async function DashboardPage() {
                 value={c.onReview}
                 icon="check"
                 tone="emerald"
+              metric="onReview"
                 href="/tasks/review"
               />
             ) : (
               <StatCard
                 label={t("dashboard.completed")}
                 value={c.completed}
+              metric="completed"
                 icon="check"
                 tone="emerald"
               />
@@ -98,6 +103,7 @@ export default async function DashboardPage() {
             <StatCard
               label={t("dashboard.overdue")}
               value={c.overdue}
+              metric="overdue"
               icon="alert"
               tone={c.overdue > 0 ? "rose" : "slate"}
               href="/tasks/overdue"
@@ -108,6 +114,7 @@ export default async function DashboardPage() {
             <StatCard
               label={t("dashboard.sent")}
               value={c.sent}
+              metric="sent"
               hint={`${t("stats.active")}: ${c.sentActive}`}
               icon="send"
               tone="navy"
@@ -118,17 +125,20 @@ export default async function DashboardPage() {
               value={c.onReview}
               icon="check"
               tone="gold"
+              metric="onReview"
               href="/tasks/review"
             />
             <StatCard
               label={t("dashboard.completed")}
               value={c.sentDone}
+              metric="sentDone"
               icon="check"
               tone="emerald"
             />
             <StatCard
               label={t("dashboard.overdue")}
               value={c.sentOverdue}
+              metric="sentOverdue"
               icon="alert"
               tone={c.sentOverdue > 0 ? "rose" : "slate"}
               href="/tasks/overdue"
@@ -300,6 +310,7 @@ async function CommandCentre({ t }: { t: (key: MessageKey) => string }) {
       <div className="mb-3 flex items-center gap-2">
         <Icon name="chart" className="size-4" />
         <h2 className="text-sm font-semibold">{t("dashboard.command")}</h2>
+        <ScopeChip scope="org" />
       </div>
 
       <MetricStrip
@@ -330,13 +341,30 @@ async function CommandCentre({ t }: { t: (key: MessageKey) => string }) {
           <PieChart
             totalLabel={t("dashboard.allTasks")}
             emptyText={t("common.noData")}
-            slices={depts.map((dept) => ({
+            slices={depts.map((dept): PieSlice => ({
               key: dept.department,
               code: t(`dept.${dept.department}` as MessageKey).split(" — ")[0],
               label: t(`dept.${dept.department}` as MessageKey),
               hint: dept.head_name,
               value: dept.total,
-            }))}
+            })).concat(
+              // Work that belongs to no department, drawn as its own neutral
+              // slice. Without it the ring summed to less than the total in
+              // the strip above it — the audit's 41 beside 67 — and the
+              // missing share had no name on screen.
+              totals.unassigned > 0
+                ? [
+                    {
+                      key: "NO_DEPT",
+                      code: t("admin.noDepartment"),
+                      label: t("admin.noDepartment"),
+                      hint: t("dashboard.noDeptHint"),
+                      value: totals.unassigned,
+                      neutral: true,
+                    },
+                  ]
+                : [],
+            )}
           />
         </Panel>
 

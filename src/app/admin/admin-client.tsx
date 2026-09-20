@@ -44,6 +44,8 @@ const ERRORS: Record<string, MessageKey> = {
   BAD_LOGIN: "admin.errLogin",
   WEAK_PASSWORD: "admin.errWeak",
   LOGIN_TAKEN: "admin.errTaken",
+  DEPARTMENT_REQUIRED: "admin.errDepartment",
+  MANAGER_REQUIRED: "admin.errManager",
   LAST_RAIS: "admin.errLastRais",
   HAS_HISTORY: "admin.errHasHistory",
   SELF: "admin.errSelf",

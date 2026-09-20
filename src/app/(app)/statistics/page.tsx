@@ -50,18 +50,21 @@ export default async function StatisticsPage() {
         <StatCard
           label={t("stats.totalUyushma")}
           value={rows.length}
+          metric="orgUyushmalar"
           icon="chart"
           tone="navy"
         />
         <StatCard
           label={t("stats.totalMembers")}
           value={formatNumber(totals.members)}
+          metric="orgMembers"
           icon="users"
           tone="gold"
         />
         <StatCard
           label={t("stats.totalProjects")}
           value={totals.loyihalar}
+          metric="orgLoyihalar"
           hint={`${formatMoney(totals.budget, t)} ${t("stats.sum")}`}
           icon="send"
           tone="emerald"
