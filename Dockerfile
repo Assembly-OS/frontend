@@ -15,7 +15,16 @@ COPY . .
 RUN --mount=type=cache,target=/app/.next/cache npm run build
 
 FROM ${NODE_IMAGE} AS runner
-RUN groupadd --system --gid 10001 app \
+# The base image is pinned by digest, which is what makes a build reproducible
+# and is also why it lags Debian's security updates: the Node image has not been
+# rebuilt since August, and the image scan that gates promotion fails on every
+# distro advisory fixed since. So the packages already in the image are brought
+# up to date here, before apt itself is removed from the image. Pinning still
+# decides *which* Debian; this decides that it is a patched one.
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system --gid 10001 app \
     && useradd --system --uid 10001 --gid app --home-dir /nonexistent --shell /usr/sbin/nologin app \
     && rm -rf /usr/local/lib/node_modules \
     && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
