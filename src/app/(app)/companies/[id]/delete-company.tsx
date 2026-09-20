@@ -16,8 +16,22 @@ import { Button } from "@/components/ui";
  * Two presses, and the second one says what will happen rather than asking
  * whether you are sure. Restricted to the chairman and his assistant by the
  * endpoint; anyone else never sees it.
+ *
+ * A company with meetings or agreements cannot be deleted at all — it is
+ * archived through its status instead, the way a staff account with history
+ * is deactivated. So when the page already shows that history, the button is
+ * replaced by the reason, rather than offered and then refused. The server
+ * enforces the same rule and also counts what this page does not load
+ * (project threads, meeting notes), which is why its refusal has a message
+ * of its own too.
  */
-export function DeleteCompany({ companyId }: { companyId: number }) {
+export function DeleteCompany({
+  companyId,
+  hasHistory,
+}: {
+  companyId: number;
+  hasHistory: boolean;
+}) {
   const t = useT();
   const router = useRouter();
   const [armed, setArmed] = useState(false);
@@ -32,7 +46,14 @@ export function DeleteCompany({ companyId }: { companyId: number }) {
         method: "DELETE",
       });
       if (!response.ok) {
-        setError(t("common.error"));
+        const data = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        setError(
+          data.error === "HAS_HISTORY"
+            ? t("crm.deleteBlocked")
+            : t("common.error"),
+        );
         setBusy(false);
         setArmed(false);
         return;
@@ -46,6 +67,14 @@ export function DeleteCompany({ companyId }: { companyId: number }) {
       setBusy(false);
       setArmed(false);
     }
+  }
+
+  if (hasHistory) {
+    // Left-aligned, unlike the warnings below: the page header wraps by
+    // content rather than at a breakpoint, so this sits beside the button on
+    // a wide screen and under it on a phone, and only left alignment reads
+    // right in both places.
+    return <p className="muted max-w-xs text-xs">{t("crm.deleteBlocked")}</p>;
   }
 
   if (!armed) {
