@@ -20,67 +20,66 @@
 }
 
 @theme {
-  /* Primary structural colour — the azure of the state flag, one hue stepped
-     from a pale wash to a deep teal-blue. The `navy-*` names are kept so every
-     existing utility follows the change, and every step holds the lightness of
-     the graphite step it replaces: white on 900 reads at 15.0:1, on 600 at
-     7.9:1, exactly as before. */
-  --color-navy-50: #e8f2f6;
-  --color-navy-100: #d9e4e8;
-  --color-navy-200: #bcd0d7;
-  --color-navy-300: #90b1bd;
-  --color-navy-400: #5c8ea0;
-  --color-navy-500: #257087;
-  --color-navy-600: #03596f;
-  --color-navy-700: #044658;
-  --color-navy-800: #003847;
-  --color-navy-900: #022b36;
-  --color-navy-950: #001b24;
+  /* Primary structural colour — the cobalt of Samarkand majolica, one hue
+     stepped from a pale wash to the tile's own depth. The `navy-*` names are
+     kept so every existing utility follows the change. Every step keeps the
+     lightness of the graphite scale it replaces, so no contrast that passed
+     before fails now: white on 900 is 15.5:1, on 600 8.3:1. */
+  --color-navy-50: #ecf0f9;
+  --color-navy-100: #dce2ed;
+  --color-navy-200: #c2cce1;
+  --color-navy-300: #9aabcd;
+  --color-navy-400: #6e85b5;
+  --color-navy-500: #4764a1;
+  --color-navy-600: #2c4b93;
+  --color-navy-700: #1a3882;
+  --color-navy-800: #0f2b6f;
+  --color-navy-900: #0a2057;
+  --color-navy-950: #031240;
 
-  /* Accent — the green of the state flag, reusing the `gold-*` names. Rare by
-     rule: three accents on a page mean none. It sits in the same family as the
-     `emerald` that marks "done", so it is never the only thing telling a
-     state — every status keeps its word beside it. 600 is the text step and
-     clears 4.5:1 on a panel (5.0:1); the marigold it replaces read at 3.0:1. */
-  --color-gold-400: #71d884;
-  --color-gold-500: #48c063;
-  --color-gold-600: #037f31;
+  /* Accent — the ochre gold of the same tilework, reusing the `gold-*` names.
+     600 is the text step and is darkened until it clears 4.5:1 on a panel
+     (5.4:1); the old marigold read at 3.0:1 and was the one failing pair. */
+  --color-gold-400: #edb24d;
+  --color-gold-500: #d79700;
+  --color-gold-600: #8b6000;
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 }
 
 :root {
-  /* A cool paper surface with a lighter panel above it, so cards read as
-     raised. Ink is a near-black; the line a soft cool grey. Both carry a trace
-     of the azure, so the neutrals belong to the palette rather than sit beside it. */
-  --surface: #e8eeef;
-  --panel: #f9fcfc;
-  --ink: #15191a;
-  --muted: #656a6b;
-  --line: #d7dedf;
+  /* Cool paper surface with a lighter panel above it, so cards read as raised.
+     Ink is a near-black; borders a soft cool line. Both carry a trace of the
+     cobalt so the neutrals belong to the same palette rather than sitting
+     beside it. */
+  --surface: #eaedf2;
+  --panel: #fafbfe;
+  --ink: #16181c;
+  --muted: #66696e;
+  --line: #dadce2;
   /* One focus colour for the whole app. Applied globally below, so an element
      is never left without a visible focus state just because its own class
      string forgot one. */
-  --focus: #03596f;
+  --focus: #2c4b93;
   /* Soft, theme-aware elevation. `soft` sits panels a hair above the surface;
      `lift` is the raised state a card reaches on hover. Stronger in the light
      theme, where cards need a visible shadow to separate from the surface. */
-  --shadow-soft: 0 1px 2px rgba(21, 25, 26, 0.06),
-    0 8px 22px -10px rgba(21, 25, 26, 0.24);
-  --shadow-lift: 0 2px 6px rgba(21, 25, 26, 0.08),
-    0 20px 44px -16px rgba(21, 25, 26, 0.34);
+  --shadow-soft: 0 1px 2px rgba(22, 24, 28, 0.06),
+    0 8px 22px -10px rgba(22, 24, 28, 0.24);
+  --shadow-lift: 0 2px 6px rgba(22, 24, 28, 0.08),
+    0 20px 44px -16px rgba(22, 24, 28, 0.34);
   /* Chart palette — the brand gold, stepped light to dark: every slice is the
      same hue, told apart by shade. Kept luminous rather than earthy: the darker
      end of the earlier ramp went brown on screen and the dominant slice, which
      is the one people actually look at, read as mud. Validated ordinal for this surface: one hue,
      monotone lightness, >=0.06 ΔL between steps, light end clears the surface.
      `-ink` is the label colour that clears 4.5:1 on each step. */
-  --series-1: #80cae4;
-  --series-2: #49accc;
-  --series-3: #058eaf;
-  --series-4: #026e89;
-  --series-5: #045064;
+  --series-1: #9ebdfd;
+  --series-2: #789de9;
+  --series-3: #587dce;
+  --series-4: #3f60a7;
+  --series-5: #2c457c;
   --series-1-ink: #000000;
   --series-2-ink: #000000;
   --series-3-ink: #000000;
@@ -97,22 +96,22 @@ html[data-theme="dark"] {
   --ink: #ece9e3;
   --muted: #9a978f;
   --line: #2c2b31;
-  --focus: #90b1bd;
+  --focus: #9aabcd;
   --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3),
     0 12px 30px -14px rgba(0, 0, 0, 0.6);
   --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.4),
     0 20px 44px -18px rgba(0, 0, 0, 0.7);
   /* The same ramp re-stepped for the dark surface, not an auto-flip. */
-  --series-1: #ace9ff;
-  --series-2: #6fd0f0;
-  --series-3: #45b4d6;
-  --series-4: #2f97b5;
-  --series-5: #2c7991;
+  --series-1: #cedeff;
+  --series-2: #a2c1ff;
+  --series-3: #7ba3f6;
+  --series-4: #6387d2;
+  --series-5: #516da7;
   --series-1-ink: #000000;
   --series-2-ink: #000000;
   --series-3-ink: #000000;
   --series-4-ink: #000000;
-  --series-5-ink: #ffffff;
+  --series-5-ink: #000000;
   color-scheme: dark;
 }
 
@@ -123,16 +122,16 @@ html[data-theme="dark"] {
     --ink: #ece9e3;
     --muted: #9a978f;
     --line: #2c2b31;
-    --focus: #90b1bd;
+    --focus: #9aabcd;
     --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3),
       0 12px 30px -14px rgba(0, 0, 0, 0.6);
     --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.4),
       0 20px 44px -18px rgba(0, 0, 0, 0.7);
-    --series-1: #ace9ff;
-    --series-2: #6fd0f0;
-    --series-3: #45b4d6;
-    --series-4: #2f97b5;
-    --series-5: #2c7991;
+    --series-1: #cedeff;
+    --series-2: #a2c1ff;
+    --series-3: #7ba3f6;
+    --series-4: #6387d2;
+    --series-5: #516da7;
     --series-1-ink: #000000;
     --series-2-ink: #000000;
     --series-3-ink: #000000;
