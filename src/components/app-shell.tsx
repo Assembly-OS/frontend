@@ -63,7 +63,7 @@ export function AppShell({
   }
 
   const sidebar = (
-    <div className="flex h-full flex-col bg-[var(--sidebar)] text-white">
+    <div className="flex h-full flex-col bg-navy-950 text-white">
       <div className="flex items-center gap-3 px-5 py-5">
         <span className="grid size-9 place-items-center rounded-lg bg-gold-500 text-sm font-black text-navy-950">
           A

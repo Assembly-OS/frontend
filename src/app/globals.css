@@ -58,10 +58,6 @@
   --ink: #16181c;
   --muted: #66696e;
   --line: #dadce2;
-  /* The navigation rail, dark in both themes. A token rather than a utility
-     class: in the dark theme it steps back to dusk with the rest of the page,
-     which a fixed `bg-navy-950` could not do. */
-  --sidebar: #031240;
   /* One focus colour for the whole app. Applied globally below, so an element
      is never left without a visible focus state just because its own class
      string forgot one. */
@@ -95,17 +91,16 @@
 }
 
 html[data-theme="dark"] {
-  --surface: #222833;
-  --panel: #313742;
-  --ink: #eef0f5;
-  --muted: #b7becc;
-  --line: #464c58;
-  --sidebar: #191e29;
-  --focus: #c2cce1;
-  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.18),
-    0 10px 26px -14px rgba(0, 0, 0, 0.45);
-  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.24),
-    0 18px 40px -18px rgba(0, 0, 0, 0.55);
+  --surface: #0f0f12;
+  --panel: #1c1b21;
+  --ink: #ece9e3;
+  --muted: #9a978f;
+  --line: #2c2b31;
+  --focus: #9aabcd;
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 12px 30px -14px rgba(0, 0, 0, 0.6);
+  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.4),
+    0 20px 44px -18px rgba(0, 0, 0, 0.7);
   /* The same ramp re-stepped for the dark surface, not an auto-flip. */
   --series-1: #cedeff;
   --series-2: #a2c1ff;
@@ -122,17 +117,16 @@ html[data-theme="dark"] {
 
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) {
-    --surface: #222833;
-    --panel: #313742;
-    --ink: #eef0f5;
-    --muted: #b7becc;
-    --line: #464c58;
-    --sidebar: #191e29;
-    --focus: #c2cce1;
-    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.18),
-      0 10px 26px -14px rgba(0, 0, 0, 0.45);
-    --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.24),
-      0 18px 40px -18px rgba(0, 0, 0, 0.55);
+    --surface: #0f0f12;
+    --panel: #1c1b21;
+    --ink: #ece9e3;
+    --muted: #9a978f;
+    --line: #2c2b31;
+    --focus: #9aabcd;
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3),
+      0 12px 30px -14px rgba(0, 0, 0, 0.6);
+    --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.4),
+      0 20px 44px -18px rgba(0, 0, 0, 0.7);
     --series-1: #cedeff;
     --series-2: #a2c1ff;
     --series-3: #7ba3f6;
