@@ -138,6 +138,14 @@ export default async function AppLayout({
     icon: "chat",
     group: "nav.group.ai",
   });
+  // Open to everyone who can ask the assistant anything: knowing what it
+  // answers from is how a person decides whether to trust the answer.
+  nav.push({
+    href: "/knowledge",
+    labelKey: "nav.knowledge",
+    icon: "library",
+    group: "nav.group.ai",
+  });
   if (canSubmitToAi(user)) {
     nav.push({
       href: "/ai",

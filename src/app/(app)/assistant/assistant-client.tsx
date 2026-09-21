@@ -7,7 +7,7 @@ import { Icon, type IconName } from "@/components/icons";
 import { Button, EmptyState, FIELD, PageHeader, Panel } from "@/components/ui";
 
 interface Ref {
-  kind: "company" | "meeting" | "agreement" | "task" | "person";
+  kind: "company" | "meeting" | "agreement" | "task" | "person" | "document";
   id: number;
   label: string;
   href: string;
@@ -28,6 +28,7 @@ const REF_ICON: Record<Ref["kind"], IconName> = {
   agreement: "check",
   task: "inbox",
   person: "user",
+  document: "file",
 };
 
 /** Questions worth one tap — and a demonstration of what it can be asked. */
