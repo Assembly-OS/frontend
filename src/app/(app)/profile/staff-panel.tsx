@@ -8,6 +8,7 @@ import {
   EMPTY_STAFF,
   newPassword,
   StaffForm,
+  type StaffChoices,
   type StaffValues,
 } from "@/components/staff-form";
 import { formatDateTime, initials } from "@/lib/format";
@@ -39,6 +40,9 @@ const ERRORS: Record<string, MessageKey> = {
   LOGIN_TAKEN: "admin.errTaken",
   DEPARTMENT_REQUIRED: "admin.errDepartment",
   MANAGER_REQUIRED: "admin.errManager",
+  KLASTER_REQUIRED: "admin.errScope",
+  UYUSHMA_REQUIRED: "admin.errScope",
+  PROJECT_REQUIRED: "admin.errScope",
   LAST_RAIS: "admin.errLastRais",
   HAS_HISTORY: "admin.errHasHistory",
   SELF: "admin.errSelf",
@@ -50,11 +54,11 @@ const SEARCH_FROM = 8;
 
 export function StaffPanel({
   staff,
-  managers,
+  choices,
   selfId,
 }: {
   staff: StaffRow[];
-  managers: { id: number; label: string }[];
+  choices: StaffChoices;
   selfId: number;
 }) {
   const t = useT();
@@ -209,6 +213,9 @@ export function StaffPanel({
       department: person.department ?? "",
       position: person.position ?? "",
       managerId: person.manager_id ? String(person.manager_id) : "",
+      klasterId: person.klaster_id ? String(person.klaster_id) : "",
+      uyushmaId: person.uyushma_id ? String(person.uyushma_id) : "",
+      projectId: person.project_id ? String(person.project_id) : "",
       phone: person.phone ?? "",
       email: person.email ?? "",
     });
@@ -282,7 +289,7 @@ export function StaffPanel({
             <StaffForm
               mode="create"
               values={values}
-              managers={managers}
+              choices={choices}
               busy={busy}
               onChange={setValues}
               onSubmit={create}
@@ -299,7 +306,7 @@ export function StaffPanel({
             <StaffForm
               mode="edit"
               values={values}
-              managers={managers}
+              choices={choices}
               busy={busy}
               onChange={setValues}
               onSubmit={() => saveEdit(editing)}

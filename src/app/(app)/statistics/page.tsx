@@ -35,7 +35,7 @@ export default async function StatisticsPage() {
   const totals = await orgTotals();
   const breakdown = await taskStatusBreakdown();
   const totalTasks = breakdown.reduce((sum, slice) => sum + slice.count, 0);
-  const projectRows = await projects();
+  const projectRows = await projects(user);
 
   const avgRate = Math.round(
     rows.reduce((sum, row) => sum + percent(row.tasks_done, row.tasks_total), 0) /

@@ -53,7 +53,7 @@ export default async function AssignPage() {
   }));
 
   const sent = await assignedTasks(user.id);
-  const projectOptions = (await projects()).map((project) => ({
+  const projectOptions = (await projects(user)).map((project) => ({
     id: project.id,
     code: project.code,
     name: project.name,

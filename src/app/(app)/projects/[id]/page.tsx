@@ -33,7 +33,9 @@ import { NewThread } from "./new-thread";
 import { ThreadRail } from "./thread-rail";
 import { Schedule } from "./schedule";
 import { ProjectDocuments } from "./documents";
-import { canKeepDocuments, documentsOf } from "@/lib/project-documents";
+import { ProjectMembers } from "./members";
+import { documentsOf } from "@/lib/project-documents";
+import { memberCandidates, membersOf, projectRights } from "@/lib/project-visibility";
 import { id as parseId } from "@/lib/validate";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +51,11 @@ export const dynamic = "force-dynamic";
  * main column in the order they were last touched, and beside them the three
  * things actually waiting on somebody.
  *
+ * Since block 4 the page is only there for the people TZ 4.2 lets see the
+ * project — anyone else gets a 404, link or no link. An outside project lead
+ * sees its card and not the staff's side of it: the passport, the schedule
+ * and the documents, which is what 4.3 lets him read and write.
+ *
  * `items-start` on the grid is load-bearing. The two columns are unrelated
  * heights, and without it a short right-hand column is stretched to match the
  * threads and renders as a panel of dead space.
@@ -63,26 +70,27 @@ export default async function ProjectPage({
   const t = createTranslator(locale);
 
   const projectId = parseId((await params).id);
-  const project = projectId ? await projectById(projectId) : undefined;
-  if (!project) notFound();
+  const rights = projectId ? await projectRights(user, projectId) : null;
+  const project = rights ? await projectById(rights.id) : undefined;
+  if (!rights || !project) notFound();
+  const internal = rights.internal;
 
   // Meetings are read by the people who may file them; to anyone else the
   // panel would be a list of links that lead nowhere.
-  const readsMeetings = canWrite(user);
-  const [threads, pulse, meetings, stages, documents] = await Promise.all([
-    threadsOf(project.id),
-    projectPulse(project.id),
-    readsMeetings
-      ? searchMeetings({ projectId: project.id })
-      : Promise.resolve({ rows: [], total: 0 }),
-    stagesOf(project.id),
-    documentsOf(project.id),
-  ]);
-  const mayManage = canManageProjects(user);
-  // The schedule is kept by the managers and by this project's own leader and
-  // deputy — the same people the API lets save it.
-  const mayKeepSchedule =
-    mayManage || project.owner_id === user.id || project.deputy_id === user.id;
+  const readsMeetings = internal && canWrite(user);
+  const [threads, pulse, meetings, stages, documents, members, candidates] =
+    await Promise.all([
+      internal ? threadsOf(project.id) : Promise.resolve([]),
+      projectPulse(project.id),
+      readsMeetings
+        ? searchMeetings({ projectId: project.id })
+        : Promise.resolve({ rows: [], total: 0 }),
+      stagesOf(project.id),
+      documentsOf(project.id),
+      internal ? membersOf(project.id) : Promise.resolve([]),
+      rights.editPassport ? memberCandidates() : Promise.resolve([]),
+    ]);
+  const mayManage = internal && canManageProjects(user);
 
   // The line under the title keeps to what changes week to week — where the
   // project stands and when it last moved. Who leads it, its dates and its
@@ -129,6 +137,118 @@ export default async function ProjectPage({
     [t("proj.field.budget"), project.budget ? formatNumber(project.budget) : null],
   ];
 
+
+  const passportPanel = (
+    <>
+    {/* The passport, block 1.3 of the TZ. What is missing is said once,
+        at the foot, in the words of the fields; the rows themselves only
+        show what is known, so a half-filled passport reads as half, not
+        as a column of dashes. */}
+    <Panel
+      title={t("proj.passport.title")}
+      action={
+        rights.editPassport ? (
+          <Link
+            href={`/projects/${project.id}/passport`}
+            className="muted text-xs font-medium hover:underline"
+          >
+            {t("proj.passport.edit")}
+          </Link>
+        ) : undefined
+      }
+    >
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 px-5 py-4">
+        {passport
+          .filter(([, value]) => value)
+          .map(([label, value]) => (
+            <div key={label} className="min-w-0">
+              <dt className="muted text-[11px]">{label}</dt>
+              <dd className="mt-0.5 text-sm tabular-nums">{value}</dd>
+            </div>
+          ))}
+        {shares && (
+          <div className="col-span-2">
+            <dt className="muted text-[11px]">{t("proj.passport.ppp")}</dt>
+            <dd className="mt-1 space-y-0.5 text-sm">
+              {shares.map(([label, share, party]) => (
+                <p key={label} className="flex gap-2">
+                  <span className="w-10 shrink-0 text-right font-medium tabular-nums">
+                    {share ?? "—"}%
+                  </span>
+                  <span className="min-w-0 truncate">
+                    {t(label)}
+                    {party && <span className="muted"> · {party}</span>}
+                  </span>
+                </p>
+              ))}
+            </dd>
+          </div>
+        )}
+        {project.first_result && (
+          <div className="col-span-2">
+            <dt className="muted text-[11px]">{t("proj.field.firstResult")}</dt>
+            <dd className="mt-0.5 text-sm">{project.first_result}</dd>
+          </div>
+        )}
+      </dl>
+      {missing.length > 0 && (
+        <p className="flex flex-wrap items-center gap-2 border-t px-5 py-3 text-xs">
+          <Badge className={INCOMPLETE_TONE}>{t("meeting.incomplete")}</Badge>
+          <span className="muted">
+            {t("meeting.missingList").replace(
+              "{fields}",
+              missing.map((field) => t(`proj.passport.missing.${field}` as MessageKey)).join(", "),
+            )}
+          </span>
+        </p>
+      )}
+    </Panel>
+    </>
+  );
+
+  // Who can see the project, for the staff; kept by whoever keeps the passport.
+  const membersPanel = internal ? (
+    <Panel
+      title={t("proj.members.title")}
+      action={<span className="muted text-xs tabular-nums">{members.length}</span>}
+    >
+      <ProjectMembers
+        projectId={project.id}
+        members={members}
+        candidates={candidates}
+        canEdit={rights.editPassport}
+      />
+    </Panel>
+  ) : null;
+
+  const documentsPanel = (
+    <>
+    {/* The passport's last field: its papers. Beside the passport
+        rather than inside it, because it is a list that grows. */}
+    <Panel
+      title={t("proj.docs.title")}
+      action={
+        documents.length > 0 ? (
+          <span className="muted text-xs tabular-nums">{documents.length}</span>
+        ) : undefined
+      }
+    >
+      <ProjectDocuments
+        projectId={project.id}
+        documents={documents.map((doc) => ({
+          id: doc.id,
+          kind: doc.kind,
+          title: doc.title,
+          file_name: doc.file_name,
+          file_size: doc.file_size,
+          created_at: doc.created_at,
+        }))}
+        canEdit={rights.keepDocuments}
+      />
+    </Panel>
+    </>
+  );
+
   return (
     <>
       <PageHeader
@@ -170,30 +290,35 @@ export default async function ProjectPage({
       </div>
 
       {/* The memory, before the numbers. Somebody arriving with a question
-          in mind should not have to scroll past four counters to ask it. */}
-      <div className="mb-6">
-        <ProjectMemory
-          projectId={project.id}
-          scopeLabel={t("memory.scopeProject")}
-        />
-      </div>
+          in mind should not have to scroll past four counters to ask it.
+          It answers from the staff's journal, so it is theirs. */}
+      {internal && (
+        <div className="mb-6">
+          <ProjectMemory
+            projectId={project.id}
+            scopeLabel={t("memory.scopeProject")}
+          />
+        </div>
+      )}
 
       {/* Full width, above the columns. Inside the third-width column the
           strip had four cells of about eighty pixels and truncated its own
           labels to "Проср…" — a number with no idea what it counts. */}
-      <div className="mb-6">
-        <MetricStrip
-          items={[
-            { label: t("proj.overdue"), value: pulse.tasks.overdue },
-            {
-              label: t("proj.awaiting"),
-              value: pulse.tasks.awaitingAcceptance,
-            },
-            { label: t("proj.inProgress"), value: pulse.tasks.inProgress },
-            { label: t("proj.done"), value: pulse.tasks.done },
-          ]}
-        />
-      </div>
+      {internal && (
+        <div className="mb-6">
+          <MetricStrip
+            items={[
+              { label: t("proj.overdue"), value: pulse.tasks.overdue },
+              {
+                label: t("proj.awaiting"),
+                value: pulse.tasks.awaitingAcceptance,
+              },
+              { label: t("proj.inProgress"), value: pulse.tasks.inProgress },
+              { label: t("proj.done"), value: pulse.tasks.done },
+            ]}
+          />
+        </div>
+      )}
 
       {/* The work schedule, full width: the TZ's reason for it is that a new
           leader opens the project and sees at once where the work stopped,
@@ -203,244 +328,170 @@ export default async function ProjectPage({
           projectId={project.id}
           stages={stages}
           today={today()}
-          mayEdit={mayKeepSchedule}
+          mayEdit={rights.enterStages}
           t={t}
         />
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Panel
-            title={t("proj.threads")}
-            action={
-              <span className="muted text-xs tabular-nums">
-                {threads.length}
-              </span>
-            }
-          >
-            {threads.length === 0 ? (
-              <EmptyState
-                bare
-                icon="chat"
-                text={t("proj.noThreads")}
-                hint={t("proj.noThreadsHint")}
-                action={
-                  mayManage ? (
-                    <NewThread
-                      projectId={project.id}
-                      label={t("proj.newThread")}
-                    />
-                  ) : undefined
-                }
-              />
-            ) : (
-              <ThreadRail
-                projectId={project.id}
-                threads={threads}
-                noActivityLabel={t("proj.noActivity")}
-              />
-            )}
-          </Panel>
-        </div>
-
-        <div className="space-y-6">
-          {/* The passport, block 1.3 of the TZ. What is missing is said once,
-              at the foot, in the words of the fields; the rows themselves only
-              show what is known, so a half-filled passport reads as half, not
-              as a column of dashes. */}
-          <Panel
-            title={t("proj.passport.title")}
-            action={
-              mayManage ? (
-                <Link
-                  href={`/projects/${project.id}/passport`}
-                  className="muted text-xs font-medium hover:underline"
-                >
-                  {t("proj.passport.edit")}
-                </Link>
-              ) : undefined
-            }
-          >
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 px-5 py-4">
-              {passport
-                .filter(([, value]) => value)
-                .map(([label, value]) => (
-                  <div key={label} className="min-w-0">
-                    <dt className="muted text-[11px]">{label}</dt>
-                    <dd className="mt-0.5 text-sm tabular-nums">{value}</dd>
-                  </div>
-                ))}
-              {shares && (
-                <div className="col-span-2">
-                  <dt className="muted text-[11px]">{t("proj.passport.ppp")}</dt>
-                  <dd className="mt-1 space-y-0.5 text-sm">
-                    {shares.map(([label, share, party]) => (
-                      <p key={label} className="flex gap-2">
-                        <span className="w-10 shrink-0 text-right font-medium tabular-nums">
-                          {share ?? "—"}%
-                        </span>
-                        <span className="min-w-0 truncate">
-                          {t(label)}
-                          {party && <span className="muted"> · {party}</span>}
-                        </span>
-                      </p>
-                    ))}
-                  </dd>
-                </div>
-              )}
-              {project.first_result && (
-                <div className="col-span-2">
-                  <dt className="muted text-[11px]">{t("proj.field.firstResult")}</dt>
-                  <dd className="mt-0.5 text-sm">{project.first_result}</dd>
-                </div>
-              )}
-            </dl>
-            {missing.length > 0 && (
-              <p className="flex flex-wrap items-center gap-2 border-t px-5 py-3 text-xs">
-                <Badge className={INCOMPLETE_TONE}>{t("meeting.incomplete")}</Badge>
-                <span className="muted">
-                  {t("meeting.missingList").replace(
-                    "{fields}",
-                    missing.map((field) => t(`proj.passport.missing.${field}` as MessageKey)).join(", "),
-                  )}
-                </span>
-              </p>
-            )}
-          </Panel>
-
-          {/* The passport's last field: its papers. Beside the passport
-              rather than inside it, because it is a list that grows. */}
-          <Panel
-            title={t("proj.docs.title")}
-            action={
-              documents.length > 0 ? (
-                <span className="muted text-xs tabular-nums">{documents.length}</span>
-              ) : undefined
-            }
-          >
-            <ProjectDocuments
-              projectId={project.id}
-              documents={documents.map((doc) => ({
-                id: doc.id,
-                kind: doc.kind,
-                title: doc.title,
-                file_name: doc.file_name,
-                file_size: doc.file_size,
-                created_at: doc.created_at,
-              }))}
-              canEdit={canKeepDocuments(user, project)}
-            />
-          </Panel>
-
-          {/* The block the whole acceptance feature exists for: assignments
-              that have been handed out and that nobody has taken on. */}
-          <Panel title={t("proj.waitingTitle")}>
-            {pulse.waiting.length === 0 ? (
-              <EmptyState bare icon="check" text={t("proj.waitingEmpty")} />
-            ) : (
-              <ul className="divide-y">
-                {pulse.waiting.map((task) => (
-                  <li key={task.id} className="px-5 py-3">
-                    <WaitingRow
-                      title={task.title}
-                      assignee={task.assignee}
-                      seen={Boolean(task.seen_at)}
-                      t={t}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
-
-          <Panel title={t("proj.openAgreements")}>
-            {pulse.openAgreements.length === 0 ? (
-              <EmptyState bare icon="check" text={t("proj.noAgreements")} />
-            ) : (
-              <ul className="divide-y">
-                {pulse.openAgreements.map((agreement) => {
-                  const view = viewStatus(agreement.status, agreement.deadline);
-                  return (
-                    <li key={agreement.id} className="px-5 py-3">
-                      <p className="text-sm">{agreement.description}</p>
-                      <p className="mt-1.5 flex flex-wrap items-center gap-2">
-                        <Badge className={AGREEMENT_TONE[view]}>
-                          {t(`crm.agr.${view}` as MessageKey)}
-                        </Badge>
-                        {agreement.deadline && (
-                          <span className="muted text-[11px] tabular-nums">
-                            {formatDate(agreement.deadline)}
-                          </span>
-                        )}
-                        {agreement.company_name && (
-                          <span className="muted truncate text-[11px]">
-                            {agreement.company_name}
-                          </span>
-                        )}
-                      </p>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </Panel>
-
-          {/* The TZ: a meeting shows on its project's card by itself. The
-              last five, newest first, and the way to the rest. */}
-          {readsMeetings && (
+      {/* The outside lead's card: passport and documents side by side, and
+          nothing of the staff's journal, pulse or meetings (TZ 4.3). */}
+      {internal ? (
+        <div className="grid items-start gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
             <Panel
-              title={t("meetings.title")}
+              title={t("proj.threads")}
               action={
-                <Link
-                  href={`/meetings/new?project=${project.id}`}
-                  className="muted text-xs font-medium hover:underline"
-                >
-                  {t("crm.newMeeting")}
-                </Link>
+                <span className="muted text-xs tabular-nums">
+                  {threads.length}
+                </span>
               }
             >
-              {meetings.rows.length === 0 ? (
-                <EmptyState bare icon="calendar" text={t("meeting.noneForProject")} />
+              {threads.length === 0 ? (
+                <EmptyState
+                  bare
+                  icon="chat"
+                  text={t("proj.noThreads")}
+                  hint={t("proj.noThreadsHint")}
+                  action={
+                    mayManage ? (
+                      <NewThread
+                        projectId={project.id}
+                        label={t("proj.newThread")}
+                      />
+                    ) : undefined
+                  }
+                />
+              ) : (
+                <ThreadRail
+                  projectId={project.id}
+                  threads={threads}
+                  noActivityLabel={t("proj.noActivity")}
+                />
+              )}
+            </Panel>
+          </div>
+
+          <div className="space-y-6">
+            {passportPanel}
+            {documentsPanel}
+
+            {/* The block the whole acceptance feature exists for: assignments
+                that have been handed out and that nobody has taken on. */}
+            <Panel title={t("proj.waitingTitle")}>
+              {pulse.waiting.length === 0 ? (
+                <EmptyState bare icon="check" text={t("proj.waitingEmpty")} />
               ) : (
                 <ul className="divide-y">
-                  {meetings.rows.slice(0, 5).map((meeting) => (
-                    <li key={meeting.id}>
-                      <Link
-                        href={`/meetings/${meeting.id}`}
-                        className="block px-5 py-3 transition duration-150 hover:bg-[var(--surface)]"
-                      >
-                        <span className="flex items-baseline justify-between gap-3">
-                          <span className="min-w-0 truncate text-sm font-medium">
-                            {meeting.title}
-                          </span>
-                          <span className="muted shrink-0 text-[11px] tabular-nums">
-                            {formatDate(meeting.happened)}
-                          </span>
-                        </span>
-                        {meeting.company_name && (
-                          <span className="muted mt-0.5 block truncate text-[11px]">
-                            {meeting.company_name}
-                          </span>
-                        )}
-                      </Link>
+                  {pulse.waiting.map((task) => (
+                    <li key={task.id} className="px-5 py-3">
+                      <WaitingRow
+                        title={task.title}
+                        assignee={task.assignee}
+                        seen={Boolean(task.seen_at)}
+                        t={t}
+                      />
                     </li>
                   ))}
-                  {meetings.total > 5 && (
-                    <li>
-                      <Link
-                        href={`/meetings?project=${project.id}`}
-                        className="muted block px-5 py-2.5 text-xs font-medium hover:underline"
-                      >
-                        {t("meeting.all").replace("{n}", String(meetings.total))}
-                      </Link>
-                    </li>
-                  )}
                 </ul>
               )}
             </Panel>
-          )}
+
+            <Panel title={t("proj.openAgreements")}>
+              {pulse.openAgreements.length === 0 ? (
+                <EmptyState bare icon="check" text={t("proj.noAgreements")} />
+              ) : (
+                <ul className="divide-y">
+                  {pulse.openAgreements.map((agreement) => {
+                    const view = viewStatus(agreement.status, agreement.deadline);
+                    return (
+                      <li key={agreement.id} className="px-5 py-3">
+                        <p className="text-sm">{agreement.description}</p>
+                        <p className="mt-1.5 flex flex-wrap items-center gap-2">
+                          <Badge className={AGREEMENT_TONE[view]}>
+                            {t(`crm.agr.${view}` as MessageKey)}
+                          </Badge>
+                          {agreement.deadline && (
+                            <span className="muted text-[11px] tabular-nums">
+                              {formatDate(agreement.deadline)}
+                            </span>
+                          )}
+                          {agreement.company_name && (
+                            <span className="muted truncate text-[11px]">
+                              {agreement.company_name}
+                            </span>
+                          )}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </Panel>
+
+            {/* The TZ: a meeting shows on its project's card by itself. The
+                last five, newest first, and the way to the rest. */}
+            {readsMeetings && (
+              <Panel
+                title={t("meetings.title")}
+                action={
+                  <Link
+                    href={`/meetings/new?project=${project.id}`}
+                    className="muted text-xs font-medium hover:underline"
+                  >
+                    {t("crm.newMeeting")}
+                  </Link>
+                }
+              >
+                {meetings.rows.length === 0 ? (
+                  <EmptyState bare icon="calendar" text={t("meeting.noneForProject")} />
+                ) : (
+                  <ul className="divide-y">
+                    {meetings.rows.slice(0, 5).map((meeting) => (
+                      <li key={meeting.id}>
+                        <Link
+                          href={`/meetings/${meeting.id}`}
+                          className="block px-5 py-3 transition duration-150 hover:bg-[var(--surface)]"
+                        >
+                          <span className="flex items-baseline justify-between gap-3">
+                            <span className="min-w-0 truncate text-sm font-medium">
+                              {meeting.title}
+                            </span>
+                            <span className="muted shrink-0 text-[11px] tabular-nums">
+                              {formatDate(meeting.happened)}
+                            </span>
+                          </span>
+                          {meeting.company_name && (
+                            <span className="muted mt-0.5 block truncate text-[11px]">
+                              {meeting.company_name}
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    ))}
+                    {meetings.total > 5 && (
+                      <li>
+                        <Link
+                          href={`/meetings?project=${project.id}`}
+                          className="muted block px-5 py-2.5 text-xs font-medium hover:underline"
+                        >
+                          {t("meeting.all").replace("{n}", String(meetings.total))}
+                        </Link>
+                      </li>
+                    )}
+                  </ul>
+                )}
+              </Panel>
+            )}
+
+            {membersPanel}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          {passportPanel}
+          {documentsPanel}
+        </div>
+      )}
     </>
   );
 }

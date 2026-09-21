@@ -2,7 +2,14 @@
 
 import { useT } from "@/components/i18n-provider";
 import { Button, FIELD, Select } from "@/components/ui";
-import { DEPARTMENTS, ROLES, receivesTasks, type Role } from "@/lib/types";
+import {
+  DEPARTMENTS,
+  ROLES,
+  isAssociationRole,
+  isExternal,
+  receivesTasks,
+  type Role,
+} from "@/lib/types";
 import type { MessageKey } from "@/lib/i18n";
 
 /**
@@ -20,8 +27,23 @@ export interface StaffValues {
   department: string;
   position: string;
   managerId: string;
+  /** A cluster head's cluster, an association role's association, an
+   *  outside project lead's project (TZ 4.1). */
+  klasterId: string;
+  uyushmaId: string;
+  projectId: string;
   phone: string;
   email: string;
+}
+
+type Choice = { id: number; label: string };
+
+/** What the form's pickers offer. */
+export interface StaffChoices {
+  managers: Choice[];
+  clusters: Choice[];
+  associations: Choice[];
+  projects: Choice[];
 }
 
 export const EMPTY_STAFF: StaffValues = {
@@ -32,6 +54,9 @@ export const EMPTY_STAFF: StaffValues = {
   department: "",
   position: "",
   managerId: "",
+  klasterId: "",
+  uyushmaId: "",
+  projectId: "",
   phone: "",
   email: "",
 };
@@ -49,7 +74,7 @@ const LOGIN_SHAPE = /^[a-z0-9]([a-z0-9._-]{1,30}[a-z0-9])$/;
 export function StaffForm({
   mode,
   values,
-  managers,
+  choices,
   busy,
   onChange,
   onSubmit,
@@ -57,7 +82,7 @@ export function StaffForm({
 }: {
   mode: "create" | "edit";
   values: StaffValues;
-  managers: { id: number; label: string }[];
+  choices: StaffChoices;
   busy: boolean;
   onChange: (next: StaffValues) => void;
   onSubmit: () => void;
@@ -84,6 +109,22 @@ export function StaffForm({
   // field, so a colleague with no manager is on nobody's team on either
   // screen. The chairman reports to no one.
   const needsManager = !values.managerId && values.role !== "RAIS";
+
+  // TZ 4.1: each new role is scoped by one thing, and the form asks for it
+  // only when that role is picked. Someone outside the Assembly has no
+  // department, and their "manager" is the member of staff they deal with.
+  const external = isExternal(values.role);
+  const scope =
+    values.role === "KLASTER_RAHBARI"
+      ? { key: "klasterId" as const, label: t("admin.cluster"), pick: t("admin.pickCluster"), options: choices.clusters }
+      : isAssociationRole(values.role)
+        ? { key: "uyushmaId" as const, label: t("admin.association"), pick: t("admin.pickAssociation"), options: choices.associations }
+        : values.role === "TASHQI_LOYIHA_RAHBARI"
+          ? { key: "projectId" as const, label: t("admin.project"), pick: t("admin.pickProject"), options: choices.projects }
+          : null;
+  // On an edit the outside lead already has his projects; the field adds one.
+  const scopeRequired = scope !== null && !(scope.key === "projectId" && mode === "edit");
+  const needsScope = scope !== null && scopeRequired && !values[scope.key];
 
   return (
     <form
@@ -177,42 +218,75 @@ export function StaffForm({
         </Select>
       </div>
 
-      <div>
-        <label className={label} htmlFor="department">
-          {t("admin.department")}
-          {values.role === "RAIS" ? "" : " *"}
-        </label>
-        <Select
-          id="department"
-          value={values.department}
-          onChange={(e) => set("department", e.target.value)}
-          aria-invalid={needsDepartment || undefined}
-          aria-describedby={needsDepartment ? "department-hint" : undefined}
-        >
-          {/* Leaving it blank is a real answer for the chairman and a mistake
-              for everyone else, so the same option says two different things.
-              The server refuses the second case either way; this is so the
-              person finds out while the form is still in front of them. */}
-          <option value="">
-            {values.role === "RAIS"
-              ? t("admin.noDepartment")
-              : t("admin.pickDepartment")}
-          </option>
-          {DEPARTMENTS.map((dept) => (
-            <option key={dept} value={dept}>
-              {t(`dept.${dept}` as MessageKey)}
-            </option>
-          ))}
-        </Select>
-        {needsDepartment && (
-          <span
-            id="department-hint"
-            className="mt-1 block text-[11px] font-medium text-amber-600 dark:text-amber-400"
+      {!external && (
+        <div>
+          <label className={label} htmlFor="department">
+            {t("admin.department")}
+            {values.role === "RAIS" ? "" : " *"}
+          </label>
+          <Select
+            id="department"
+            value={values.department}
+            onChange={(e) => set("department", e.target.value)}
+            aria-invalid={needsDepartment || undefined}
+            aria-describedby={needsDepartment ? "department-hint" : undefined}
           >
-            {t("admin.errDepartment")}
-          </span>
-        )}
-      </div>
+            {/* Leaving it blank is a real answer for the chairman and a mistake
+                for everyone else, so the same option says two different things.
+                The server refuses the second case either way; this is so the
+                person finds out while the form is still in front of them. */}
+            <option value="">
+              {values.role === "RAIS"
+                ? t("admin.noDepartment")
+                : t("admin.pickDepartment")}
+            </option>
+            {DEPARTMENTS.map((dept) => (
+              <option key={dept} value={dept}>
+                {t(`dept.${dept}` as MessageKey)}
+              </option>
+            ))}
+          </Select>
+          {needsDepartment && (
+            <span
+              id="department-hint"
+              className="mt-1 block text-[11px] font-medium text-amber-600 dark:text-amber-400"
+            >
+              {t("admin.errDepartment")}
+            </span>
+          )}
+        </div>
+      )}
+
+      {scope && (
+        <div className={external ? "" : "sm:col-span-2"}>
+          <label className={label} htmlFor="scope">
+            {scope.label}
+            {scopeRequired ? " *" : ""}
+          </label>
+          <Select
+            id="scope"
+            value={values[scope.key]}
+            onChange={(e) => set(scope.key, e.target.value)}
+            aria-invalid={needsScope || undefined}
+            aria-describedby={needsScope ? "scope-hint" : undefined}
+          >
+            <option value="">{scope.pick}</option>
+            {scope.options.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+          {needsScope && (
+            <span
+              id="scope-hint"
+              className="mt-1 block text-[11px] font-medium text-amber-600 dark:text-amber-400"
+            >
+              {t("admin.errScope")}
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="sm:col-span-2">
         <label className={label} htmlFor="position">
@@ -230,7 +304,7 @@ export function StaffForm({
 
       <div className="sm:col-span-2">
         <label className={label} htmlFor="managerId">
-          {t("admin.manager")}
+          {external ? t("admin.liaison") : t("admin.manager")}
           {values.role === "RAIS" ? "" : " *"}
         </label>
         <Select
@@ -245,19 +319,23 @@ export function StaffForm({
               ? t("admin.noManager")
               : t("admin.pickManager")}
           </option>
-          {managers.map((m) => (
+          {choices.managers.map((m) => (
             <option key={m.id} value={m.id}>
               {m.label}
             </option>
           ))}
         </Select>
-        {needsManager && (
+        {needsManager ? (
           <span
             id="manager-hint"
             className="mt-1 block text-[11px] font-medium text-amber-600 dark:text-amber-400"
           >
             {t("admin.errManager")}
           </span>
+        ) : (
+          external && (
+            <span className="muted mt-1 block text-[11px]">{t("admin.liaisonHint")}</span>
+          )
         )}
       </div>
 

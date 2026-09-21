@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { currentLocale, requireUser } from "@/lib/session";
 import { canManageProjects } from "@/lib/project-access";
 import { projectById } from "@/lib/project-threads";
+import { projectRights } from "@/lib/project-visibility";
 import { stagesOf } from "@/lib/project-stages";
 import { inLocale } from "@/lib/project-passport";
 import { today } from "@/lib/crm";
@@ -17,14 +18,14 @@ export default async function StagesPage({
 }) {
   const user = await requireUser();
   const projectId = parseId((await params).id);
-  const project = projectId ? await projectById(projectId) : undefined;
-  if (!project) notFound();
+  const rights = projectId ? await projectRights(user, projectId) : null;
+  const project = rights ? await projectById(rights.id) : undefined;
+  if (!rights || !project) notFound();
 
-  // The same people the API lets save it: the managers, and this project's
-  // own leader and deputy.
-  const manager = canManageProjects(user);
-  if (!manager && project.owner_id !== user.id && project.deputy_id !== user.id)
-    redirect(`/projects/${project.id}`);
+  // The same people the API lets save it (TZ 4.2's stage row, and this
+  // project's own leader and deputy); answering help is the staff's side.
+  if (!rights.enterStages) redirect(`/projects/${project.id}`);
+  const manager = canManageProjects(user) && rights.internal;
 
   const locale = await currentLocale(user);
   const stages = await stagesOf(project.id);

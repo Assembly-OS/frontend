@@ -7,9 +7,11 @@ import { PageHeader, Panel, StatCard } from "@/components/ui";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { initials } from "@/lib/format";
 import { canManageStaff } from "@/lib/oversight";
-import { managerOptions, staff } from "@/lib/admin";
+import { managerOptions, scopeOptions, staff } from "@/lib/admin";
 import { PasswordForm } from "./password-form";
 import { StaffPanel } from "./staff-panel";
+import { PermissionsTable } from "./permissions-table";
+import { columnFor } from "@/lib/permissions";
 
 export default async function ProfilePage() {
   const user = await requireUser();
@@ -22,9 +24,9 @@ export default async function ProfilePage() {
   // Only the chairman and his assistant see the staff section, and only they
   // pay for the two queries behind it.
   const managesStaff = canManageStaff(user);
-  const [people, managers] = managesStaff
-    ? await Promise.all([staff(), managerOptions()])
-    : [null, null];
+  const [people, managers, scopes] = managesStaff
+    ? await Promise.all([staff(), managerOptions(), scopeOptions(locale)])
+    : [null, null, null];
 
   const manager = user.manager_id ? await userById(user.manager_id) : undefined;
   const uyushma = user.uyushma_id
@@ -143,11 +145,27 @@ export default async function ProfilePage() {
         </div>
       </div>
 
+      {/* TZ 4.2: the permission table is visible in settings — to the people
+          who answer for access: the chairman's side, and AI Lab, which keeps
+          the technical settings (4.1). */}
+      {/* A one-track grid, not a plain block: the table is wider than a
+          phone, and a block would hand its width up to the layout and scroll
+          the whole page instead of the table's own container. */}
+      {(managesStaff || user.role === "AI_LAB") && (
+        <div className="mt-6 grid grid-cols-[minmax(0,1fr)]">
+          <PermissionsTable own={columnFor(user)} t={t} />
+        </div>
+      )}
+
       {/* Full width, below the personal half of the page: this is the one
           thing here that is about other people rather than about you. */}
       {managesStaff && (
         <div className="mt-6">
-          <StaffPanel staff={people!} managers={managers!} selfId={user.id} />
+          <StaffPanel
+            staff={people!}
+            choices={{ managers: managers!, ...scopes! }}
+            selfId={user.id}
+          />
         </div>
       )}
     </>

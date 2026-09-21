@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { currentLocale, requireUser } from "@/lib/session";
-import { canManageProjects } from "@/lib/project-access";
 import { clusters, projectById } from "@/lib/project-threads";
+import { projectRights } from "@/lib/project-visibility";
 import { clusterName } from "@/lib/project-passport";
 import { all } from "@/lib/pg";
 import { id as parseId } from "@/lib/validate";
@@ -20,10 +20,11 @@ export default async function PassportPage({
 }) {
   const user = await requireUser();
   const projectId = parseId((await params).id);
-  const project = projectId ? await projectById(projectId) : undefined;
-  if (!project) notFound();
-  // The same managers the API lets save it.
-  if (!canManageProjects(user)) redirect(`/projects/${project.id}`);
+  const rights = projectId ? await projectRights(user, projectId) : null;
+  const project = rights ? await projectById(rights.id) : undefined;
+  if (!rights || !project) notFound();
+  // The same people the API lets save it (TZ 4.2).
+  if (!rights.editPassport) redirect(`/projects/${project.id}`);
 
   const locale = await currentLocale(user);
   const [clusterRows, people] = await Promise.all([

@@ -26,7 +26,7 @@ export default async function ProjectsPage() {
   const user = await requireUser();
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
-  const projects = await projectList();
+  const projects = await projectList(user);
   const mayManage = canManageProjects(user);
 
   return (
