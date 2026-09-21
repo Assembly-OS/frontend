@@ -1,10 +1,23 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
 import { canManageProjects } from "@/lib/project-access";
+import { canWrite } from "@/lib/crm-access";
+import { searchMeetings } from "@/lib/meetings";
 import { projectById, projectPulse, threadsOf } from "@/lib/project-threads";
-import { viewStatus } from "@/lib/crm";
-import { formatDate } from "@/lib/format";
+import { today, viewStatus } from "@/lib/crm";
+import { stagesOf } from "@/lib/project-stages";
+import { formatDate, formatNumber } from "@/lib/format";
+import {
+  PHASE_STATUS,
+  clusterName,
+  inLocale,
+  isDraft,
+  missingPassport,
+  type Phase,
+} from "@/lib/project-passport";
+import { INCOMPLETE_TONE, NEUTRAL_TONE } from "@/lib/types";
 import {
   Badge,
   EmptyState,
@@ -18,6 +31,7 @@ import { PROJECT_TONE } from "../tone";
 import { ProjectMemory } from "@/components/project-memory";
 import { NewThread } from "./new-thread";
 import { ThreadRail } from "./thread-rail";
+import { Schedule } from "./schedule";
 import { id as parseId } from "@/lib/validate";
 
 export const dynamic = "force-dynamic";
@@ -50,20 +64,28 @@ export default async function ProjectPage({
   const project = projectId ? await projectById(projectId) : undefined;
   if (!project) notFound();
 
-  const [threads, pulse] = await Promise.all([
+  // Meetings are read by the people who may file them; to anyone else the
+  // panel would be a list of links that lead nowhere.
+  const readsMeetings = canWrite(user);
+  const [threads, pulse, meetings, stages] = await Promise.all([
     threadsOf(project.id),
     projectPulse(project.id),
+    readsMeetings
+      ? searchMeetings({ projectId: project.id })
+      : Promise.resolve({ rows: [], total: 0 }),
+    stagesOf(project.id),
   ]);
   const mayManage = canManageProjects(user);
+  // The schedule is kept by the managers and by this project's own leader and
+  // deputy — the same people the API lets save it.
+  const mayKeepSchedule =
+    mayManage || project.owner_id === user.id || project.deputy_id === user.id;
 
+  // The line under the title keeps to what changes week to week — where the
+  // project stands and when it last moved. Who leads it, its dates and its
+  // shares are the passport, beside the threads.
   const facts: [string, string | null][] = [
     [t("proj.field.stage"), project.stage],
-    [t("proj.field.owner"), project.owner_full_name],
-    [
-      t("proj.field.started"),
-      project.started_at && formatDate(project.started_at),
-    ],
-    [t("proj.field.deadline"), project.deadline && formatDate(project.deadline)],
     [
       t("proj.lastActivity"),
       project.last_activity ? formatDate(project.last_activity) : null,
@@ -71,11 +93,44 @@ export default async function ProjectPage({
   ];
   const shown = facts.filter(([, value]) => value);
 
+  const missing = missingPassport(project);
+  const draft = isDraft(project);
+  const name = inLocale(locale, project.name, project.name_ru, project.name_en) ?? project.name;
+  const about = inLocale(locale, project.description, project.description_ru, project.description_en);
+  const person = (full: string | null, typed: string | null) => full ?? typed;
+  const shares =
+    project.ppp_state !== null || project.ppp_public !== null || project.ppp_private !== null
+      ? (
+          [
+            ["proj.passport.pppState", project.ppp_state, project.ppp_state_party],
+            ["proj.passport.pppPublic", project.ppp_public, project.ppp_public_party],
+            ["proj.passport.pppPrivate", project.ppp_private, project.ppp_private_party],
+          ] as const
+        )
+      : null;
+  const passport: [string, string | null][] = [
+    [
+      t("proj.field.klaster"),
+      clusterName(locale, {
+        uz: project.klaster_uz,
+        uzc: project.klaster_uzc,
+        ru: project.klaster_ru,
+        en: project.klaster_en,
+      }),
+    ],
+    [t("proj.field.leader"), person(project.owner_full_name, project.leader_name)],
+    [t("proj.field.deputy"), person(project.deputy_full_name, project.deputy_name)],
+    [t("proj.field.nextDecision"), project.next_decision_on && formatDate(project.next_decision_on)],
+    [t("proj.field.started"), project.started_at && formatDate(project.started_at)],
+    [t("proj.field.targetEnd"), project.deadline && formatDate(project.deadline)],
+    [t("proj.field.budget"), project.budget ? formatNumber(project.budget) : null],
+  ];
+
   return (
     <>
       <PageHeader
-        title={project.name}
-        description={project.description ?? undefined}
+        title={name}
+        description={about ?? undefined}
         action={
           mayManage ? (
             <NewThread projectId={project.id} label={t("proj.newThread")} />
@@ -87,9 +142,22 @@ export default async function ProjectPage({
           five cards. Five cards of one word each is five boxes of whitespace,
           and it pushes the threads below the fold on a phone. */}
       <div className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-2">
-        <Badge className={PROJECT_TONE[project.status] ?? PROJECT_TONE.REJA}>
-          {t(`proj.status.${project.status}` as MessageKey)}
-        </Badge>
+        {/* The phase when the passport has one; the older status until then,
+            so a project nobody has touched yet does not lose its badge. The
+            tone is the status's either way, so the colours people know stay. */}
+        {project.phase ? (
+          <Badge className={PROJECT_TONE[PHASE_STATUS[project.phase as Phase]] ?? PROJECT_TONE.REJA}>
+            {t(`proj.phase.${project.phase}` as MessageKey)}
+          </Badge>
+        ) : (
+          <Badge className={PROJECT_TONE[project.status] ?? PROJECT_TONE.REJA}>
+            {t(`proj.status.${project.status}` as MessageKey)}
+          </Badge>
+        )}
+        {project.tier && (
+          <Badge className={NEUTRAL_TONE}>{t(`proj.tier.${project.tier}` as MessageKey)}</Badge>
+        )}
+        {draft && <Badge className={INCOMPLETE_TONE}>{t("proj.draft")}</Badge>}
         {shown.map(([label, value]) => (
           <p key={label} className="text-xs">
             <span className="muted">{label}: </span>
@@ -121,6 +189,19 @@ export default async function ProjectPage({
             { label: t("proj.inProgress"), value: pulse.tasks.inProgress },
             { label: t("proj.done"), value: pulse.tasks.done },
           ]}
+        />
+      </div>
+
+      {/* The work schedule, full width: the TZ's reason for it is that a new
+          leader opens the project and sees at once where the work stopped,
+          so it sits above the conversations rather than beside them. */}
+      <div className="mb-6">
+        <Schedule
+          projectId={project.id}
+          stages={stages}
+          today={today()}
+          mayEdit={mayKeepSchedule}
+          t={t}
         />
       </div>
 
@@ -160,6 +241,70 @@ export default async function ProjectPage({
         </div>
 
         <div className="space-y-6">
+          {/* The passport, block 1.3 of the TZ. What is missing is said once,
+              at the foot, in the words of the fields; the rows themselves only
+              show what is known, so a half-filled passport reads as half, not
+              as a column of dashes. */}
+          <Panel
+            title={t("proj.passport.title")}
+            action={
+              mayManage ? (
+                <Link
+                  href={`/projects/${project.id}/passport`}
+                  className="muted text-xs font-medium hover:underline"
+                >
+                  {t("proj.passport.edit")}
+                </Link>
+              ) : undefined
+            }
+          >
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 px-5 py-4">
+              {passport
+                .filter(([, value]) => value)
+                .map(([label, value]) => (
+                  <div key={label} className="min-w-0">
+                    <dt className="muted text-[11px]">{label}</dt>
+                    <dd className="mt-0.5 text-sm tabular-nums">{value}</dd>
+                  </div>
+                ))}
+              {shares && (
+                <div className="col-span-2">
+                  <dt className="muted text-[11px]">{t("proj.passport.ppp")}</dt>
+                  <dd className="mt-1 space-y-0.5 text-sm">
+                    {shares.map(([label, share, party]) => (
+                      <p key={label} className="flex gap-2">
+                        <span className="w-10 shrink-0 text-right font-medium tabular-nums">
+                          {share ?? "—"}%
+                        </span>
+                        <span className="min-w-0 truncate">
+                          {t(label)}
+                          {party && <span className="muted"> · {party}</span>}
+                        </span>
+                      </p>
+                    ))}
+                  </dd>
+                </div>
+              )}
+              {project.first_result && (
+                <div className="col-span-2">
+                  <dt className="muted text-[11px]">{t("proj.field.firstResult")}</dt>
+                  <dd className="mt-0.5 text-sm">{project.first_result}</dd>
+                </div>
+              )}
+            </dl>
+            {missing.length > 0 && (
+              <p className="flex flex-wrap items-center gap-2 border-t px-5 py-3 text-xs">
+                <Badge className={INCOMPLETE_TONE}>{t("meeting.incomplete")}</Badge>
+                <span className="muted">
+                  {t("meeting.missingList").replace(
+                    "{fields}",
+                    missing.map((field) => t(`proj.passport.missing.${field}` as MessageKey)).join(", "),
+                  )}
+                </span>
+              </p>
+            )}
+          </Panel>
+
           {/* The block the whole acceptance feature exists for: assignments
               that have been handed out and that nobody has taken on. */}
           <Panel title={t("proj.waitingTitle")}>
@@ -212,6 +357,61 @@ export default async function ProjectPage({
               </ul>
             )}
           </Panel>
+
+          {/* The TZ: a meeting shows on its project's card by itself. The
+              last five, newest first, and the way to the rest. */}
+          {readsMeetings && (
+            <Panel
+              title={t("meetings.title")}
+              action={
+                <Link
+                  href={`/meetings/new?project=${project.id}`}
+                  className="muted text-xs font-medium hover:underline"
+                >
+                  {t("crm.newMeeting")}
+                </Link>
+              }
+            >
+              {meetings.rows.length === 0 ? (
+                <EmptyState bare icon="calendar" text={t("meeting.noneForProject")} />
+              ) : (
+                <ul className="divide-y">
+                  {meetings.rows.slice(0, 5).map((meeting) => (
+                    <li key={meeting.id}>
+                      <Link
+                        href={`/meetings/${meeting.id}`}
+                        className="block px-5 py-3 transition duration-150 hover:bg-[var(--surface)]"
+                      >
+                        <span className="flex items-baseline justify-between gap-3">
+                          <span className="min-w-0 truncate text-sm font-medium">
+                            {meeting.title}
+                          </span>
+                          <span className="muted shrink-0 text-[11px] tabular-nums">
+                            {formatDate(meeting.happened)}
+                          </span>
+                        </span>
+                        {meeting.company_name && (
+                          <span className="muted mt-0.5 block truncate text-[11px]">
+                            {meeting.company_name}
+                          </span>
+                        )}
+                      </Link>
+                    </li>
+                  ))}
+                  {meetings.total > 5 && (
+                    <li>
+                      <Link
+                        href={`/meetings?project=${project.id}`}
+                        className="muted block px-5 py-2.5 text-xs font-medium hover:underline"
+                      >
+                        {t("meeting.all").replace("{n}", String(meetings.total))}
+                      </Link>
+                    </li>
+                  )}
+                </ul>
+              )}
+            </Panel>
+          )}
         </div>
       </div>
     </>

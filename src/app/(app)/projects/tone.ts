@@ -37,3 +37,25 @@ export const ENTRY_ICON = {
   FILE: "paperclip",
   LINK: "link",
 } as const;
+
+/**
+ * Where a work-schedule item stands. Behind is the one that shouts; done is
+ * green; under way is information; planned takes no colour.
+ */
+export const STAGE_TONE: Record<string, string> = {
+  DONE: "bg-[var(--surface)] text-emerald-700 ring-[var(--line)] dark:text-emerald-300",
+  LATE: "bg-rose-50 text-rose-700 ring-rose-600/25 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-400/30",
+  ACTIVE: "bg-[var(--surface)] text-sky-700 ring-[var(--line)] dark:text-sky-300",
+  PLANNED: "bg-[var(--surface)] muted ring-[var(--line)]",
+};
+
+/**
+ * A request for the Assembly's help. Waiting on us is the amber one — it is
+ * the Assembly that owes the next move.
+ */
+export const HELP_TONE: Record<string, string> = {
+  REQUESTED: "bg-[var(--surface)] text-amber-700 ring-[var(--line)] dark:text-amber-300",
+  IN_REVIEW: "bg-[var(--surface)] text-sky-700 ring-[var(--line)] dark:text-sky-300",
+  GIVEN: "bg-[var(--surface)] text-emerald-700 ring-[var(--line)] dark:text-emerald-300",
+  REFUSED: "bg-[var(--surface)] muted ring-[var(--line)]",
+};

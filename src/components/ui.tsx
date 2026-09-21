@@ -7,6 +7,7 @@ import type {
   ThHTMLAttributes,
 } from "react";
 import { Icon, type IconName } from "./icons";
+import { MetricNote } from "./metric-note";
 
 /* ------------------------------------------------------------------ */
 /* Buttons                                                            */
@@ -259,6 +260,26 @@ const TONES = {
   slate: "text-slate-600 dark:bg-slate-400/15 dark:text-slate-300",
 } as const;
 
+/**
+ * A figure, with what it is counting over written beside it.
+ *
+ * `metric` is a seventh prop on a component the guide says should have six,
+ * and the reason it is not a separate component is structural: the formula
+ * disclosure has to be a **sibling** of the card's link, never a child, since
+ * a linked card renders an `<a>` and an interactive element inside an anchor
+ * is invalid and swallows the tap. Only the card knows whether it is a link,
+ * so only the card can place the disclosure. Passing it through `hint` would
+ * put it inside the anchor, which is the bug this avoids.
+ *
+ * `<details>` rather than a click handler: ui.tsx is a server component, and a
+ * native disclosure needs no state, no hydration and works on a touch screen,
+ * which `title` does not — the Mini App is read on a phone.
+ *
+ * The scope is the part that matters most. The audit's sharpest finding was a
+ * dashboard reading "Overdue 0" while statistics read 2: both true, one
+ * personal and one Assembly-wide, and neither saying so. The chairman read the
+ * zero as "nothing is late".
+ */
 export function StatCard({
   label,
   value,
@@ -266,6 +287,7 @@ export function StatCard({
   icon,
   tone = "navy",
   href,
+  metric,
 }: {
   label: string;
   value: string | number;
@@ -273,6 +295,7 @@ export function StatCard({
   icon: IconName;
   tone?: keyof typeof TONES;
   href?: string;
+  metric?: string;
 }) {
   // h-full so a linked card (wrapped in <a>) fills the stretched grid row the
   // same way an unlinked one does — otherwise the cards end up different
@@ -302,12 +325,25 @@ export function StatCard({
       </div>
     </div>
   );
-  return href ? (
+  const note = metric ? <MetricNote metric={metric} /> : null;
+
+  const card = href ? (
     <a href={href} className="block h-full">
       {inner}
     </a>
   ) : (
     inner
+  );
+
+  if (!note) return card;
+
+  // The disclosure sits over the card's own corner, outside the link: same
+  // place on screen, separate element in the markup.
+  return (
+    <div className="relative h-full">
+      {card}
+      {note}
+    </div>
   );
 }
 

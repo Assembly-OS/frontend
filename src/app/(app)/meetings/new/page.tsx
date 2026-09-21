@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
 import { canWrite } from "@/lib/crm-access";
-import { companies } from "@/lib/crm";
-import { assignableUsers } from "@/lib/queries";
+import { meetingFormOptions } from "@/lib/meetings";
+import { receivesTasks } from "@/lib/types";
 import { MeetingForm } from "./meeting-form";
 
 export const dynamic = "force-dynamic";
@@ -10,24 +10,42 @@ export const dynamic = "force-dynamic";
 export default async function NewMeetingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ company?: string }>;
+  searchParams: Promise<{ company?: string; project?: string }>;
 }) {
   const user = await requireUser();
   if (!canWrite(user)) redirect("/meetings");
-  const preset = Number((await searchParams).company);
 
-  const companyOptions = await companies();
+  const query = await searchParams;
+  const preset = (value?: string) => {
+    const n = Number(value);
+    return Number.isInteger(n) && n > 0 ? n : null;
+  };
+  const project = preset(query.project);
+
   return (
     <MeetingForm
-      companies={companyOptions.map((company) => ({
-        id: company.id,
-        name: company.name,
-      }))}
-      staff={(await assignableUsers(user)).map((person) => ({
-        id: person.id,
-        full_name: person.full_name,
-      }))}
-      presetCompany={Number.isInteger(preset) && preset > 0 ? preset : null}
+      mode="create"
+      {...(await meetingFormOptions(user))}
+      initial={{
+        title: "",
+        held_at: "",
+        company_id: preset(query.company),
+        legal_status: "",
+        uyushma_id: null,
+        place: "",
+        participants: "",
+        description: "",
+        agreed: "",
+        open_issues: "",
+        next_steps: "",
+        // Whoever files the meeting answers for its next step unless they name
+        // somebody else — except the chairman, who receives no assignments.
+        responsible_id: receivesTasks(user.role) ? user.id : null,
+        transcript: "",
+        project_ids: project ? [project] : [],
+        // The person filing it was usually there.
+        staff_ids: [user.id],
+      }}
     />
   );
 }

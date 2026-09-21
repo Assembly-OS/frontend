@@ -13,6 +13,14 @@ export interface PieSlice {
   /** Secondary line under the label in the legend — a head's name, a region… */
   hint?: string | null;
   value: number;
+  /**
+   * Context rather than a category: drawn in the neutral colour, never folded
+   * into "other", and never given one of the five series hues. Used for work
+   * that belongs to no category at all — assignments with no department —
+   * so the ring's total still equals the total everywhere else, and the gap
+   * is shown and named instead of silently dropped.
+   */
+  neutral?: boolean;
 }
 
 const SIZE = 260;
@@ -77,8 +85,12 @@ const SERIES_INK = [
 ];
 const OTHER_INK = "#000000";
 
-function fold(slices: PieSlice[], otherLabel: string): PieSlice[] {
-  if (slices.length <= MAX_SLICES) return slices;
+function fold(input: PieSlice[], otherLabel: string): PieSlice[] {
+  // Neutral slices sit outside the ranking and after it, so the categories
+  // keep the first series slots and the order they were given in.
+  const neutral = input.filter((slice) => slice.neutral);
+  const slices = input.filter((slice) => !slice.neutral);
+  if (slices.length <= MAX_SLICES) return [...slices, ...neutral];
   const ranked = [...slices].sort((a, b) => b.value - a.value);
   const rest = ranked.slice(MAX_SLICES - 1);
   return [
@@ -90,6 +102,7 @@ function fold(slices: PieSlice[], otherLabel: string): PieSlice[] {
       hint: `${rest.length}`,
       value: rest.reduce((sum, slice) => sum + slice.value, 0),
     },
+    ...neutral,
   ];
 }
 
@@ -205,10 +218,12 @@ export function PieChart({
     return <EmptyState bare text={emptyText} icon="chart" />;
   }
 
+  const isContext = (index: number) =>
+    slices[index]?.key === "__other" || Boolean(slices[index]?.neutral);
   const colorOf = (index: number) =>
-    slices[index]?.key === "__other" ? OTHER_COLOR : SERIES[index];
+    isContext(index) ? OTHER_COLOR : SERIES[index];
   const inkOf = (index: number) =>
-    slices[index]?.key === "__other" ? OTHER_INK : SERIES_INK[index];
+    isContext(index) ? OTHER_INK : SERIES_INK[index];
 
   const drawn = slices
     .map((slice, index) => ({ slice, color: colorOf(index), ink: inkOf(index) }))
