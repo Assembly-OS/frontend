@@ -10,10 +10,14 @@ import { TaskList } from "@/components/task-list";
 import { initials } from "@/lib/format";
 import {
   PRIORITIES,
+  REPORT_RHYTHMS,
+  TASK_KINDS,
   TASK_STATUSES,
   priorityTone,
   statusTone,
   type Priority,
+  type ReportRhythm,
+  type TaskKind,
   type TaskRow,
   TASK_SCOPES,
   type TaskScope,
@@ -44,6 +48,7 @@ const CHAIN_ERROR: Record<string, MessageKey> = {
   ADJACENT_DUPLICATE: "chain.duplicate",
   FORBIDDEN: "chain.forbidden",
   REQUIRED: "form.required",
+  DEADLINE_REQUIRED: "form.deadlineRequired",
 };
 
 /**
@@ -108,6 +113,12 @@ export function AssignForm({
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<Priority>("ORTA");
   const [scope, setScope] = useState<TaskScope>("HAFTALIK");
+  // TZ 3.1. Deadline-bound by default: most assignments are the person's own
+  // to finish, and open-ended work is the deliberate choice.
+  const [kind, setKind] = useState<TaskKind>("MUDDATLI");
+  const [rhythm, setRhythm] = useState<ReportRhythm>("WEEKLY");
+  const [target, setTarget] = useState("");
+  const [targetUnit, setTargetUnit] = useState("");
   const [deadline, setDeadline] = useState("");
   const [loyihaId, setLoyihaId] = useState<string>("");
   const [busy, setBusy] = useState(false);
@@ -187,6 +198,10 @@ export function AssignForm({
       setMessage({ ok: false, text: t("form.required") });
       return;
     }
+    if (kind === "MUDDATLI" && !deadline) {
+      setMessage({ ok: false, text: t("form.deadlineRequired") });
+      return;
+    }
     setBusy(true);
     setMessage(null);
     const response = await fetch("/api/tasks", {
@@ -197,7 +212,14 @@ export function AssignForm({
         description,
         priority,
         scope,
-        deadline: deadline || null,
+        kind,
+        // Open-ended work carries no date, even one typed before the kind
+        // was switched.
+        deadline: kind === "MUDDATLI" ? deadline || null : null,
+        reportRhythm: kind === "MUDDATSIZ" ? rhythm : null,
+        targetValue: kind === "MUDDATSIZ" && target.trim() ? target.trim() : null,
+        targetUnit:
+          kind === "MUDDATSIZ" && target.trim() ? targetUnit.trim() || null : null,
         loyihaId: loyihaId ? Number(loyihaId) : null,
         // One shape or the other, never both: a chain of one is what a plain
         // assignment already is on the server.
@@ -405,6 +427,24 @@ export function AssignForm({
         />
 
         <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
+          {/* TZ 3.1 first: who the execution depends on decides what follows
+              — a deadline, or a report rhythm in its place. */}
+          <label className="block sm:col-span-2">
+            <span className="muted mb-1.5 block text-[11px] font-semibold uppercase tracking-wide">
+              {t("form.kind")}
+            </span>
+            <Select value={kind} onChange={(e) => setKind(e.target.value as TaskKind)}>
+              {TASK_KINDS.map((value) => (
+                <option key={value} value={value}>
+                  {t(`kind.${value}` as MessageKey)}
+                </option>
+              ))}
+            </Select>
+            <span className="muted mt-1 block text-[11px]">
+              {t(`kind.${kind}.hint` as MessageKey)}
+            </span>
+          </label>
+
           {/* Kind before priority: it decides which list the assignment lands
               in, and priority only orders it once it is there. */}
           <label className="block">
@@ -439,15 +479,65 @@ export function AssignForm({
             </Select>
           </label>
 
-          <label className="block">
-            <span className="muted mb-1.5 block text-[11px] font-semibold uppercase tracking-wide">
-              {t("form.deadline")}
-            </span>
-            <DateField
-              value={deadline}
-              onChange={(e) => setDeadline(e.target.value)}
-            />
-          </label>
+          {kind === "MUDDATLI" ? (
+            <label className="block">
+              <span className="muted mb-1.5 block text-[11px] font-semibold uppercase tracking-wide">
+                {t("form.deadline")}
+              </span>
+              <DateField
+                value={deadline}
+                required
+                onChange={(e) => setDeadline(e.target.value)}
+              />
+              {!deadline && (
+                <span className="muted mt-1 block text-[11px]">
+                  {t("form.deadlineRequired")}
+                </span>
+              )}
+            </label>
+          ) : (
+            <label className="block">
+              <span className="muted mb-1.5 block text-[11px] font-semibold uppercase tracking-wide">
+                {t("form.rhythm")}
+              </span>
+              <Select
+                value={rhythm}
+                onChange={(e) => setRhythm(e.target.value as ReportRhythm)}
+              >
+                {REPORT_RHYTHMS.map((value) => (
+                  <option key={value} value={value}>
+                    {t(`rhythm.${value}` as MessageKey)}
+                  </option>
+                ))}
+              </Select>
+            </label>
+          )}
+
+          {/* Optional in the TZ: some open-ended work has a number to reach,
+              some only has to be kept moving. With one, progress is a share of
+              it; without, only the rhythm is watched. */}
+          {kind === "MUDDATSIZ" && (
+            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 sm:col-span-2">
+              <input
+                type="text"
+                inputMode="decimal"
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                placeholder={t("form.target")}
+                aria-label={t("form.target")}
+                className={FIELD}
+              />
+              <input
+                type="text"
+                value={targetUnit}
+                maxLength={40}
+                onChange={(e) => setTargetUnit(e.target.value)}
+                placeholder={t("form.targetUnit")}
+                aria-label={t("form.targetUnit")}
+                className={FIELD}
+              />
+            </div>
+          )}
 
           <label className="block sm:col-span-2">
             <span className="muted mb-1.5 block text-[11px] font-semibold uppercase tracking-wide">

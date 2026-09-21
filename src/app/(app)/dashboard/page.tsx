@@ -63,7 +63,7 @@ export default async function DashboardPage() {
       />
 
       {/* Personal counters — the Rais tracks what they handed out, not an inbox */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-5">
         {receives ? (
           <>
             <StatCard
@@ -108,6 +108,19 @@ export default async function DashboardPage() {
               tone={c.overdue > 0 ? "rose" : "slate"}
               href="/tasks/overdue"
             />
+            {/* TZ 3.2: "Jim" is its own figure beside "overdue", in its own
+                colour — quiet open-ended work is not late work. Full width
+                below the four on a phone rather than alone in half a row. */}
+            <div className="col-span-2 xl:col-span-1">
+              <StatCard
+                label={t("dashboard.silent")}
+                value={c.silent}
+                metric="silent"
+                icon="clock"
+                tone={c.silent > 0 ? "gold" : "slate"}
+                href="/tasks/execute"
+              />
+            </div>
           </>
         ) : (
           <>
@@ -143,6 +156,16 @@ export default async function DashboardPage() {
               tone={c.sentOverdue > 0 ? "rose" : "slate"}
               href="/tasks/overdue"
             />
+            <div className="col-span-2 xl:col-span-1">
+              <StatCard
+                label={t("dashboard.silent")}
+                value={c.sentSilent}
+                metric="sentSilent"
+                icon="clock"
+                tone={c.sentSilent > 0 ? "gold" : "slate"}
+                href="/tasks/assign"
+              />
+            </div>
           </>
         )}
       </div>

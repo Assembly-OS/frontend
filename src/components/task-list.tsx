@@ -7,14 +7,18 @@ import { Badge, Button, EmptyState } from "./ui";
 import { Icon } from "./icons";
 import { StageDetail } from "./stage-detail";
 import { StageStrip } from "./stage-strip";
+import { ProgressJournal } from "./progress-journal";
 import {
   daysUntil,
   formatDate,
   formatDateTime,
   formatBytes,
+  formatNumber,
   localDay,
 } from "@/lib/format";
+import { REPORTING_STATUSES } from "@/lib/metrics";
 import {
+  NEUTRAL_TONE,
   priorityTone,
   statusTone,
   type Priority,
@@ -124,6 +128,9 @@ function TaskCard({
   const t = useT();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  // Opened from the "write a report" shortcut, the journal arrives with its
+  // form already out, so the shortcut is one tap and not two.
+  const [writeNow, setWriteNow] = useState(false);
   const [pendingAction, setPendingAction] = useState<Action | null>(null);
   const [comment, setComment] = useState("");
   // Only handing in a result carries a file, so the picker lives with the
@@ -133,6 +140,11 @@ function TaskCard({
   const [error, setError] = useState<string | null>(null);
 
   const actions = actionsFor(variant, task.status);
+  // The holder's own lists only; the server checks the same rule.
+  const canReport =
+    (variant === "execute" || variant === "overdue") &&
+    task.kind === "MUDDATSIZ" &&
+    REPORTING_STATUSES.includes(task.status);
   const left = daysUntil(task.deadline);
   // In the report this person's part is done; if a chain is still running
   // late after them, that lateness is not theirs to wear on this card.
@@ -248,6 +260,17 @@ function TaskCard({
                 {t("scope.UMUMIY")}
               </Badge>
             )}
+            {task.kind === "MUDDATSIZ" && (
+              <Badge className={NEUTRAL_TONE}>{t("kind.MUDDATSIZ")}</Badge>
+            )}
+            {/* Its own word and its own colour (TZ 3.2): quiet open-ended work
+                is not late work, and reading it as rose would say it was. */}
+            {task.is_silent && (
+              <Badge className="bg-amber-50 text-amber-800 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-400/30">
+                <Icon name="clock" className="mr-1 size-3" />
+                {t("tasks.silent")}
+              </Badge>
+            )}
             {overdue && (
               <Badge className="bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-400/30">
                 <Icon name="alert" className="mr-1 size-3" />
@@ -292,18 +315,40 @@ function TaskCard({
               <span className="font-medium">{counterpart.name}</span>{" "}
               <span className="font-mono">@{counterpart.login}</span>
             </span>
-            <span className="inline-flex items-center gap-1">
-              <Icon name="clock" className="size-3.5" />
-              {task.deadline ? formatDate(task.deadline) : t("tasks.noDeadline")}
-              {left !== null &&
-                left >= 0 &&
-                task.status !== "BAJARILDI" &&
-                !task.completed_at && (
-                  <span className="ml-1">
-                    ({left} {t("tasks.daysLeft")})
-                  </span>
-                )}
-            </span>
+            {/* Open-ended work has no date to count down to; what matters is
+                when it was last reported on, and how often it should be. */}
+            {task.kind === "MUDDATSIZ" ? (
+              <>
+                <span className="inline-flex items-center gap-1">
+                  <Icon name="clock" className="size-3.5" />
+                  {t("progress.last")}:{" "}
+                  {task.last_report_at ? formatDate(task.last_report_at) : t("progress.never")}
+                </span>
+                {/* Its own item in the row, so on a phone it wraps whole
+                    instead of splitting the line above into two columns. */}
+                <span>{t(`rhythm.short.${task.report_rhythm ?? "WEEKLY"}` as MessageKey)}</span>
+              </>
+            ) : (
+              <span className="inline-flex items-center gap-1">
+                <Icon name="clock" className="size-3.5" />
+                {task.deadline ? formatDate(task.deadline) : t("tasks.noDeadline")}
+                {left !== null &&
+                  left >= 0 &&
+                  task.status !== "BAJARILDI" &&
+                  !task.completed_at && (
+                    <span className="ml-1">
+                      ({left} {t("tasks.daysLeft")})
+                    </span>
+                  )}
+              </span>
+            )}
+            {task.kind === "MUDDATSIZ" && task.target_value !== null && (
+              <span className="tabular-nums">
+                {formatNumber(task.last_metric ?? 0)} / {formatNumber(task.target_value)}
+                {task.target_unit ? ` ${task.target_unit}` : ""} ·{" "}
+                {Math.min(100, Math.round(((task.last_metric ?? 0) / task.target_value) * 100))}%
+              </span>
+            )}
             {task.completed_at && (
               <span className="inline-flex items-center gap-1">
                 <Icon name="check" className="size-3.5" />
@@ -318,13 +363,30 @@ function TaskCard({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="muted rounded-lg border px-2.5 py-1.5 text-xs font-medium transition hover:bg-[var(--surface)]"
-        >
-          {t("action.details")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {canReport && !open && (
+            <button
+              type="button"
+              onClick={() => {
+                setWriteNow(true);
+                setOpen(true);
+              }}
+              className="rounded-lg border px-2.5 py-1.5 text-xs font-medium transition hover:bg-[var(--surface)]"
+            >
+              {t("progress.add")}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setWriteNow(false);
+              setOpen((v) => !v);
+            }}
+            className="muted rounded-lg border px-2.5 py-1.5 text-xs font-medium transition hover:bg-[var(--surface)]"
+          >
+            {t("action.details")}
+          </button>
+        </div>
       </div>
 
       {open && (
@@ -377,6 +439,14 @@ function TaskCard({
             </div>
           )}
           {task.stage_count > 1 && <StageDetail taskId={task.id} />}
+          {task.kind === "MUDDATSIZ" && (
+            <ProgressJournal
+              taskId={task.id}
+              canReport={canReport}
+              unit={task.target_unit}
+              initiallyWriting={writeNow}
+            />
+          )}
           {task.result_file_name && (
             <a
               href={`/api/tasks/${task.id}/result-file`}
