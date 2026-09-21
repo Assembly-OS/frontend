@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { useT } from "@/components/i18n-provider";
 import { Icon } from "@/components/icons";
-import { Badge, PageHeader, Panel, ProgressBar, StatCard } from "@/components/ui";
+import {
+  Badge,
+  FOCUS,
+  PageHeader,
+  Panel,
+  ProgressBar,
+  StatCard,
+} from "@/components/ui";
 import type { MessageKey } from "@/lib/i18n";
 import type { WeeklyReport, WeeklyRow } from "@/lib/reports";
 
@@ -15,12 +22,16 @@ function worked(row: WeeklyRow): boolean {
 export function ReportClient({
   report,
   period,
+  openable,
 }: {
   report: WeeklyReport;
   period: "week" | "month";
+  /** People whose completed tasks this viewer may open. */
+  openable: number[];
 }) {
   const t = useT();
   const { week, totals, rows } = report;
+  const canOpen = new Set(openable);
 
   const active = rows.filter(worked);
   const idle = rows.filter((row) => !worked(row));
@@ -143,13 +154,40 @@ export function ReportClient({
                 {active.map((row) => (
                   <tr key={row.id} className="border-b last:border-0">
                     <td className="px-5 py-3">
-                      <p className="font-medium">{row.full_name}</p>
-                      <p className="muted text-xs">
-                        {t(`role.${row.role}` as MessageKey)}
-                        {row.department
-                          ? ` · ${t(`dept.${row.department}` as MessageKey).split(" — ")[0]}`
-                          : ""}
-                      </p>
+                      {canOpen.has(row.id) ? (
+                        // Name and role together, so the target is the whole
+                        // cell rather than one line of text on a phone.
+                        <Link
+                          href={`/reports/${row.id}?period=${period}&week=${week.offset}`}
+                          title={t("report.openPerson")}
+                          className={`group -mx-2 -my-1 block rounded-lg px-2 py-1 transition duration-150 hover:bg-[var(--surface)] ${FOCUS}`}
+                        >
+                          <span className="flex items-center gap-1 font-medium group-hover:underline group-hover:underline-offset-4">
+                            {row.full_name}
+                            <Icon
+                              name="chevron"
+                              aria-hidden
+                              className="muted size-3.5 shrink-0 -rotate-90"
+                            />
+                          </span>
+                          <span className="muted block text-xs">
+                            {t(`role.${row.role}` as MessageKey)}
+                            {row.department
+                              ? ` · ${t(`dept.${row.department}` as MessageKey).split(" — ")[0]}`
+                              : ""}
+                          </span>
+                        </Link>
+                      ) : (
+                        <>
+                          <p className="font-medium">{row.full_name}</p>
+                          <p className="muted text-xs">
+                            {t(`role.${row.role}` as MessageKey)}
+                            {row.department
+                              ? ` · ${t(`dept.${row.department}` as MessageKey).split(" — ")[0]}`
+                              : ""}
+                          </p>
+                        </>
+                      )}
                     </td>
                     <td className="px-3 py-3 text-right tabular-nums">
                       {row.given || "—"}

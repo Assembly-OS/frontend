@@ -662,6 +662,12 @@ const ru: Dictionary = {
   "report.idle": "Без активности",
   "report.everyoneWorked": "Работали все",
   "report.nobody": "На этой неделе активности не было",
+  "report.openPerson": "Открыть выполненные задачи",
+  "report.completedTitle": "Выполненные задачи",
+  "report.completedEmpty": "За этот период выполненных задач нет",
+  "report.completedEmptyHint": "Задача появляется здесь, когда автор принимает результат",
+  "report.back": "Назад к отчёту",
+  "report.finishedLate": "С опозданием",
 
   "admin.tabAgents": "Агенты",
   "agent.title": "AI-агенты",

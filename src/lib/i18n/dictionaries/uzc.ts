@@ -662,6 +662,12 @@ const uzc: Dictionary = {
   "report.idle": "Ҳаракатсиз",
   "report.everyoneWorked": "Ҳамма ишлади",
   "report.nobody": "Бу ҳафтада ҳаракат бўлмади",
+  "report.openPerson": "Бажарилган топшириқларни очиш",
+  "report.completedTitle": "Бажарилган топшириқлар",
+  "report.completedEmpty": "Бу даврда бажарилган топшириқ йўқ",
+  "report.completedEmptyHint": "Муаллиф натижани қабул қилганда топшириқ шу ерда пайдо бўлади",
+  "report.back": "Ҳисоботга қайтиш",
+  "report.finishedLate": "Кечикиб",
 
   "admin.tabAgents": "Агентлар",
   "agent.title": "AI агентлар",

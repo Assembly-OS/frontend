@@ -662,6 +662,12 @@ const en: Dictionary = {
   "report.idle": "No activity",
   "report.everyoneWorked": "Everyone worked",
   "report.nobody": "No activity this week",
+  "report.openPerson": "Open completed tasks",
+  "report.completedTitle": "Completed tasks",
+  "report.completedEmpty": "No completed tasks in this period",
+  "report.completedEmptyHint": "A task appears here once its author approves the result",
+  "report.back": "Back to report",
+  "report.finishedLate": "Late",
 
   "admin.tabAgents": "Agents",
   "agent.title": "AI agents",
