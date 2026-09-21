@@ -1,4 +1,5 @@
 import { currentLocale, requireUser } from "@/lib/session";
+import { isExternal } from "@/lib/types";
 import { conversations, directory, rais, userGroups } from "@/lib/queries";
 import { isOnline } from "@/lib/presence";
 import { ConversationList } from "./chat-client";
@@ -12,7 +13,7 @@ export default async function ChatLayout({
   const user = await requireUser();
   const locale = await currentLocale(user);
   const list = await conversations(user.id);
-  const people = await directory(user.id);
+  const people = await directory(user);
   const groups = await userGroups(user.id);
   const chairman = await rais();
 
@@ -38,7 +39,8 @@ export default async function ChatLayout({
             conversations={list}
             groups={groups}
             people={people}
-            raisLogin={chairman?.login ?? null}
+            // Someone outside the Assembly writes to his contacts only (TZ 4.3).
+            raisLogin={isExternal(user.role) ? null : (chairman?.login ?? null)}
             meLogin={user.login}
             onlineLogins={onlineLogins}
           />

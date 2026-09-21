@@ -83,7 +83,7 @@ export default async function ProjectPage({
       internal ? threadsOf(project.id) : Promise.resolve([]),
       projectPulse(project.id),
       readsMeetings
-        ? searchMeetings({ projectId: project.id })
+        ? searchMeetings({ projectId: project.id }, user)
         : Promise.resolve({ rows: [], total: 0 }),
       stagesOf(project.id),
       documentsOf(project.id),

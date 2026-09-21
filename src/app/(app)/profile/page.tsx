@@ -11,7 +11,8 @@ import { managerOptions, scopeOptions, staff } from "@/lib/admin";
 import { PasswordForm } from "./password-form";
 import { StaffPanel } from "./staff-panel";
 import { PermissionsTable } from "./permissions-table";
-import { columnFor } from "@/lib/permissions";
+import { GlobalAiPanel } from "./global-ai-panel";
+import { columnFor, grantsGlobalAi } from "@/lib/permissions";
 
 export default async function ProfilePage() {
   const user = await requireUser();
@@ -152,8 +153,21 @@ export default async function ProfilePage() {
           phone, and a block would hand its width up to the layout and scroll
           the whole page instead of the table's own container. */}
       {(managesStaff || user.role === "AI_LAB") && (
-        <div className="mt-6 grid grid-cols-[minmax(0,1fr)]">
+        <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6">
           <PermissionsTable own={columnFor(user)} t={t} />
+          {/* The table's one switch per person, the chairman's to set. */}
+          {managesStaff && (
+            <GlobalAiPanel
+              // The chairman's assistant already reads the chairman's column;
+              // a switch beside him would change nothing.
+              heads={people!.filter(
+                (person) =>
+                  person.is_active === 1 &&
+                  grantsGlobalAi(person.role) &&
+                  columnFor(person) !== "RAIS",
+              )}
+            />
+          )}
         </div>
       )}
 

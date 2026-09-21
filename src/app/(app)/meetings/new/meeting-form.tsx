@@ -87,6 +87,7 @@ export function MeetingForm({
   projects,
   uyushmalar,
   suggestion,
+  aiTools,
 }: {
   mode: "create" | "edit";
   meetingId?: number;
@@ -98,6 +99,8 @@ export function MeetingForm({
   uyushmalar: Option[];
   /** What the AI proposed for this meeting and nobody has reviewed yet. */
   suggestion?: MeetingSuggestion | null;
+  /** Prefill and analysis: the CRM's writers only, as the API decides. */
+  aiTools: boolean;
 }) {
   const t = useT();
   const router = useRouter();
@@ -377,7 +380,7 @@ export function MeetingForm({
             >
               {t("common.save")}
             </Button>
-            {mode === "create" && (
+            {mode === "create" && aiTools && (
               <Button
                 type="submit"
                 icon="shield"
@@ -462,7 +465,11 @@ export function MeetingForm({
                 "place",
               )}
             </div>
-            {field(
+            {/* The link lists are empty for someone outside the Assembly
+                (`meetingFormOptions`): the companies base and the staff list
+                are closed to them (TZ 4.3), so the fields are not shown. */}
+            {companies.length > 0 &&
+            field(
               `${t("meeting.field.company")} *`,
               <Select name="company_id" defaultValue={values.company_id ?? ""}>
                 <option value="">{t("meeting.pick")}</option>
@@ -488,6 +495,7 @@ export function MeetingForm({
               undefined,
               "legal_status",
             )}
+            {projects.length > 0 && (
             <div>
               <CheckList
                 name="project_ids"
@@ -497,6 +505,7 @@ export function MeetingForm({
               />
               {mark("project_ids")}
             </div>
+            )}
             {uyushmalar.length > 0 &&
               field(
                 t("meeting.field.uyushma"),
@@ -531,10 +540,12 @@ export function MeetingForm({
               {field(
                 `${t("meeting.field.next_step")} *`,
                 area("next_steps", 2),
-                t("meeting.nextStepHint"),
+                // Only true when there is somebody to hand it to.
+                responsibles.length > 0 ? t("meeting.nextStepHint") : undefined,
                 "next_steps",
               )}
-              {field(
+              {responsibles.length > 0 &&
+              field(
                 `${t("meeting.field.responsible")} *`,
                 <Select
                   name="responsible_id"
@@ -562,6 +573,7 @@ export function MeetingForm({
               t("meeting.field.externalHint"),
               "participants",
             )}
+            {people.length > 0 && (
             <div>
               <CheckList
                 name="staff_ids"
@@ -571,6 +583,7 @@ export function MeetingForm({
               />
               {mark("staff_ids")}
             </div>
+            )}
           </div>
         </Panel>
 
@@ -593,6 +606,7 @@ export function MeetingForm({
                   <option value="en-US">EN</option>
                 </Select>,
               )}
+            {aiTools && (
             <div className="space-y-1.5">
               <Button
                 type="button"
@@ -618,6 +632,7 @@ export function MeetingForm({
                 </p>
               )}
             </div>
+            )}
           </div>
         </Panel>
       </div>

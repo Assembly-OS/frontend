@@ -59,13 +59,17 @@ const GROUP_ORDER = [
   "PR",
   "AI_LAB",
   "LOYIHA",
+  // The Assembly's outside contacts, after its own staff (TZ 4.1).
+  "TASHQI",
   "UYUSHMA",
 ];
 
 function groupLabel(group: string, t: (key: MessageKey) => string): string {
   if (group === "RAIS") return t("role.RAIS");
   if (group === "LOYIHA") return t("role.LOYIHA_RAHBARI");
-  if (group === "UYUSHMA") return t("role.UYUSHMA_RAISI");
+  if (group === "TASHQI") return t("role.TASHQI_LOYIHA_RAHBARI");
+  // Both association roles — its chairman and its representative.
+  if (group === "UYUSHMA") return t("perm.col.UYUSHMA");
   return t(`dept.${group}` as MessageKey);
 }
 

@@ -4,9 +4,11 @@ import { counters, pulse } from "@/lib/queries";
 import { I18nProvider } from "@/components/i18n-provider";
 import { AppShell, type NavItem } from "@/components/app-shell";
 import { LiveUpdates } from "@/components/live-updates";
-import { isManager, receivesTasks } from "@/lib/types";
-import { canWrite } from "@/lib/crm-access";
+import { isExternal, isManager, receivesTasks } from "@/lib/types";
+import { canRead } from "@/lib/crm-access";
 import { canSubmitToAi } from "@/lib/agents/access";
+import { readsMeetings } from "@/lib/meeting-visibility";
+import { may, readsAudit } from "@/lib/permissions";
 
 export default async function AppLayout({
   children,
@@ -31,9 +33,12 @@ export default async function AppLayout({
    * own work first, the outside world second, the machine third, the
    * management view last.
    */
-  const nav: NavItem[] = [
-    { href: "/dashboard", labelKey: "nav.dashboard", icon: "grid" },
-  ];
+  // Someone outside the Assembly (TZ 4.3) has no dashboard — its figures are
+  // the staff's work — and lands on his project or his association's
+  // meetings instead; see `homePath`.
+  const nav: NavItem[] = isExternal(user.role)
+    ? []
+    : [{ href: "/dashboard", labelKey: "nav.dashboard", icon: "grid" }];
 
   /* --- Ish: your own queue ------------------------------------------ */
 
@@ -100,28 +105,34 @@ export default async function AppLayout({
   // First in the group on purpose. A project is the thing people are working
   // on; the company directory and the commitments list are ways of slicing
   // it. Somebody arriving to find out what is happening wants the former.
-  nav.push({
-    href: "/projects",
-    labelKey: "nav.projects",
-    icon: "folder",
-    group: "nav.group.partners",
-  });
-  nav.push({
-    href: "/companies",
-    labelKey: "nav.companies",
-    icon: "users",
-    group: "nav.group.partners",
-  });
-  nav.push({
-    href: "/agreements",
-    labelKey: "nav.agreements",
-    icon: "check",
-    group: "nav.group.partners",
-  });
-  // Shown to whoever may file a meeting, which is who the register lets in.
-  // It was tied to the AI permission while the page was only a feed of AI
-  // conclusions; a project lead could file a meeting and then not find it.
-  if (canWrite(user)) {
+  // TZ 4.2: an association's people see no projects at all.
+  if (may(user, "viewProjects")) {
+    nav.push({
+      href: "/projects",
+      labelKey: "nav.projects",
+      icon: "folder",
+      group: "nav.group.partners",
+    });
+  }
+  // The companies and agreements base is the staff's (TZ 4.3).
+  if (canRead(user)) {
+    nav.push({
+      href: "/companies",
+      labelKey: "nav.companies",
+      icon: "users",
+      group: "nav.group.partners",
+    });
+    nav.push({
+      href: "/agreements",
+      labelKey: "nav.agreements",
+      icon: "check",
+      group: "nav.group.partners",
+    });
+  }
+  // Shown to whoever the register lets in: since block 4 every member of
+  // staff, who files the meetings he sat in (TZ 4.2), and an association's
+  // people, who see their association's.
+  if (readsMeetings(user)) {
     nav.push({
       href: "/meetings",
       labelKey: "nav.meetings",
@@ -170,6 +181,16 @@ export default async function AppLayout({
       href: "/reports",
       labelKey: "nav.reports",
       icon: "calendar",
+      group: "nav.group.manage",
+    });
+  }
+
+  // TZ 4.4: the audit journal, for the chairman and the head of AI Lab.
+  if (readsAudit(user.role)) {
+    nav.push({
+      href: "/audit",
+      labelKey: "nav.audit",
+      icon: "shield",
       group: "nav.group.manage",
     });
   }

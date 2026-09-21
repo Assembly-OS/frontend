@@ -1,4 +1,6 @@
 import { seesEverything } from "@/lib/oversight";
+import { redirect } from "next/navigation";
+import { homePath } from "@/lib/permissions";
 import Link from "next/link";
 import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
@@ -24,15 +26,13 @@ import { ScopeChip } from "@/components/metric-note";
 import { CrmBlock } from "./crm-block";
 import { Icon } from "@/components/icons";
 import { formatDate, formatMoney, formatNumber, initials, percent } from "@/lib/format";
-import {
-  isManager,
-  priorityTone,
-  receivesTasks,
-  statusTone,
-} from "@/lib/types";
+import { isManager, priorityTone, receivesTasks, statusTone, isExternal } from "@/lib/types";
 
 export default async function DashboardPage() {
   const user = await requireUser();
+  // The dashboard is the staff's work; someone outside the Assembly lands on
+  // the part of it that is theirs (TZ 4.3).
+  if (isExternal(user.role)) redirect(homePath(user.role));
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
 

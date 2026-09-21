@@ -30,6 +30,8 @@ export interface StaffRow {
   uyushma_id: number | null;
   /** An outside project lead's first project, to prefill the form. */
   project_id: number | null;
+  /** 1 when the chairman has granted the global AI view (TZ 4.2). */
+  global_ai: number;
   /** Assignments that name this person, in either direction. */
   tasks: number;
 }
@@ -40,7 +42,7 @@ export async function staff(): Promise<StaffRow[]> {
     `SELECT u.id, u.login, u.full_name, u.role, u.department, u.position,
             u.phone, u.email, u.is_active, u.last_seen, u.created_at,
             u.manager_id, m.full_name AS manager_name,
-            u.klaster_id, u.uyushma_id,
+            u.klaster_id, u.uyushma_id, u.global_ai,
             (SELECT pm.project_id FROM project_members pm
               WHERE pm.user_id = u.id ORDER BY pm.created_at LIMIT 1) AS project_id,
             (SELECT COUNT(*) FROM tasks t
