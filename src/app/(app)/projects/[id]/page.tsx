@@ -32,6 +32,8 @@ import { ProjectMemory } from "@/components/project-memory";
 import { NewThread } from "./new-thread";
 import { ThreadRail } from "./thread-rail";
 import { Schedule } from "./schedule";
+import { ProjectDocuments } from "./documents";
+import { canKeepDocuments, documentsOf } from "@/lib/project-documents";
 import { id as parseId } from "@/lib/validate";
 
 export const dynamic = "force-dynamic";
@@ -67,13 +69,14 @@ export default async function ProjectPage({
   // Meetings are read by the people who may file them; to anyone else the
   // panel would be a list of links that lead nowhere.
   const readsMeetings = canWrite(user);
-  const [threads, pulse, meetings, stages] = await Promise.all([
+  const [threads, pulse, meetings, stages, documents] = await Promise.all([
     threadsOf(project.id),
     projectPulse(project.id),
     readsMeetings
       ? searchMeetings({ projectId: project.id })
       : Promise.resolve({ rows: [], total: 0 }),
     stagesOf(project.id),
+    documentsOf(project.id),
   ]);
   const mayManage = canManageProjects(user);
   // The schedule is kept by the managers and by this project's own leader and
@@ -303,6 +306,30 @@ export default async function ProjectPage({
                 </span>
               </p>
             )}
+          </Panel>
+
+          {/* The passport's last field: its papers. Beside the passport
+              rather than inside it, because it is a list that grows. */}
+          <Panel
+            title={t("proj.docs.title")}
+            action={
+              documents.length > 0 ? (
+                <span className="muted text-xs tabular-nums">{documents.length}</span>
+              ) : undefined
+            }
+          >
+            <ProjectDocuments
+              projectId={project.id}
+              documents={documents.map((doc) => ({
+                id: doc.id,
+                kind: doc.kind,
+                title: doc.title,
+                file_name: doc.file_name,
+                file_size: doc.file_size,
+                created_at: doc.created_at,
+              }))}
+              canEdit={canKeepDocuments(user, project)}
+            />
           </Panel>
 
           {/* The block the whole acceptance feature exists for: assignments
