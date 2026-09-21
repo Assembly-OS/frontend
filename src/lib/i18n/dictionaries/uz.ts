@@ -111,6 +111,8 @@ const uz = {
   "tasks.result": "Natija",
   "tasks.attachResult": "Natijaga fayl biriktirish",
   "tasks.fileTooLarge": "Fayl juda katta (50 MB gacha)",
+  "tasks.resultRequired": "Natijani yozing — nima qilindi va nima chiqdi",
+  "tasks.reasonRequired": "Sababini yozing",
   "tasks.scope": "Turi",
   "scope.HAFTALIK": "Haftalik",
   "scope.UMUMIY": "Umumiy",

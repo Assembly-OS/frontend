@@ -113,6 +113,8 @@ const uzc: Dictionary = {
   "tasks.result": "Натижа",
   "tasks.attachResult": "Натижага файл бириктириш",
   "tasks.fileTooLarge": "Файл жуда катта (50 МБ гача)",
+  "tasks.resultRequired": "Натижани ёзинг — нима қилинди ва нима чиқди",
+  "tasks.reasonRequired": "Сабабини ёзинг",
   "tasks.scope": "Тури",
   "scope.HAFTALIK": "Ҳафталик",
   "scope.UMUMIY": "Умумий",

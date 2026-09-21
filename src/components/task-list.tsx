@@ -193,7 +193,13 @@ function TaskCard({
         error?: string;
       };
       setError(
-        data.error === "TOO_LARGE" ? t("tasks.fileTooLarge") : t("common.error"),
+        data.error === "TOO_LARGE"
+          ? t("tasks.fileTooLarge")
+          : data.error === "RESULT_REQUIRED"
+            ? t("tasks.resultRequired")
+            : data.error === "REASON_REQUIRED"
+              ? t("tasks.reasonRequired")
+              : t("common.error"),
       );
       return;
     }
@@ -426,10 +432,17 @@ function TaskCard({
             }
             className="w-full rounded-xl border bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:border-navy-500"
           />
+          {/* Every action that opens this box needs words (TZ 3.4); the
+              button waits for them, and this line says why it is waiting. */}
+          {!comment.trim() && (
+            <p className="muted text-[11px]">
+              {t(pendingAction === "submit" ? "tasks.resultRequired" : "tasks.reasonRequired")}
+            </p>
+          )}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              disabled={busy}
+              disabled={busy || !comment.trim()}
               onClick={() => void fire(pendingAction, comment)}
               className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition disabled:opacity-60 ${ACTION_STYLE[pendingAction]}`}
             >

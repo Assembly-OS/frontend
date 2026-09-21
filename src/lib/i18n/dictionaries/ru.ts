@@ -113,6 +113,8 @@ const ru: Dictionary = {
   "tasks.result": "Результат",
   "tasks.attachResult": "Прикрепить файл к результату",
   "tasks.fileTooLarge": "Файл слишком большой (до 50 МБ)",
+  "tasks.resultRequired": "Опишите результат — что сделано и что получилось",
+  "tasks.reasonRequired": "Укажите причину",
   "tasks.scope": "Вид",
   "scope.HAFTALIK": "Недельное",
   "scope.UMUMIY": "Общее",

@@ -113,6 +113,8 @@ const en: Dictionary = {
   "tasks.result": "Result",
   "tasks.attachResult": "Attach a file to the result",
   "tasks.fileTooLarge": "File is too large (50 MB limit)",
+  "tasks.resultRequired": "Describe the result — what was done and what came of it",
+  "tasks.reasonRequired": "Give the reason",
   "tasks.scope": "Kind",
   "scope.HAFTALIK": "Weekly",
   "scope.UMUMIY": "Long-running",
