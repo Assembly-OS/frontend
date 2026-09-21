@@ -114,6 +114,8 @@ const uz = {
   "tasks.resultRequired": "Natijani yozing — nima qilindi va nima chiqdi",
   "tasks.reasonRequired": "Sababini yozing",
   "tasks.silent": "Jim",
+  "priority.full.KRITIK": "Tizimda bir vaqtda 5 tadan ortiq kritik topshiriq ochiq bo'lmaydi — chegara to'lgan",
+  "priority.full.YUQORI": "«Yuqori» siz bergan ochiq topshiriqlarning 25 foizidan oshmasligi kerak",
   "kind.MUDDATLI": "Muddatli",
   "kind.MUDDATSIZ": "Muddatsiz",
   "kind.MUDDATLI.hint": "Ijro xodimning o'ziga bog'liq — muddat majburiy",

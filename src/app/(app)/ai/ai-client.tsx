@@ -747,7 +747,9 @@ export function AiClient({
               text:
                 data.error === "NOT_ASSIGNABLE"
                   ? t("ai.notAssignable")
-                  : (data.error ?? t("common.error")),
+                  : data.error === "KRITIK_LIMIT" || data.error === "YUQORI_LIMIT"
+                    ? t(data.error === "KRITIK_LIMIT" ? "priority.full.KRITIK" : "priority.full.YUQORI")
+                    : (data.error ?? t("common.error")),
             },
       );
       if (data.ok) closeEditor();

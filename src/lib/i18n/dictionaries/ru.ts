@@ -116,6 +116,8 @@ const ru: Dictionary = {
   "tasks.resultRequired": "Опишите результат — что сделано и что получилось",
   "tasks.reasonRequired": "Укажите причину",
   "tasks.silent": "Молчит",
+  "priority.full.KRITIK": "Открытых критических поручений в системе — не больше 5, предел достигнут",
+  "priority.full.YUQORI": "«Высокий» — не больше 25% ваших открытых поручений",
   "kind.MUDDATLI": "Срочное",
   "kind.MUDDATSIZ": "Бессрочное",
   "kind.MUDDATLI.hint": "Исполнение зависит от сотрудника — срок обязателен",

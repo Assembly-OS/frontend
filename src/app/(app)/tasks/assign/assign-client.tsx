@@ -23,6 +23,7 @@ import {
   type TaskScope,
 } from "@/lib/types";
 import type { MessageKey } from "@/lib/i18n";
+import { priorityRefusal, type PriorityRoom } from "@/lib/priority-rules";
 
 export interface Candidate {
   id: number;
@@ -49,6 +50,8 @@ const CHAIN_ERROR: Record<string, MessageKey> = {
   FORBIDDEN: "chain.forbidden",
   REQUIRED: "form.required",
   DEADLINE_REQUIRED: "form.deadlineRequired",
+  KRITIK_LIMIT: "priority.full.KRITIK",
+  YUQORI_LIMIT: "priority.full.YUQORI",
 };
 
 /**
@@ -88,9 +91,12 @@ function groupLabel(group: string, t: (key: MessageKey) => string): string {
 export function AssignForm({
   candidates,
   projects,
+  room,
 }: {
   candidates: Candidate[];
   projects: ProjectOption[];
+  /** What the TZ 3.5 limits are judged against, counted on the server. */
+  room: PriorityRoom;
 }) {
   const t = useT();
   const router = useRouter();
@@ -472,11 +478,18 @@ export function AssignForm({
               onChange={(e) => setPriority(e.target.value as Priority)}
             >
               {PRIORITIES.map((p) => (
-                <option key={p} value={p}>
+                <option key={p} value={p} disabled={priorityRefusal(p, room) !== null}>
                   {t(`priority.${p}` as MessageKey)}
                 </option>
               ))}
             </Select>
+            {/* A disabled option says why it is disabled (TZ 3.5), in the
+                same words the server would refuse with. */}
+            {PRIORITIES.filter((p) => priorityRefusal(p, room) !== null).map((p) => (
+              <span key={p} className="muted mt-1 block text-[11px]">
+                {t(`priority.full.${p}` as MessageKey)}
+              </span>
+            ))}
           </label>
 
           {kind === "MUDDATLI" ? (

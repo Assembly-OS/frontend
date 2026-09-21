@@ -116,6 +116,8 @@ const uzc: Dictionary = {
   "tasks.resultRequired": "Натижани ёзинг — нима қилинди ва нима чиқди",
   "tasks.reasonRequired": "Сабабини ёзинг",
   "tasks.silent": "Жим",
+  "priority.full.KRITIK": "Тизимда бир вақтда 5 тадан ортиқ критик топшириқ очиқ бўлмайди — чегара тўлган",
+  "priority.full.YUQORI": "«Юқори» сиз берган очиқ топшириқларнинг 25 фоизидан ошмаслиги керак",
   "kind.MUDDATLI": "Муддатли",
   "kind.MUDDATSIZ": "Муддатсиз",
   "kind.MUDDATLI.hint": "Ижро ходимнинг ўзига боғлиқ — муддат мажбурий",

@@ -116,6 +116,8 @@ const en: Dictionary = {
   "tasks.resultRequired": "Describe the result — what was done and what came of it",
   "tasks.reasonRequired": "Give the reason",
   "tasks.silent": "Silent",
+  "priority.full.KRITIK": "No more than 5 critical assignments may be open at once — the limit is reached",
+  "priority.full.YUQORI": "“High” may be at most 25% of your open assignments",
   "kind.MUDDATLI": "With a deadline",
   "kind.MUDDATSIZ": "Open-ended",
   "kind.MUDDATLI.hint": "Up to the assignee — a deadline is required",

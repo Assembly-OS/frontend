@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createTranslator } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
 import { assignableUsers, assignedTasks, projects } from "@/lib/queries";
+import { priorityRoom } from "@/lib/priority-limits";
 import { PageHeader } from "@/components/ui";
 import { isManager, type User } from "@/lib/types";
 import { AssignForm, SentTasks, type Candidate } from "./assign-client";
@@ -68,7 +69,11 @@ export default async function AssignPage() {
       {/* items-start: the form must keep its own height, not stretch to match
           the (much longer) list of sent assignments next to it. */}
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
-        <AssignForm candidates={candidates} projects={projectOptions} />
+        <AssignForm
+          candidates={candidates}
+          projects={projectOptions}
+          room={await priorityRoom(user.id)}
+        />
 
         <div>
           <h2 className="mb-3 text-sm font-semibold">{t("tasks.sentByMe")}</h2>
