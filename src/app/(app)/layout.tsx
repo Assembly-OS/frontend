@@ -149,6 +149,13 @@ export default async function AppLayout({
     icon: "chat",
     group: "nav.group.ai",
   });
+  // The memory: what the chat answers from, and the library it is fed with.
+  nav.push({
+    href: "/knowledge",
+    labelKey: "nav.knowledge",
+    icon: "library",
+    group: "nav.group.ai",
+  });
   if (canSubmitToAi(user)) {
     nav.push({
       href: "/ai",

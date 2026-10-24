@@ -5,18 +5,16 @@ import { useEffect, useRef, useState } from "react";
 import { useT } from "@/components/i18n-provider";
 import { Icon, type IconName } from "@/components/icons";
 import { Button, EmptyState, FIELD, PageHeader, Panel } from "@/components/ui";
-
-interface Ref {
-  kind: "company" | "meeting" | "agreement" | "task" | "person";
-  id: number;
-  label: string;
-  href: string;
-}
+import { formatDate } from "@/lib/format";
+import type { MessageKey } from "@/lib/i18n";
+import type { Evidence, Ref } from "@/lib/agents/assistant";
+import type { Suggestion } from "@/lib/knowledge/suggest";
 
 interface Turn {
   role: "user" | "assistant";
   content: string;
   refs?: Ref[];
+  evidence?: Evidence[];
   failed?: boolean;
   /** The question to re-send, on failures where a retry can succeed. */
   retry?: string;
@@ -28,23 +26,23 @@ const REF_ICON: Record<Ref["kind"], IconName> = {
   agreement: "check",
   task: "inbox",
   person: "user",
+  document: "file",
+  message: "chat",
+  entry: "pin",
+  project: "folder",
+  source: "library",
 };
-
-/** Questions worth one tap — and a demonstration of what it can be asked. */
-const SUGGESTIONS = [
-  "assistant.q1",
-  "assistant.q2",
-  "assistant.q3",
-  "assistant.q4",
-] as const;
 
 export function AssistantClient({
   llmConfigured,
   initial,
+  suggestions,
 }: {
   llmConfigured: boolean;
   /** The conversation as the server has it — what a refresh comes back to. */
   initial: Turn[];
+  /** Questions drawn from this person's data, each with an answer behind it. */
+  suggestions: Suggestion[];
 }) {
   const t = useT();
   const [turns, setTurns] = useState<Turn[]>(initial);
@@ -52,6 +50,10 @@ export function AssistantClient({
   const [busy, setBusy] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+
+  const questions = suggestions.map((item) =>
+    t(item.key as MessageKey).replace("{name}", item.name ?? ""),
+  );
 
   useEffect(() => {
     // Only once there is something to scroll to — otherwise the empty state
@@ -83,6 +85,7 @@ export function AssistantClient({
       const data = (await response.json()) as {
         answer?: string;
         refs?: Ref[];
+        evidence?: Evidence[];
         error?: string;
       };
 
@@ -115,7 +118,12 @@ export function AssistantClient({
 
       setTurns((current) => [
         ...current,
-        { role: "assistant", content: data.answer!, refs: data.refs ?? [] },
+        {
+          role: "assistant",
+          content: data.answer!,
+          refs: data.refs ?? [],
+          evidence: data.evidence ?? [],
+        },
       ]);
     } catch {
       setTurns((current) => [
@@ -230,13 +238,16 @@ export function AssistantClient({
                                 className="muted inline-flex max-w-full items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-medium transition hover:bg-[var(--surface)] hover:text-[var(--ink)]"
                               >
                                 <Icon
-                                  name={REF_ICON[ref.kind]}
+                                  name={REF_ICON[ref.kind] ?? "file"}
                                   className="size-3 shrink-0"
                                 />
                                 <span className="truncate">{ref.label}</span>
                               </Link>
                             ))}
                           </div>
+                        )}
+                        {turn.evidence && turn.evidence.length > 0 && (
+                          <EvidenceList items={turn.evidence} />
                         )}
                       </div>
                     )}
@@ -258,15 +269,15 @@ export function AssistantClient({
               whole screen of height for four lines nobody scrolls to — and the
               chat itself is the thing that should own the screen. */}
           <div className="scroll-thin flex gap-2 overflow-x-auto border-t px-4 py-2.5 xl:hidden">
-            {SUGGESTIONS.map((key) => (
+            {questions.map((question) => (
               <button
-                key={key}
+                key={question}
                 type="button"
                 disabled={busy}
-                onClick={() => void ask(t(key))}
+                onClick={() => void ask(question)}
                 className="shrink-0 rounded-full border px-3 py-1.5 text-xs transition hover:bg-[var(--surface)] disabled:opacity-50"
               >
-                {t(key)}
+                {question}
               </button>
             ))}
           </div>
@@ -304,15 +315,15 @@ export function AssistantClient({
 
         <Panel title={t("assistant.examples")} className="hidden xl:block">
           <ul className="divide-y">
-            {SUGGESTIONS.map((key) => (
-              <li key={key}>
+            {questions.map((question) => (
+              <li key={question}>
                 <button
                   type="button"
                   disabled={busy}
-                  onClick={() => void ask(t(key))}
+                  onClick={() => void ask(question)}
                   className="w-full px-5 py-3 text-left text-xs transition hover:bg-[var(--surface)] disabled:opacity-50"
                 >
-                  {t(key)}
+                  {question}
                 </button>
               </li>
             ))}
@@ -324,5 +335,53 @@ export function AssistantClient({
         </Panel>
       </div>
     </>
+  );
+}
+
+/**
+ * The passages an answer rested on, folded under it.
+ *
+ * A native disclosure: the evidence is there for the reader who wants to
+ * check, and out of the way of the one who does not. Each passage links to
+ * the record it came from and to the full set of passages the AI read.
+ */
+function EvidenceList({ items }: { items: Evidence[] }) {
+  const t = useT();
+  return (
+    <details className="group mt-3">
+      <summary className="muted inline-flex cursor-pointer items-center gap-1.5 text-[11px] font-semibold transition hover:text-[var(--ink)]">
+        <Icon name="quote" className="size-3.5" aria-hidden />
+        {t("assistant.evidence")} · {items.length}
+        <Icon name="chevron" className="size-3 transition group-open:rotate-180" aria-hidden />
+      </summary>
+      <p className="muted mt-1.5 text-[11px]">{t("assistant.evidenceHint")}</p>
+      <ul className="mt-2 space-y-2">
+        {items.map((item) => (
+          <li
+            key={`${item.source_id}-${item.chunk_id ?? 0}`}
+            className="rounded-xl border px-3 py-2.5 text-xs"
+          >
+            <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <span className="font-medium [overflow-wrap:anywhere]">{item.title}</span>
+              <span className="muted text-[11px]">
+                {t(`knowledge.kind.${item.kind}` as MessageKey)}
+                {item.occurred_at ? ` · ${formatDate(item.occurred_at)}` : ""}
+              </span>
+            </p>
+            <p className="muted mt-1 border-l-2 pl-2.5 leading-relaxed [overflow-wrap:anywhere]">
+              {item.excerpt}
+            </p>
+            <p className="mt-1.5 flex gap-3 text-[11px] font-medium">
+              <Link href={item.href} className="hover:underline">
+                {t("knowledge.open")}
+              </Link>
+              <Link href={item.evidence_href} className="muted hover:underline">
+                {t("knowledge.passages")}
+              </Link>
+            </p>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
