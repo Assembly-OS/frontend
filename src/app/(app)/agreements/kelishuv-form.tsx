@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useT } from "@/components/i18n-provider";
+import { HistoryNotice } from "@/components/history-notice";
 import { CheckList } from "@/components/check-list";
 import {
   Button,
@@ -98,6 +99,20 @@ export function KelishuvForm({
   const [meeting, setMeeting] = useState(initial.meeting);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** What the reminder watches: the first party, the project, the title. */
+  const [watch, setWatch] = useState<{ company_id: number | null; project_id: number | null; title: string }>({
+    company_id: initial.party_ids[0] ?? null,
+    project_id: initial.loyiha_id,
+    title: initial.title,
+  });
+  function watched(event: React.FormEvent<HTMLFormElement>) {
+    const form = new FormData(event.currentTarget);
+    setWatch({
+      company_id: Number(form.getAll("party_ids")[0]) || null,
+      project_id: Number(form.get("loyiha_id")) || null,
+      title: String(form.get("title") ?? ""),
+    });
+  }
 
   function addLine() {
     nextKey.current += 1;
@@ -188,7 +203,7 @@ export function KelishuvForm({
   );
 
   return (
-    <form onSubmit={submit}>
+    <form onSubmit={submit} onChange={watched}>
       <PageHeader
         title={mode === "create" ? t("kelishuv.new") : t("kelishuv.editTitle")}
         action={
@@ -205,6 +220,10 @@ export function KelishuvForm({
           </div>
         }
       />
+
+      {mode === "create" && (
+        <HistoryNotice companyId={watch.company_id} projectId={watch.project_id} text={watch.title} />
+      )}
 
       {error && (
         <p

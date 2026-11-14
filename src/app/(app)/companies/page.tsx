@@ -4,7 +4,7 @@ import { homePath } from "@/lib/permissions";
 import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
 import { canWrite, canRead } from "@/lib/crm-access";
-import { companies, funnel } from "@/lib/crm";
+import { COMPANY_PAGE, companies, companyCount, funnel } from "@/lib/crm";
 import { daysIn, isStage, isStuck, STAGES } from "@/lib/crm-stages";
 import { stageLimits } from "@/lib/settings";
 import { seesEverything } from "@/lib/oversight";
@@ -29,6 +29,7 @@ type Filters = {
   stuck?: string;
   uyushma?: string;
   q?: string;
+  page?: string;
 };
 
 /**
@@ -53,15 +54,20 @@ export default async function CompaniesPage({
   const onlyStuck = filters.stuck === "1";
 
   const limits = await stageLimits();
-  const [all, counts, association] = await Promise.all([
-    companies({ status: filters.status, stage, uyushmaId, query: filters.q }),
+  const pageNo = Math.max(1, Number(filters.page) || 1);
+  const base = { status: filters.status, stage, uyushmaId, query: filters.q };
+  // TZ 8.5: the list is filtered and paged on the server; "stuck" is a
+  // SQL predicate over the stage limits, not a pass over every row.
+  const [rows, total, stuckTotal, counts, association] = await Promise.all([
+    companies({ ...base, stuckLimits: onlyStuck ? limits : null, page: pageNo, pageSize: COMPANY_PAGE }),
+    companyCount({ ...base, stuckLimits: onlyStuck ? limits : null }),
+    companyCount({ ...base, stuckLimits: limits }),
     funnel(),
     uyushmaId ? associationById(user, uyushmaId) : undefined,
   ]);
+  const pages = Math.max(1, Math.ceil(total / COMPANY_PAGE));
   const today = new Date();
-  const stuckOf = (row: (typeof all)[number]) => isStuck(row.stage, row.stage_since, limits, today);
-  const rows = onlyStuck ? all.filter(stuckOf) : all;
-  const stuckTotal = all.filter(stuckOf).length;
+  const stuckOf = (row: (typeof rows)[number]) => isStuck(row.stage, row.stage_since, limits, today);
 
   const tabs = ["ALL", "ACTIVE", "POTENTIAL", "PAUSED", "ARCHIVED"] as const;
   const current = filters.status ?? "ALL";
@@ -69,6 +75,7 @@ export default async function CompaniesPage({
 
   /** Keeps whichever filter is not being changed, so they all compose. */
   function href(patch: Partial<Filters>) {
+    // A changed filter starts from the first page; only `page` keeps it.
     const next: Filters = {
       status: current === "ALL" ? undefined : current,
       stage,
@@ -77,6 +84,7 @@ export default async function CompaniesPage({
       q: query || undefined,
       ...patch,
     };
+    if (next.page === "1") delete next.page;
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(next)) if (value) params.set(key, value);
     const search = params.toString();
@@ -280,6 +288,20 @@ export default async function CompaniesPage({
             );
           })}
         </div>
+      )}
+
+      {pages > 1 && (
+        <nav className="mt-4 flex items-center justify-between gap-3 text-xs" aria-label={t("common.pageOf")}>
+          <Button href={href({ page: String(Math.max(1, pageNo - 1)) })} size="sm" variant="ghost" disabled={pageNo <= 1}>
+            ← {t("common.prev")}
+          </Button>
+          <span className="muted tabular-nums">
+            {t("common.pageOf").replace("{page}", String(pageNo)).replace("{pages}", String(pages))} · {total}
+          </span>
+          <Button href={href({ page: String(Math.min(pages, pageNo + 1)) })} size="sm" variant="ghost" disabled={pageNo >= pages}>
+            {t("common.next")} →
+          </Button>
+        </nav>
       )}
 
       {seesEverything(user) && (
