@@ -99,6 +99,16 @@ export default async function AppLayout({
     badge: c.unread,
     group: "nav.group.work",
   });
+  // TZ 5: every member of staff has a KPI card; a manager's page also rolls
+  // up the people in his reach.
+  if (!isExternal(user.role) && user.role !== "RAIS") {
+    nav.push({
+      href: "/kpi",
+      labelKey: "nav.kpi",
+      icon: "chart",
+      group: "nav.group.work",
+    });
+  }
 
   /* --- Hamkorlar: the outside world --------------------------------- */
 
@@ -183,6 +193,15 @@ export default async function AppLayout({
       icon: "chart",
       group: "nav.group.manage",
     });
+    // The chairman's KPI view is the roll-up, under management.
+    if (user.role === "RAIS") {
+      nav.push({
+        href: "/kpi",
+        labelKey: "nav.kpi",
+        icon: "chart",
+        group: "nav.group.manage",
+      });
+    }
     // Weekly review — who did what, Monday to Sunday.
     nav.push({
       href: "/reports",
