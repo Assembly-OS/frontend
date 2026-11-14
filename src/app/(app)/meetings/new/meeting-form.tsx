@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useT } from "@/components/i18n-provider";
+import { HistoryNotice } from "@/components/history-notice";
 import { CheckList } from "@/components/check-list";
 import {
   Button,
@@ -258,7 +259,22 @@ export function MeetingForm({
   }
 
   /** A field a person has changed is theirs now, whoever filled it first. */
+  /** What the reminder watches: the company, the association, the first project, the title. */
+  const [watch, setWatch] = useState(() => ({
+    company_id: start.values.company_id,
+    uyushma_id: start.values.uyushma_id,
+    project_id: start.values.project_ids[0] ?? null,
+    title: start.values.title,
+  }));
+
   function touched(event: React.FormEvent<HTMLFormElement>) {
+    const current = readForm();
+    setWatch({
+      company_id: current.company_id,
+      uyushma_id: current.uyushma_id,
+      project_id: current.project_ids[0] ?? null,
+      title: current.title,
+    });
     const name = (event.target as HTMLInputElement).name as SuggestedField;
     if (!marked.has(name)) return;
     setMarked((before) => {
@@ -393,6 +409,17 @@ export function MeetingForm({
           </div>
         }
       />
+
+      {/* TZ 7.4: what the memory already holds about this company, association
+          or project, shown before the record is written — not on request. */}
+      {mode === "create" && (
+        <HistoryNotice
+          companyId={watch.company_id}
+          uyushmaId={watch.uyushma_id}
+          projectId={watch.project_id}
+          text={watch.title}
+        />
+      )}
 
       {error && (
         <p
