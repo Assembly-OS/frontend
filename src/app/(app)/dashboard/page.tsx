@@ -244,6 +244,7 @@ export default async function DashboardPage() {
                 </>
               )}
               <QuickLink href="/chat" icon="chat" label={t("nav.chat")} badge={c.unread} />
+              <QuickLink href="/kpi" icon="chart" label={t("kpi.mine")} />
               {manager && (
                 <QuickLink href="/statistics" icon="chart" label={t("nav.statistics")} />
               )}
