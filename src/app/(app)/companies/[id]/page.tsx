@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { homePath } from "@/lib/permissions";
+import { notFound, redirect } from "next/navigation";
 import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
-import { canDelete, canWrite } from "@/lib/crm-access";
+import { canDelete, canWrite, canRead } from "@/lib/crm-access";
 import {
   agreementsOf,
   companyById,
@@ -35,6 +36,8 @@ export default async function CompanyPage({
   params: Promise<{ id: string }>;
 }) {
   const user = await requireUser();
+  // The companies and agreements base is the staff's (TZ 4.3).
+  if (!canRead(user)) redirect(homePath(user.role));
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
 

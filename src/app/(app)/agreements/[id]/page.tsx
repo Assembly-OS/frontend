@@ -11,6 +11,7 @@ import { INCOMPLETE_TONE, NEUTRAL_TONE, kelishuvTone } from "@/lib/types";
 import { id as parseId } from "@/lib/validate";
 import { Badge, Button, PageHeader, Panel } from "@/components/ui";
 import { AgreementRowItem } from "../agreement-row";
+import { SignedCopy } from "./signed-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -97,7 +98,19 @@ export default async function KelishuvPage({
   if (kelishuv.signed_on)
     facts.push([t("kelishuv.field.signed_on"), formatDate(kelishuv.signed_on)]);
   if (kelishuv.valid_until)
-    facts.push([t("kelishuv.field.valid_until"), formatDate(kelishuv.valid_until)]);
+    facts.push([
+      t("kelishuv.field.valid_until"),
+      <span key="valid_until">
+        {formatDate(kelishuv.valid_until)}
+        {/* Said where the date is, so nobody sets a calendar reminder of
+            their own for what the platform already sends. */}
+        {kelishuv.status === "OPEN" && (
+          <span className="muted mt-0.5 block text-[11px]">
+            {t("kelishuv.termReminder")}
+          </span>
+        )}
+      </span>,
+    ]);
   if (kelishuv.amount !== null)
     facts.push([
       t("kelishuv.field.amount"),
@@ -189,16 +202,30 @@ export default async function KelishuvPage({
           </Panel>
         </div>
 
-        <Panel title={t("meeting.facts")}>
-          <dl className="divide-y">
-            {facts.map(([label, value]) => (
-              <div key={label} className="px-4 py-2.5 lg:px-5">
-                <dt className="muted mb-1 text-xs">{label}</dt>
-                <dd className="text-sm">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        </Panel>
+        <div className="space-y-6">
+          <Panel title={t("meeting.facts")}>
+            <dl className="divide-y">
+              {facts.map(([label, value]) => (
+                <div key={label} className="px-4 py-2.5 lg:px-5">
+                  <dt className="muted mb-1 text-xs">{label}</dt>
+                  <dd className="text-sm">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </Panel>
+
+          <Panel title={t("kelishuv.field.file")}>
+            <SignedCopy
+              id={kelishuv.id}
+              file={
+                kelishuv.file_key
+                  ? { name: kelishuv.file_name ?? "kelishuv", size: kelishuv.file_size }
+                  : null
+              }
+              canEdit={mayEdit}
+            />
+          </Panel>
+        </div>
       </div>
     </>
   );

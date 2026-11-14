@@ -6,6 +6,7 @@ import {
   allGroups,
   adminTasks,
   managerOptions,
+  scopeOptions,
   projects,
   staff,
 } from "@/lib/admin";
@@ -65,6 +66,7 @@ export default async function AdminPage() {
           projects={await projects()}
           tasks={await adminTasks()}
           managers={await managerOptions()}
+          scopes={await scopeOptions()}
           stats={await dbStats()}
           online={await onlineUsers()}
           events={await recentEvents(20)}

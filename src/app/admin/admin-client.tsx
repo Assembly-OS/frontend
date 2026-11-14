@@ -11,6 +11,7 @@ import {
   EMPTY_STAFF,
   newPassword,
   StaffForm,
+  type StaffChoices,
   type StaffValues,
 } from "@/components/staff-form";
 import {
@@ -46,6 +47,9 @@ const ERRORS: Record<string, MessageKey> = {
   LOGIN_TAKEN: "admin.errTaken",
   DEPARTMENT_REQUIRED: "admin.errDepartment",
   MANAGER_REQUIRED: "admin.errManager",
+  KLASTER_REQUIRED: "admin.errScope",
+  UYUSHMA_REQUIRED: "admin.errScope",
+  PROJECT_REQUIRED: "admin.errScope",
   LAST_RAIS: "admin.errLastRais",
   HAS_HISTORY: "admin.errHasHistory",
   SELF: "admin.errSelf",
@@ -176,6 +180,7 @@ function AuditBubble({
 export function AdminClient({
   staff,
   managers,
+  scopes,
   projects,
   tasks,
   stats,
@@ -191,6 +196,7 @@ export function AdminClient({
 }: {
   staff: StaffRow[];
   managers: { id: number; label: string }[];
+  scopes: Omit<StaffChoices, "managers">;
   projects: ProjectRow[];
   tasks: AdminTaskRow[];
   stats: DbStats;
@@ -398,6 +404,9 @@ export function AdminClient({
       department: person.department ?? "",
       position: person.position ?? "",
       managerId: person.manager_id ? String(person.manager_id) : "",
+      klasterId: person.klaster_id ? String(person.klaster_id) : "",
+      uyushmaId: person.uyushma_id ? String(person.uyushma_id) : "",
+      projectId: person.project_id ? String(person.project_id) : "",
       phone: person.phone ?? "",
       email: person.email ?? "",
     });
@@ -504,7 +513,7 @@ export function AdminClient({
               <StaffForm
                 mode="create"
                 values={values}
-                managers={managers}
+                choices={{ managers, ...scopes }}
                 busy={busy}
                 onChange={setValues}
                 onSubmit={create}
@@ -521,7 +530,7 @@ export function AdminClient({
               <StaffForm
                 mode="edit"
                 values={values}
-                managers={managers}
+                choices={{ managers, ...scopes }}
                 busy={busy}
                 onChange={setValues}
                 onSubmit={() => saveEdit(editing)}

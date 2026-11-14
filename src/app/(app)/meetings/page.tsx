@@ -2,7 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
-import { canWrite } from "@/lib/crm-access";
+import { mayRecordMeeting, readsMeetings } from "@/lib/meeting-visibility";
+import { projectRights } from "@/lib/project-visibility";
+import { homePath } from "@/lib/permissions";
 import { MEETING_PAGE, missingFields, searchMeetings } from "@/lib/meetings";
 import { formatDate } from "@/lib/format";
 import { get } from "@/lib/pg";
@@ -40,8 +42,10 @@ export default async function MeetingsPage({
   searchParams: Promise<{ q?: string; page?: string; project?: string }>;
 }) {
   const user = await requireUser();
-  // The people who may file a meeting are the people who may look one up.
-  if (!canWrite(user)) redirect("/dashboard");
+  // TZ 4.2: the register is everyone's who may file a meeting, and each
+  // reads his own scope of it (`meetingScope`).
+  if (!readsMeetings(user)) redirect(homePath(user.role));
+  const mayRecord = mayRecordMeeting(user);
 
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
@@ -52,18 +56,24 @@ export default async function MeetingsPage({
   const page = Math.max(0, Number.parseInt(params.page ?? "0", 10) || 0);
   // Reached from a project's card: its meetings, and a way back to all.
   const projectId = parseId(params.project);
-  const project = projectId
-    ? await get<{ code: string; name: string }>(
-        "SELECT code, name FROM loyihalar WHERE id = ?",
-        projectId,
-      )
-    : undefined;
-  const { rows, total } = await searchMeetings({
-    query,
-    lang,
-    page,
-    projectId: project ? projectId : null,
-  });
+  // Only a project the reader can see narrows the list; any other id is
+  // ignored rather than confirmed.
+  const project =
+    projectId && (await projectRights(user, projectId))
+      ? await get<{ code: string; name: string }>(
+          "SELECT code, name FROM loyihalar WHERE id = ?",
+          projectId,
+        )
+      : undefined;
+  const { rows, total } = await searchMeetings(
+    {
+      query,
+      lang,
+      page,
+      projectId: project ? projectId : null,
+    },
+    user,
+  );
 
   const from = page * MEETING_PAGE;
   const hrefFor = (target: number) => {
@@ -81,9 +91,11 @@ export default async function MeetingsPage({
         title={t("meetings.title")}
         description={t("meetings.subtitle")}
         action={
-          <Button href="/meetings/new" icon="plus">
-            {t("crm.newMeeting")}
-          </Button>
+          mayRecord ? (
+            <Button href="/meetings/new" icon="plus">
+              {t("crm.newMeeting")}
+            </Button>
+          ) : undefined
         }
       />
 
@@ -131,9 +143,11 @@ export default async function MeetingsPage({
             text={t("meetings.empty")}
             hint={t("meeting.emptyHint")}
             action={
-              <Button href="/meetings/new" icon="plus">
-                {t("crm.newMeeting")}
-              </Button>
+              mayRecord ? (
+                <Button href="/meetings/new" icon="plus">
+                  {t("crm.newMeeting")}
+                </Button>
+              ) : undefined
             }
           />
         )

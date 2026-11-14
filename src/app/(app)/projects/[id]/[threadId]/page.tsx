@@ -13,6 +13,7 @@ import {
   type EntryRow,
 } from "@/lib/project-threads";
 import { assignableUsers } from "@/lib/queries";
+import { projectRights } from "@/lib/project-visibility";
 import {
   formatBytes,
   formatDate,
@@ -75,6 +76,9 @@ export default async function ThreadPage({
   // The thread must belong to the project in the URL, or `/projects/1/99`
   // would happily render another project's history under this one's name.
   if (!project || !thread || thread.project_id !== project.id) notFound();
+  // And the project must be one this person can see; the journal is the
+  // staff's, so an outside lead is not shown it either (TZ 4.2, 4.3).
+  if (!(await projectRights(user, project.id))?.internal) notFound();
 
   const [entries, pinned, threads, staff, members] = await Promise.all([
     entriesOf(thread.id),

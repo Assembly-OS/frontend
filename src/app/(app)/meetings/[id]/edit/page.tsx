@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
-import { canWrite, crmRole } from "@/lib/crm-access";
+import { canWrite } from "@/lib/crm-access";
+import { canSeeMeeting, mayEditMeeting } from "@/lib/meeting-visibility";
 import { meetingById, meetingFormOptions } from "@/lib/meetings";
 import { id as parseId } from "@/lib/validate";
 import { MeetingForm } from "../../new/meeting-form";
@@ -14,17 +15,13 @@ export default async function EditMeetingPage({
 }) {
   const user = await requireUser();
   const meetingId = parseId((await params).id);
-  const meeting = meetingId ? await meetingById(meetingId) : undefined;
+  const visible = meetingId ? await canSeeMeeting(user, meetingId) : false;
+  const meeting = visible && meetingId ? await meetingById(meetingId) : undefined;
   if (!meeting) notFound();
 
   // The same people the API lets through: whoever filed it, whoever answers
-  // for its next step, and the chairman's side.
-  const mayEdit =
-    canWrite(user) &&
-    (meeting.owner_id === user.id ||
-      meeting.responsible_id === user.id ||
-      crmRole(user) === "admin");
-  if (!mayEdit) redirect(`/meetings/${meeting.id}`);
+  // for its next step, and the chairman's side (`mayEditMeeting`).
+  if (!mayEditMeeting(user, meeting)) redirect(`/meetings/${meeting.id}`);
 
   const options = await meetingFormOptions(user);
   // The person already answering for the next step stays on offer even when
@@ -43,6 +40,7 @@ export default async function EditMeetingPage({
   return (
     <MeetingForm
       mode="edit"
+      aiTools={canWrite(user)}
       meetingId={meeting.id}
       {...options}
       suggestion={meeting.suggestion}

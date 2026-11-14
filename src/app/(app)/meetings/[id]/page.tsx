@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
-import { canWrite, crmRole } from "@/lib/crm-access";
+import { canRead, canWrite } from "@/lib/crm-access";
+import { canSeeMeeting, mayEditMeeting } from "@/lib/meeting-visibility";
+import { visibleProjectIds } from "@/lib/project-visibility";
+import { isManager } from "@/lib/types";
 import { meetingById, meetingCode, missingFields } from "@/lib/meetings";
 import { suggestedFields } from "@/lib/meeting-fields";
 import { kelishuvCode, kelishuvlarOfMeeting, viewKelishuv } from "@/lib/kelishuvlar";
@@ -43,23 +46,28 @@ export default async function MeetingPage({
   searchParams: Promise<{ task?: string }>;
 }) {
   const user = await requireUser();
-  if (!canWrite(user)) redirect("/dashboard");
 
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
   const lang = locale === "ru" ? "ru" : locale === "en" ? "en" : "uz";
 
   const meetingId = parseId((await params).id);
-  const meeting = meetingId ? await meetingById(meetingId, lang) : undefined;
+  // A meeting outside this person's scope (TZ 4.2) does not exist for them.
+  const visible = meetingId ? await canSeeMeeting(user, meetingId) : false;
+  const meeting = visible && meetingId ? await meetingById(meetingId, lang) : undefined;
   if (!meeting) notFound();
+  // Links only where the reader can follow them: the companies and
+  // agreements base is closed to people outside the Assembly, and a project
+  // opens only to those it is visible to.
+  const readsCrm = canRead(user);
+  const openProjects = new Set(
+    await visibleProjectIds(user, meeting.projects.map((project) => project.id)),
+  );
 
   const taskFailed = (await searchParams).task === "failed";
   const agreements = await kelishuvlarOfMeeting(meeting.id);
   const missing = missingFields(meeting);
-  const mayEdit =
-    meeting.owner_id === user.id ||
-    meeting.responsible_id === user.id ||
-    crmRole(user) === "admin";
+  const mayEdit = mayEditMeeting(user, meeting);
   // Offered only to someone who can act on it: the review happens in the edit
   // form, and a reader who cannot open it has nothing to do with the news.
   const suggested = mayEdit ? suggestedFields(meeting.suggestion) : [];
@@ -80,9 +88,13 @@ export default async function MeetingPage({
     [
       t("meeting.field.company"),
       meeting.company_id ? (
-        <Link href={`/companies/${meeting.company_id}`} className="font-medium hover:underline">
-          {meeting.company_name}
-        </Link>
+        readsCrm ? (
+          <Link href={`/companies/${meeting.company_id}`} className="font-medium hover:underline">
+            {meeting.company_name}
+          </Link>
+        ) : (
+          <span className="font-medium">{meeting.company_name}</span>
+        )
       ) : (
         notRecorded
       ),
@@ -103,10 +115,17 @@ export default async function MeetingPage({
         <ul className="space-y-1">
           {meeting.projects.map((project) => (
             <li key={project.id}>
-              <Link href={`/projects/${project.id}`} className="hover:underline">
-                <span className="muted font-mono text-xs">{project.code}</span>{" "}
-                {project.name}
-              </Link>
+              {openProjects.has(project.id) ? (
+                <Link href={`/projects/${project.id}`} className="hover:underline">
+                  <span className="muted font-mono text-xs">{project.code}</span>{" "}
+                  {project.name}
+                </Link>
+              ) : (
+                <span>
+                  <span className="muted font-mono text-xs">{project.code}</span>{" "}
+                  {project.name}
+                </span>
+              )}
             </li>
           ))}
         </ul>
@@ -224,12 +243,21 @@ export default async function MeetingPage({
                   notRecorded
                 )}
                 {meeting.next_task_code && meeting.next_task_status && (
-                  <Link href="/tasks/assign" className="inline-flex items-center gap-1.5">
-                    <span className="font-mono">{meeting.next_task_code}</span>
-                    <Badge className={statusTone(meeting.next_task_status as TaskStatus)}>
-                      {t(`status.${meeting.next_task_status}` as MessageKey)}
-                    </Badge>
-                  </Link>
+                  isManager(user.role) ? (
+                    <Link href="/tasks/assign" className="inline-flex items-center gap-1.5">
+                      <span className="font-mono">{meeting.next_task_code}</span>
+                      <Badge className={statusTone(meeting.next_task_status as TaskStatus)}>
+                        {t(`status.${meeting.next_task_status}` as MessageKey)}
+                      </Badge>
+                    </Link>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="font-mono">{meeting.next_task_code}</span>
+                      <Badge className={statusTone(meeting.next_task_status as TaskStatus)}>
+                        {t(`status.${meeting.next_task_status}` as MessageKey)}
+                      </Badge>
+                    </span>
+                  )
                 )}
               </p>
             </div>
@@ -240,12 +268,14 @@ export default async function MeetingPage({
           <Panel
             title={t("kelishuv.title")}
             action={
-              <Link
-                href={`/agreements/new?meeting=${meeting.id}`}
-                className="muted text-xs font-medium hover:underline"
-              >
-                {t("kelishuv.draftFromMeeting")}
-              </Link>
+              canWrite(user) ? (
+                <Link
+                  href={`/agreements/new?meeting=${meeting.id}`}
+                  className="muted text-xs font-medium hover:underline"
+                >
+                  {t("kelishuv.draftFromMeeting")}
+                </Link>
+              ) : undefined
             }
           >
             {agreements.length === 0 ? (
@@ -254,18 +284,30 @@ export default async function MeetingPage({
               <ul className="divide-y">
                 {agreements.map((agreement) => {
                   const view = viewKelishuv(agreement.status, agreement.valid_until, today());
+                  const row = (
+                    <>
+                      <span className="muted font-mono text-xs">{kelishuvCode(agreement.id)}</span>
+                      <span className="text-sm font-medium">{agreement.title}</span>
+                      <Badge className={kelishuvTone(view)}>
+                        {t(`kelishuv.status.${view}` as MessageKey)}
+                      </Badge>
+                    </>
+                  );
+                  // The association chairman reads his association's
+                  // agreements here, from the meeting; the agreements base
+                  // itself stays the staff's (TZ 4.3).
                   return (
                     <li key={agreement.id}>
-                      <Link
-                        href={`/agreements/${agreement.id}`}
-                        className="flex flex-wrap items-center gap-2 px-4 py-3 transition duration-150 hover:bg-[var(--surface)] lg:px-5"
-                      >
-                        <span className="muted font-mono text-xs">{kelishuvCode(agreement.id)}</span>
-                        <span className="text-sm font-medium">{agreement.title}</span>
-                        <Badge className={kelishuvTone(view)}>
-                          {t(`kelishuv.status.${view}` as MessageKey)}
-                        </Badge>
-                      </Link>
+                      {readsCrm ? (
+                        <Link
+                          href={`/agreements/${agreement.id}`}
+                          className="flex flex-wrap items-center gap-2 px-4 py-3 transition duration-150 hover:bg-[var(--surface)] lg:px-5"
+                        >
+                          {row}
+                        </Link>
+                      ) : (
+                        <div className="flex flex-wrap items-center gap-2 px-4 py-3 lg:px-5">{row}</div>
+                      )}
                     </li>
                   );
                 })}

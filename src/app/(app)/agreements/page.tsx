@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { homePath } from "@/lib/permissions";
 import { createTranslator, type MessageKey } from "@/lib/i18n";
 import { currentLocale, requireUser } from "@/lib/session";
-import { canWrite } from "@/lib/crm-access";
+import { canWrite, canRead } from "@/lib/crm-access";
 import { agreementBoard, companies, type AgreementRow } from "@/lib/crm";
 import {
   KELISHUV_PAGE,
@@ -49,6 +51,8 @@ export default async function AgreementsPage({
   searchParams: Promise<{ view?: string; status?: string; q?: string; page?: string }>;
 }) {
   const user = await requireUser();
+  // The companies and agreements base is the staff's (TZ 4.3).
+  if (!canRead(user)) redirect(homePath(user.role));
   const locale = await currentLocale(user);
   const t = createTranslator(locale);
   const writable = canWrite(user);

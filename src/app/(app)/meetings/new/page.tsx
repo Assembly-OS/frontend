@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
 import { canWrite } from "@/lib/crm-access";
+import { mayRecordMeeting } from "@/lib/meeting-visibility";
 import { meetingFormOptions } from "@/lib/meetings";
-import { receivesTasks } from "@/lib/types";
+import { isExternal, receivesTasks } from "@/lib/types";
 import { MeetingForm } from "./meeting-form";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export default async function NewMeetingPage({
   searchParams: Promise<{ company?: string; project?: string }>;
 }) {
   const user = await requireUser();
-  if (!canWrite(user)) redirect("/meetings");
+  if (!mayRecordMeeting(user)) redirect("/meetings");
 
   const query = await searchParams;
   const preset = (value?: string) => {
@@ -26,12 +27,14 @@ export default async function NewMeetingPage({
     <MeetingForm
       mode="create"
       {...(await meetingFormOptions(user))}
+      aiTools={canWrite(user)}
       initial={{
         title: "",
         held_at: "",
         company_id: preset(query.company),
         legal_status: "",
-        uyushma_id: null,
+        // Someone from an association files for his own association.
+        uyushma_id: isExternal(user.role) ? user.uyushma_id : null,
         place: "",
         participants: "",
         description: "",
@@ -44,7 +47,7 @@ export default async function NewMeetingPage({
         transcript: "",
         project_ids: project ? [project] : [],
         // The person filing it was usually there.
-        staff_ids: [user.id],
+        staff_ids: isExternal(user.role) ? [] : [user.id],
       }}
     />
   );

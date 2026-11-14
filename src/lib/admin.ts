@@ -1,5 +1,5 @@
 import { all, get } from "./pg";
-import type { MessageKind, Priority, Role, TaskStatus } from "./types";
+import type { Locale, MessageKind, Priority, Role, TaskStatus } from "./types";
 
 /**
  * Staff administration queries, used by the standalone panel under /admin.
@@ -26,6 +26,12 @@ export interface StaffRow {
   created_at: string;
   manager_id: number | null;
   manager_name: string | null;
+  klaster_id: number | null;
+  uyushma_id: number | null;
+  /** An outside project lead's first project, to prefill the form. */
+  project_id: number | null;
+  /** 1 when the chairman has granted the global AI view (TZ 4.2). */
+  global_ai: number;
   /** Assignments that name this person, in either direction. */
   tasks: number;
 }
@@ -36,6 +42,9 @@ export async function staff(): Promise<StaffRow[]> {
     `SELECT u.id, u.login, u.full_name, u.role, u.department, u.position,
             u.phone, u.email, u.is_active, u.last_seen, u.created_at,
             u.manager_id, m.full_name AS manager_name,
+            u.klaster_id, u.uyushma_id, u.global_ai,
+            (SELECT pm.project_id FROM project_members pm
+              WHERE pm.user_id = u.id ORDER BY pm.created_at LIMIT 1) AS project_id,
             (SELECT COUNT(*) FROM tasks t
               WHERE t.to_user_id = u.id OR t.from_user_id = u.id) AS tasks
        FROM users u
@@ -55,6 +64,38 @@ export async function managerOptions(): Promise<
     id: row.id,
     label: `${row.full_name} (@${row.login})`,
   }));
+}
+
+const CLUSTER_NAME: Record<Locale, "uz" | "uzc" | "ru" | "en"> = {
+  uz: "uz",
+  uzc: "uzc",
+  ru: "ru",
+  en: "en",
+};
+
+/**
+ * What the staff form's role-scoped pickers offer (TZ 4.1): clusters for a
+ * cluster head, associations for the association roles, projects for an
+ * outside project lead.
+ */
+export async function scopeOptions(locale: Locale = "uz"): Promise<{
+  clusters: { id: number; label: string }[];
+  associations: { id: number; label: string }[];
+  projects: { id: number; label: string }[];
+}> {
+  const [clusters, associations, projects] = await Promise.all([
+    all<{ id: number; label: string }>(
+      // The column is one of four fixed names, never user input.
+      `SELECT id, name_${CLUSTER_NAME[locale]} AS label FROM klasterlar ORDER BY code`,
+    ),
+    all<{ id: number; label: string }>(
+      "SELECT id, name AS label FROM uyushmalar ORDER BY name",
+    ),
+    all<{ id: number; label: string }>(
+      "SELECT id, code || ' · ' || name AS label FROM loyihalar ORDER BY code",
+    ),
+  ]);
+  return { clusters, associations, projects };
 }
 
 /** True when the login is already taken (comparison is case-insensitive). */
