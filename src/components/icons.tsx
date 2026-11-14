@@ -32,9 +32,24 @@ export type IconName =
   | "eyeOff"
   | "folder"
   | "pin"
-  | "link";
+  | "link"
+  | "library"
+  | "quote";
 
 const PATHS: Record<IconName, React.ReactNode> = {
+  library: (
+    <>
+      <path d="M4.5 4h3.5v16H4.5z" />
+      <path d="M10 4h3.5v16H10z" />
+      <path d="m16 5.3 3.2-.8 2.3 15.2-3.2.8z" />
+    </>
+  ),
+  quote: (
+    <>
+      <path d="M5 11h4v4H5a2 2 0 0 1-2-2v-2a5 5 0 0 1 5-5" />
+      <path d="M15 11h4v4h-4a2 2 0 0 1-2-2v-2a5 5 0 0 1 5-5" />
+    </>
+  ),
   grid: (
     <>
       <rect x="3" y="3" width="7" height="7" rx="1.5" />

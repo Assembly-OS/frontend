@@ -37,6 +37,9 @@ import { ProjectMembers } from "./members";
 import { documentsOf } from "@/lib/project-documents";
 import { memberCandidates, membersOf, projectRights } from "@/lib/project-visibility";
 import { id as parseId } from "@/lib/validate";
+import { decisionsOf } from "@/lib/project-decisions";
+import { projectHealthOf } from "@/lib/signals";
+import { DecisionPanel } from "./decision-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -137,6 +140,19 @@ export default async function ProjectPage({
     [t("proj.field.budget"), project.budget ? formatNumber(project.budget) : null],
   ];
 
+
+  // TZ 8.3: the decision point, with the dates the signals judge by.
+  const [decisions, health] = await Promise.all([decisionsOf(project.id), projectHealthOf(project.id)]);
+  const decisionPanel = (
+    <DecisionPanel
+      projectId={project.id}
+      phase={(project.phase as Phase | null) ?? null}
+      nextDecisionOn={project.next_decision_on}
+      reviewDue={health?.reviewDue ?? new Date().toISOString().slice(0, 10)}
+      decisions={decisions}
+      canDecide={rights.editPassport}
+    />
+  );
 
   const passportPanel = (
     <>
@@ -372,6 +388,7 @@ export default async function ProjectPage({
           </div>
 
           <div className="space-y-6">
+            {decisionPanel}
             {passportPanel}
             {documentsPanel}
 
@@ -488,6 +505,7 @@ export default async function ProjectPage({
         </div>
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-2">
+          {decisionPanel}
           {passportPanel}
           {documentsPanel}
         </div>

@@ -92,7 +92,9 @@ export function UyushmaTable({ rows }: { rows: UyushmaStat[] }) {
               return (
                 <tr key={row.id} className="hover:bg-[var(--surface)]">
                   <td className="px-4 py-3">
-                    <p className="font-medium">{row.name}</p>
+                    <Link href={`/associations/${row.id}`} className="font-medium hover:underline">
+                      {row.name}
+                    </Link>
                     <p className="muted mt-0.5 text-xs">
                       {row.sector} · {row.region}
                       {row.head_login && (

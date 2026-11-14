@@ -22,9 +22,11 @@ import {
 export function CompanyForm({
   staff,
   defaultOwner,
+  associations,
 }: {
   staff: { id: number; full_name: string }[];
   defaultOwner: number;
+  associations: { id: number; name: string }[];
 }) {
   const t = useT();
   const router = useRouter();
@@ -165,6 +167,39 @@ export function CompanyForm({
                 t("crm.field.notes"),
                 <textarea name="notes" rows={3} className={`${FIELD} resize-y`} />,
               )}
+            </div>
+          </Panel>
+
+          {/* TZ 6.2: the company's place in the Assembly — its association,
+              whether it has been checked, and the first next step. The stage
+              itself starts at "new contact" and moves with the record. */}
+          <Panel title={t("crm.pathDetails")}>
+            <div className="space-y-3 p-5">
+              {label(
+                t("crm.field.association"),
+                <Select name="uyushma_id" defaultValue="">
+                  <option value="">—</option>
+                  {associations.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </Select>,
+              )}
+              {label(
+                t("crm.field.verification"),
+                <Select name="verification" defaultValue="NOT_CHECKED">
+                  {["NOT_CHECKED", "CHECKED", "FLAGGED"].map((value) => (
+                    <option key={value} value={value}>
+                      {t(`crm.verification.${value}` as never)}
+                    </option>
+                  ))}
+                </Select>,
+              )}
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
+                {label(t("crm.field.nextStep"), <input name="next_step" maxLength={300} className={FIELD} />)}
+                {label(t("crm.field.nextStepOn"), <DateField name="next_step_on" />)}
+              </div>
             </div>
           </Panel>
         </div>

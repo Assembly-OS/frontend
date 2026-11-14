@@ -9,15 +9,22 @@ import {
   companyById,
   contactsOf,
   meetingsOf,
+  projectsOf,
+  stageHistory,
   viewStatus,
 } from "@/lib/crm";
+import { daysIn } from "@/lib/crm-stages";
+import { stageLimits } from "@/lib/settings";
+import { associations } from "@/lib/associations";
 import { assignableUsers } from "@/lib/queries";
 import { Badge, Button, PageHeader, Panel } from "@/components/ui";
-import { formatDate } from "@/lib/format";
-import { AGREEMENT_TONE, COMPANY_TONE } from "../tone";
+import { formatDate, formatNumber } from "@/lib/format";
+import { AGREEMENT_TONE, COMPANY_TONE, VERIFICATION_TONE } from "../tone";
 import { partnersFor } from "@/lib/agents/partners";
 import { CompanyPanels } from "./company-panels";
 import { DeleteCompany } from "./delete-company";
+import { StagePanel } from "./stage-panel";
+import { PathDetails } from "./path-details";
 import { id as parseId } from "@/lib/validate";
 
 export const dynamic = "force-dynamic";
@@ -57,6 +64,16 @@ export default async function CompanyPage({
   );
   const writable = canWrite(user);
   const removable = canDelete(user);
+  // The path (TZ 6.2): where the company stands, for how long, and how it
+  // got there; the projects whose journals mention it; the associations the
+  // detail form may attach it to.
+  const [history, limits, projects, associationList] = await Promise.all([
+    stageHistory(company.id),
+    stageLimits(),
+    projectsOf(company.id, user),
+    associations(user),
+  ]);
+  const days = daysIn(company.stage_since);
 
   const facts: [string, string | null][] = [
     [t("crm.field.industry"), company.industry],
@@ -71,6 +88,19 @@ export default async function CompanyPage({
       [company.country, company.city, company.address].filter(Boolean).join(", ") || null,
     ],
     [t("crm.field.owner"), company.owner_name],
+    [t("crm.field.association"), company.uyushma_name],
+    [
+      t("crm.field.dealValue"),
+      company.deal_value
+        ? `${formatNumber(company.deal_value)}${company.deal_currency ? ` ${company.deal_currency}` : ""}`
+        : null,
+    ],
+    [
+      t("crm.field.nextStep"),
+      company.next_step
+        ? `${company.next_step}${company.next_step_on ? ` · ${formatDate(company.next_step_on)}` : ""}`
+        : null,
+    ],
     [t("crm.field.started"), company.started_at && formatDate(company.started_at)],
     [
       t("crm.field.lastContact"),
@@ -105,6 +135,16 @@ export default async function CompanyPage({
         <Badge className={COMPANY_TONE[company.status] ?? COMPANY_TONE.POTENTIAL}>
           {t(`crm.status.${company.status}` as MessageKey)}
         </Badge>
+        {company.verification !== "NOT_CHECKED" && (
+          <Badge className={VERIFICATION_TONE[company.verification]}>
+            {t(`crm.verification.${company.verification}` as MessageKey)}
+          </Badge>
+        )}
+        {company.uyushma_id && company.uyushma_name && (
+          <Link href={`/associations/${company.uyushma_id}`} className="muted text-xs hover:underline">
+            {company.uyushma_name}
+          </Link>
+        )}
         {company.services && (
           <span className="muted text-xs">{company.services}</span>
         )}
@@ -112,6 +152,15 @@ export default async function CompanyPage({
 
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
+          <StagePanel
+            companyId={company.id}
+            stage={company.stage}
+            days={days}
+            limit={limits[company.stage]}
+            history={history}
+            writable={writable}
+          />
+
           <Panel title={t("crm.tab.meetings")}>
             {meetings.length === 0 ? (
               <p className="muted px-5 py-8 text-center text-sm">
@@ -183,6 +232,42 @@ export default async function CompanyPage({
         </div>
 
         <div className="space-y-6">
+          <PathDetails
+            companyId={company.id}
+            values={{
+              deal_value: company.deal_value,
+              deal_currency: company.deal_currency,
+              next_step: company.next_step,
+              next_step_on: company.next_step_on,
+              verification: company.verification,
+              uyushma_id: company.uyushma_id,
+            }}
+            associations={associationList.map((item) => ({ id: item.id, name: item.short_name || item.name }))}
+            writable={writable}
+          />
+
+          <Panel title={t("crm.field.projects")}>
+            {projects.length === 0 ? (
+              <p className="muted px-5 py-6 text-center text-xs">{t("crm.noProjects")}</p>
+            ) : (
+              <ul className="divide-y">
+                {projects.map((project) => (
+                  <li key={project.id} className="flex items-baseline gap-3 px-5 py-2.5">
+                    <Link href={`/projects/${project.id}`} className="min-w-0 flex-1 text-sm hover:underline">
+                      <span className="muted mr-2 font-mono text-xs">{project.code}</span>
+                      {project.name}
+                    </Link>
+                    {project.phase && (
+                      <span className="muted shrink-0 text-[11px]">
+                        {t(`proj.phase.${project.phase}` as MessageKey)}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+
           <Panel title={t("profile.personal")}>
             <dl className="divide-y">
               {facts

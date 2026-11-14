@@ -24,6 +24,10 @@ import {
 import { PieChart, type PieSlice } from "@/components/pie-chart";
 import { ScopeChip } from "@/components/metric-note";
 import { CrmBlock } from "./crm-block";
+import { ChairmanHome } from "./chairman-home";
+import { SignalsPanel } from "./signals-panel";
+import { TierSettingsPanel } from "./tier-settings";
+import { signalSettings, tierSettings } from "@/lib/settings";
 import { Icon } from "@/components/icons";
 import { formatDate, formatMoney, formatNumber, initials, percent } from "@/lib/format";
 import { isManager, priorityTone, receivesTasks, statusTone, isExternal } from "@/lib/types";
@@ -170,6 +174,17 @@ export default async function DashboardPage() {
         )}
       </div>
 
+      {/* TZ 8.4: the chairman's four blocks come first — what needs him,
+          the clusters, the month's results, the decisions due. */}
+      {seesEverything(user) && <ChairmanHome user={user} t={t} locale={locale} />}
+
+      {/* TZ 7.5: the six signals, for whoever manages people or projects. */}
+      {manager && (
+        <div className="mt-6">
+          <SignalsPanel user={user} t={t} />
+        </div>
+      )}
+
       {/* Rais command centre */}
       {/* The chairman's view of the whole Assembly — and his assistant's,
           who is asked the same questions about it. */}
@@ -177,6 +192,12 @@ export default async function DashboardPage() {
 
       {/* The CRM at a glance, plus whatever is about to go wrong. */}
       <CrmBlock user={user} t={t} />
+
+      {seesEverything(user) && (
+        <div className="mt-6">
+          <TierSettingsPanel tiers={await tierSettings()} signals={await signalSettings()} />
+        </div>
+      )}
 
       {/* items-start: without it the short right column stretches the tall left
           panel — or the reverse — and the difference renders as dead space. */}
@@ -244,6 +265,7 @@ export default async function DashboardPage() {
                 </>
               )}
               <QuickLink href="/chat" icon="chat" label={t("nav.chat")} badge={c.unread} />
+              <QuickLink href="/kpi" icon="chart" label={t("kpi.mine")} />
               {manager && (
                 <QuickLink href="/statistics" icon="chart" label={t("nav.statistics")} />
               )}

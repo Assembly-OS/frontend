@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useT } from "@/components/i18n-provider";
 import { Button, DateField, FIELD, PageHeader, Panel, Select } from "@/components/ui";
 import { PHASES, TIERS } from "@/lib/project-passport";
+import { OUTCOMES } from "@/lib/signal-rules";
 import { PROJECT_PRIORITIES } from "@/lib/project-vocab";
 import type { MessageKey } from "@/lib/i18n";
 
@@ -44,6 +45,7 @@ const ERRORS: Record<string, MessageKey> = {
   BAD_PPP: "proj.errPpp",
   BAD_TERM: "proj.errTerm",
   GONE: "proj.errGone",
+  DECISION_REQUIRED: "decision.required",
 };
 
 /**
@@ -81,6 +83,10 @@ export function PassportForm({
     private: initial.ppp_private,
   });
   const [owner, setOwner] = useState(initial.owner_id ? String(initial.owner_id) : "");
+  // TZ 8.3: a phase change is a decision; the two fields appear when the
+  // phase differs from the one on record, and the route refuses without them.
+  const [phase, setPhase] = useState(initial.phase);
+  const moving = phase !== initial.phase;
   const [deputy, setDeputy] = useState(initial.deputy_id ? String(initial.deputy_id) : "");
 
   const given = [shares.state, shares.public, shares.private].filter((v) => v.trim() !== "");
@@ -250,14 +256,32 @@ export function PassportForm({
             )}
             {field(
               `${t("proj.field.phase")} *`,
-              <Select name="phase" defaultValue={initial.phase}>
+              <Select name="phase" value={phase} onChange={(e) => setPhase(e.target.value)}>
                 <option value="">{t("meeting.pick")}</option>
-                {PHASES.map((phase) => (
-                  <option key={phase} value={phase}>
-                    {t(`proj.phase.${phase}` as MessageKey)}
+                {PHASES.map((value) => (
+                  <option key={value} value={value}>
+                    {t(`proj.phase.${value}` as MessageKey)}
                   </option>
                 ))}
               </Select>,
+            )}
+            {moving && (
+              <div className="rounded-xl border border-dashed p-3 sm:col-span-2">
+                <p className="muted mb-2 text-xs">{t("decision.hint")}</p>
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+                  {field(
+                    `${t("decision.title")} *`,
+                    <Select name="decision_outcome" defaultValue="CONTINUE">
+                      {OUTCOMES.map((value) => (
+                        <option key={value} value={value}>
+                          {t(`decision.outcome.${value}` as MessageKey)}
+                        </option>
+                      ))}
+                    </Select>,
+                  )}
+                  {field(t("decision.note"), <input name="decision_note" maxLength={2000} className={FIELD} />)}
+                </div>
+              </div>
             )}
             {field(
               t("proj.field.priority"),

@@ -4,7 +4,7 @@ import { counters, pulse } from "@/lib/queries";
 import { I18nProvider } from "@/components/i18n-provider";
 import { AppShell, type NavItem } from "@/components/app-shell";
 import { LiveUpdates } from "@/components/live-updates";
-import { isExternal, isManager, receivesTasks } from "@/lib/types";
+import { isAssociationRole, isExternal, isManager, receivesTasks } from "@/lib/types";
 import { canRead } from "@/lib/crm-access";
 import { canSubmitToAi } from "@/lib/agents/access";
 import { readsMeetings } from "@/lib/meeting-visibility";
@@ -99,6 +99,16 @@ export default async function AppLayout({
     badge: c.unread,
     group: "nav.group.work",
   });
+  // TZ 5: every member of staff has a KPI card; a manager's page also rolls
+  // up the people in his reach.
+  if (!isExternal(user.role) && user.role !== "RAIS") {
+    nav.push({
+      href: "/kpi",
+      labelKey: "nav.kpi",
+      icon: "chart",
+      group: "nav.group.work",
+    });
+  }
 
   /* --- Hamkorlar: the outside world --------------------------------- */
 
@@ -129,6 +139,16 @@ export default async function AppLayout({
       group: "nav.group.partners",
     });
   }
+  // TZ 6.1: the associations — all of them for the staff, their own for an
+  // association's chairman and representative.
+  if (canRead(user) || isAssociationRole(user.role)) {
+    nav.push({
+      href: "/associations",
+      labelKey: "nav.associations",
+      icon: "users",
+      group: "nav.group.partners",
+    });
+  }
   // Shown to whoever the register lets in: since block 4 every member of
   // staff, who files the meetings he sat in (TZ 4.2), and an association's
   // people, who see their association's.
@@ -147,6 +167,13 @@ export default async function AppLayout({
     href: "/assistant",
     labelKey: "nav.assistant",
     icon: "chat",
+    group: "nav.group.ai",
+  });
+  // The memory: what the chat answers from, and the library it is fed with.
+  nav.push({
+    href: "/knowledge",
+    labelKey: "nav.knowledge",
+    icon: "library",
     group: "nav.group.ai",
   });
   if (canSubmitToAi(user)) {
@@ -176,6 +203,15 @@ export default async function AppLayout({
       icon: "chart",
       group: "nav.group.manage",
     });
+    // The chairman's KPI view is the roll-up, under management.
+    if (user.role === "RAIS") {
+      nav.push({
+        href: "/kpi",
+        labelKey: "nav.kpi",
+        icon: "chart",
+        group: "nav.group.manage",
+      });
+    }
     // Weekly review — who did what, Monday to Sunday.
     nav.push({
       href: "/reports",

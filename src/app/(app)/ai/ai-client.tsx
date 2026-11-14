@@ -7,13 +7,17 @@ import { Icon } from "@/components/icons";
 import {
   Badge,
   Button,
+  DateField,
   EmptyState,
   FIELD,
   PageHeader,
   Panel,
 } from "@/components/ui";
 import { formatDateTime, formatDuration } from "@/lib/format";
+import Link from "next/link";
 import type { ProposalView, RunRow } from "@/lib/agents/orchestrator";
+import type { AiSettings } from "@/lib/signal-rules";
+import { AiSettingsPanel } from "./ai-settings";
 import { ACCEPTED } from "@/lib/agents/extract";
 import type { MessageKey } from "@/lib/i18n";
 
@@ -147,14 +151,31 @@ interface Draft {
 
 const PRIORITIES = ["PAST", "ORTA", "YUQORI", "KRITIK"] as const;
 
+/** The queue as the server paged and filtered it (TZ 7.1). */
+export interface QueueState {
+  filter: { status: string | null; severity: string | null; assignee: string | null; from: string | null; to: string | null };
+  total: number;
+  page: number;
+  pages: number;
+  /** The switches, for the chairman's side; null for everyone else. */
+  settings: AiSettings | null;
+}
+
+const PROPOSAL_STATUSES = ["pending", "approved", "rejected", "executed", "failed", "auto", "expired"] as const;
+
+// A seventh prop, against the guide's six: the queue state belongs with
+// the list it pages, and splitting the component would split the one
+// piece of state — the selection — that the list and the toolbar share.
 export function AiClient({
   proposals,
+  queue,
   runs,
   staff,
   meetings,
   llmConfigured,
 }: {
   proposals: ProposalView[];
+  queue: QueueState;
   runs: RunRow[];
   staff: StaffOption[];
   meetings: MeetingRecord[];
@@ -168,6 +189,39 @@ export function AiClient({
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(
     null,
   );
+  /** The proposals ticked for a decision in bulk. */
+  const [selected, setSelected] = useState<Set<number>>(() => new Set());
+
+  async function decideSelected(decision: "approve" | "reject") {
+    if (selected.size === 0) return;
+    setBusy(true);
+    try {
+      const response = await fetch("/api/ai/proposals/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [...selected], decision }),
+      });
+      const data = (await response.json()) as { ok?: boolean; done?: number; results?: { id: number; ok: boolean }[] };
+      setNotice(
+        data.ok
+          ? { ok: true, text: t("ai.queue.bulkDone").replace("{done}", String(data.done ?? 0)).replace("{total}", String(selected.size)) }
+          : { ok: false, text: t("common.error") },
+      );
+      setSelected(new Set());
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** A link to this queue with one filter changed; the rest kept. */
+  function queueHref(patch: Partial<QueueState["filter"]> & { page?: number }) {
+    const next = { ...queue.filter, page: queue.page, ...patch };
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(next)) if (value && !(key === "page" && value === 1)) params.set(key, String(value));
+    const search = params.toString();
+    return search ? `/ai?${search}` : "/ai";
+  }
 
   /**
    * "PDF · Yaratildi: 4 · Tasdiq kutilmoqda: 1" — a count that is zero is left
@@ -1086,7 +1140,107 @@ export function AiClient({
 
       {/* The review queue belongs to the document tab. */}
       {tab === "document" && (
-      <Panel title={`${t("ai.pending")}: ${pending.length}`} className="mb-5">
+      <Panel
+        title={`${t("ai.pending")}: ${queue.filter.status && queue.filter.status !== "pending" ? queue.total : pending.length}`}
+        className="mb-5"
+        action={
+          <span className="muted text-[11px] tabular-nums">
+            {t("ai.queue.page")
+              .replace("{page}", String(queue.page))
+              .replace("{pages}", String(queue.pages))
+              .replace("{total}", String(queue.total))}
+          </span>
+        }
+      >
+        {/* TZ 7.1: filters by status, importance, person and date; applied on
+            the server, which pages the result. A plain GET form, so the URL
+            holds the view and survives a refresh. */}
+        <form
+          method="get"
+          action="/ai"
+          className="grid grid-cols-[minmax(0,1fr)] gap-2 overflow-hidden border-b px-5 py-3 sm:grid-cols-[repeat(5,minmax(0,1fr))_auto] sm:items-end"
+        >
+          <label className="block min-w-0">
+            <span className="muted mb-1 block text-[11px] font-medium">{t("ai.queue.status")}</span>
+            <select name="status" defaultValue={queue.filter.status ?? ""} className={`${FIELD} py-1.5 text-xs`}>
+              <option value="">{t("ai.queue.any")}</option>
+              {PROPOSAL_STATUSES.map((value) => (
+                <option key={value} value={value}>
+                  {t(`ai.pstatus.${value}` as MessageKey)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block min-w-0">
+            <span className="muted mb-1 block text-[11px] font-medium">{t("ai.queue.severity")}</span>
+            <select name="severity" defaultValue={queue.filter.severity ?? ""} className={`${FIELD} py-1.5 text-xs`}>
+              <option value="">{t("ai.queue.any")}</option>
+              {["P1", "P2", "P3", "P4"].map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block min-w-0">
+            <span className="muted mb-1 block text-[11px] font-medium">{t("ai.queue.assignee")}</span>
+            <select name="assignee" defaultValue={queue.filter.assignee ?? ""} className={`${FIELD} py-1.5 text-xs`}>
+              <option value="">{t("ai.queue.any")}</option>
+              {staff.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {person.full_name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block min-w-0">
+            <span className="muted mb-1 block text-[11px] font-medium">{t("ai.queue.from")}</span>
+            {/* DateField, not a bare date input: without a positioned wrapper
+                Chromium's picker indicator sizes itself against the page and
+                adds a few pixels of horizontal scroll. */}
+            <DateField name="from" defaultValue={queue.filter.from ?? ""} className="py-1.5 text-xs" />
+          </label>
+          <label className="block min-w-0">
+            <span className="muted mb-1 block text-[11px] font-medium">{t("ai.queue.to")}</span>
+            <DateField name="to" defaultValue={queue.filter.to ?? ""} className="py-1.5 text-xs" />
+          </label>
+          <Button type="submit" size="sm" variant="secondary">
+            {t("ai.queue.apply")}
+          </Button>
+        </form>
+
+        {pending.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 border-b bg-[var(--surface)] px-5 py-2">
+            <label className="flex items-center gap-2 text-xs">
+              <input
+                type="checkbox"
+                checked={selected.size === pending.length}
+                onChange={(e) => setSelected(e.target.checked ? new Set(pending.map((item) => item.id)) : new Set())}
+              />
+              {t("ai.queue.selectAll")}
+            </label>
+            <span className="muted text-xs tabular-nums">{t("ai.queue.selected").replace("{n}", String(selected.size))}</span>
+            <div className="ml-auto flex gap-2">
+              <button
+                type="button"
+                onClick={() => void decideSelected("approve")}
+                disabled={busy || selected.size === 0}
+                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-40"
+              >
+                {t("ai.queue.approveSelected")}
+              </button>
+              <button
+                type="button"
+                onClick={() => void decideSelected("reject")}
+                disabled={busy || selected.size === 0}
+                className="muted rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:text-rose-600 disabled:opacity-40"
+              >
+                {t("ai.queue.rejectSelected")}
+              </button>
+            </div>
+          </div>
+        )}
+
         {pending.length === 0 ? (
           <p className="muted px-5 py-8 text-sm">{t("agent.noProposals")}</p>
         ) : (
@@ -1094,11 +1248,22 @@ export function AiClient({
             {pending.map((item) => (
               <li key={item.id} className="px-5 py-3.5">
                 <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="checkbox"
+                    aria-label={item.title}
+                    checked={selected.has(item.id)}
+                    onChange={(e) => {
+                      const next = new Set(selected);
+                      if (e.target.checked) next.add(item.id);
+                      else next.delete(item.id);
+                      setSelected(next);
+                    }}
+                  />
                   <Badge className={SEVERITY[item.severity] ?? SEVERITY.P3}>
                     {item.severity}
                   </Badge>
-                  <span className="muted font-mono text-[11px]">
-                    {item.action}
+                  <span className="muted text-[11px]">
+                    {t(`ai.action.${item.action}` as MessageKey)}
                   </span>
                   <span className="muted ml-auto text-[11px]">
                     {formatDateTime(item.created_at)}
@@ -1251,8 +1416,35 @@ export function AiClient({
             ))}
           </ul>
         )}
+        {queue.pages > 1 && (
+          <nav className="flex items-center justify-between gap-3 border-t px-5 py-3 text-xs" aria-label={t("ai.queue.page")}>
+            <Link
+              href={queueHref({ page: Math.max(1, queue.page - 1) })}
+              aria-disabled={queue.page <= 1}
+              className={`font-medium hover:underline ${queue.page <= 1 ? "pointer-events-none opacity-40" : ""}`}
+            >
+              ← {t("ai.queue.prev")}
+            </Link>
+            <span className="muted tabular-nums">
+              {t("common.pageOf").replace("{page}", String(queue.page)).replace("{pages}", String(queue.pages))}
+            </span>
+            <Link
+              href={queueHref({ page: Math.min(queue.pages, queue.page + 1) })}
+              aria-disabled={queue.page >= queue.pages}
+              className={`font-medium hover:underline ${queue.page >= queue.pages ? "pointer-events-none opacity-40" : ""}`}
+            >
+              {t("ai.queue.next")} →
+            </Link>
+          </nav>
+        )}
       </Panel>
 
+      )}
+
+      {tab === "document" && queue.settings && (
+        <div className="mb-5">
+          <AiSettingsPanel initial={queue.settings} />
+        </div>
       )}
 
       <Panel title={t("ai.history")}>
@@ -1264,8 +1456,8 @@ export function AiClient({
               <li key={item.id} className="px-5 py-2.5">
                 <p className="flex flex-wrap items-center gap-2 text-sm">
                   <span className="font-medium">{item.title}</span>
-                  <span className="muted font-mono text-[11px]">
-                    {item.status}
+                  <span className="muted text-[11px]">
+                    {t(`ai.pstatus.${item.status}` as MessageKey)}
                   </span>
                   {item.result && (
                     <span className="muted text-[11px]">{item.result}</span>
