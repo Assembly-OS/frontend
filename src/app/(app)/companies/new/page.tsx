@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
 import { canWrite } from "@/lib/crm-access";
 import { assignableUsers } from "@/lib/queries";
+import { associations } from "@/lib/associations";
 import { CompanyForm } from "./company-form";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export default async function NewCompanyPage() {
         full_name: person.full_name,
       }))}
       defaultOwner={user.id}
+      associations={(await associations(user)).map((item) => ({ id: item.id, name: item.short_name || item.name }))}
     />
   );
 }
