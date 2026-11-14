@@ -4,7 +4,7 @@ import { counters, pulse } from "@/lib/queries";
 import { I18nProvider } from "@/components/i18n-provider";
 import { AppShell, type NavItem } from "@/components/app-shell";
 import { LiveUpdates } from "@/components/live-updates";
-import { isExternal, isManager, receivesTasks } from "@/lib/types";
+import { isAssociationRole, isExternal, isManager, receivesTasks } from "@/lib/types";
 import { canRead } from "@/lib/crm-access";
 import { canSubmitToAi } from "@/lib/agents/access";
 import { readsMeetings } from "@/lib/meeting-visibility";
@@ -136,6 +136,16 @@ export default async function AppLayout({
       href: "/agreements",
       labelKey: "nav.agreements",
       icon: "check",
+      group: "nav.group.partners",
+    });
+  }
+  // TZ 6.1: the associations — all of them for the staff, their own for an
+  // association's chairman and representative.
+  if (canRead(user) || isAssociationRole(user.role)) {
+    nav.push({
+      href: "/associations",
+      labelKey: "nav.associations",
+      icon: "users",
       group: "nav.group.partners",
     });
   }

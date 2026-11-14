@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function NewMeetingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ company?: string; project?: string }>;
+  searchParams: Promise<{ company?: string; project?: string; uyushma?: string }>;
 }) {
   const user = await requireUser();
   if (!mayRecordMeeting(user)) redirect("/meetings");
@@ -33,8 +33,9 @@ export default async function NewMeetingPage({
         held_at: "",
         company_id: preset(query.company),
         legal_status: "",
-        // Someone from an association files for his own association.
-        uyushma_id: isExternal(user.role) ? user.uyushma_id : null,
+        // Someone from an association files for his own association; the
+        // staff arrive from the association's card with it already chosen.
+        uyushma_id: isExternal(user.role) ? user.uyushma_id : preset(query.uyushma),
         place: "",
         participants: "",
         description: "",
